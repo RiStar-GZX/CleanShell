@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
+<!-- Created with Cambalache 0.96.1 -->
+<cambalache-project version="0.96.0" target_tk="gtk-4.0">
+  <ui filename="notification center.ui" sha256="a0bd50f8d6b536bdb136c346aa921072633f4e230cf4c8e2714398c9e2898f3c"/>
+</cambalache-project>

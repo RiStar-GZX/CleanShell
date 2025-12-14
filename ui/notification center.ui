@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name notification center.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <object class="GtkBox" id="center_head">
+    <property name="css-classes">box{
+	background-color: rgba(128, 128, 128, 0.3);
+}</property>
+    <property name="orientation">vertical</property>
+    <property name="vexpand">True</property>
+    <property name="vexpand-set">True</property>
+    <child>
+      <object class="GtkBox" id="center_head_box">
+        <property name="hexpand">True</property>
+        <property name="hexpand-set">True</property>
+        <property name="margin-bottom">10</property>
+        <property name="margin-end">20</property>
+        <property name="margin-start">20</property>
+        <property name="margin-top">30</property>
+        <child>
+          <object class="GtkBox" id="center_head_time_box">
+            <property name="vexpand-set">True</property>
+            <child>
+              <object class="GtkLabel" id="center_head_time">
+                <property name="css-classes">time</property>
+                <property name="ellipsize">middle</property>
+                <property name="justify">center</property>
+                <property name="vexpand">True</property>
+                <property name="vexpand-set">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="center_head_date">
+                <property name="css-classes">date</property>
+                <property name="lines">2</property>
+                <property name="margin-start">10</property>
+                <property name="vexpand">True</property>
+                <property name="vexpand-set">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkBox" id="notify_head_box">
+    <child>
+      <object class="GtkSeparator" id="main_separator">
+        <property name="hexpand">True</property>
+        <property name="hexpand-set">True</property>
+        <property name="opacity">0.0</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="main_button_able_notification">
+        <property name="icon-name">notification-inactive</property>
+        <property name="valign">center</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkBox" id="notification_item">
+    <property name="css-name">notify_item</property>
+    <property name="hexpand">True</property>
+    <property name="hexpand-set">True</property>
+    <property name="vexpand">True</property>
+    <property name="vexpand-set">True</property>
+    <child>
+      <object class="GtkImage" id="item_image">
+        <property name="margin-start">20</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="item_text">
+        <property name="hexpand">True</property>
+        <property name="hexpand-set">True</property>
+        <property name="margin-start">20</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="margin-end">10</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="item_time">
+            <property name="margin-top">5</property>
+            <property name="vexpand">True</property>
+            <property name="vexpand-set">True</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="item_button_more">
+            <property name="vexpand">True</property>
+            <property name="vexpand-set">True</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkBox" id="notify_box">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkScrolledWindow">
+        <child>
+          <object class="GtkOverlay">
+            <property name="hexpand">True</property>
+            <property name="hexpand-set">True</property>
+            <property name="valign">baseline</property>
+            <property name="vexpand">True</property>
+            <property name="vexpand-set">True</property>
+            <child>
+              <object class="GtkListBox" id="main_list_box">
+                <property name="margin-end">20</property>
+                <property name="margin-start">20</property>
+                <property name="vexpand">True</property>
+                <property name="vexpand-set">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="notify_clear">
+        <property name="halign">center</property>
+        <property name="height-request">-1</property>
+        <property name="icon-name">application-exit-symbolic</property>
+        <property name="margin-bottom">20</property>
+        <property name="opacity">0.5</property>
+        <property name="valign">end</property>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -1,0 +1,255 @@
+/* 页面指示器 */
+.dot {
+    width = 9px;
+    height = 9px;
+    /*margin:5px 5px 5px 5px;
+    */border-radius: 5px;
+    background: gray;
+    border: none;
+    padding: 0;
+    transition: background 1s;
+}
+
+.dot:hover{
+    border-radius: 5px;
+    background: red;
+    border: none;
+    padding: 0;
+}
+
+.active-dot {
+    transiton-property:transfrom;
+    border-radius: 5px;
+    background: white;
+    border: none;
+    padding: 0;
+}
+
+.notify_clear {
+    border-radius: 60px;
+    min-width: 60px;
+    min-height: 60px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+}
+
+.desktop-dock {
+    background-color: rgba(200, 200, 200, 0.3);
+    /*backdrop_filter: blur(10px);*/
+    border-radius: 30px;
+    margin :10px 10px 10px 10px;
+}
+
+/*.desktop-dock::before{
+    filter: blur(10px);
+}*/
+
+.app-drawer {
+    background-color: rgba(200, 200, 200, 0.3);
+}
+
+/*button:hover {
+    border-radius: 30px; /* 悬停时增大圆角
+    outline: none;
+}*/
+
+.light-style{
+    color:white;
+}
+
+label.time{
+    font-size: 50px;
+}
+
+label.date{
+    font-size: 18px;
+}
+
+listbox {
+    background: rgba(0, 0, 0, 0);
+    border-radius: 30px;
+}
+
+
+list.activatable {
+  background: rgba(255,255,255,1);
+
+}
+
+.control-bar {
+  min-width: 200px;
+}
+
+/*控制中心的按钮*/
+
+
+
+/*控制中心的滑动条*/
+
+.ling-scale trough {
+    min-width: 70px;  /* 轨道宽度 */
+    /*border-height:50px;*/
+    border-color: rgba(0,0,0,0);
+    border-radius: 50px;
+    display: flex;
+    border-color: rgba(0,0,0,0);
+}
+
+.ling-scale fill{
+    background-color:rgba(255,0,0,1);
+}
+
+.ling-scale slider{
+    min-height: 10px;
+    min-width:  70px;
+    border-radius: 10px;
+    border:5px;
+    border-color:rgba(0,0,0,0);
+    color: rgba(0,0,0,0);
+    border-color: rgba(0,0,0,0);
+    background-color: rgba(255,255,255,0);
+}
+
+.notify_list_box{
+    background-color:rgba(0,0,0,0);
+}
+
+.notify_list_box row{
+    background-color:rgba(0,0,0,0);
+}
+
+.notify_list_box button{
+    min-width:20px;
+    min-height:20px;
+    margin: 5px;
+    border-radius:30px;
+    border-style:none;
+    background-color: rgba(255, 255, 255, 0.5);
+    opacity:0.5;
+}
+
+.notify_item{
+    background-color: rgba(0,0,0,0);
+    border-radius: 50px;
+    min-height:60px;
+    border: 0;
+    outline: 0;
+    margin :5px 0px 5px 0px;
+    background-color: rgba(255, 255, 255, 0.5);
+    opacity:1;
+}
+
+.notify_item_box{
+    /*background-color: rgba(255,0,0,0);*/
+    border-style: none;
+}
+
+.notify_item_text{
+    font-size:16px;
+}
+
+/*notify_item{
+    background-color: rgba(0,0,0,0);
+    border-radius: 50px;
+    border: 0;
+    outline: 0;
+    margin :10px 0;
+    background-color: rgba(100, 100, 100, 1);
+    opacity: 0.5;
+}*/
+
+.control-item {
+    border-radius: 50px;
+    background-color:white;
+    border-style:none;
+    outline: none;
+    opacity:0.5;
+    /*background-color:rgba(200,200,200,0.5);*/
+}
+
+
+
+.control-button{
+    border-radius: 50px;
+    margin: 10px;
+    border-style: none;
+    opacity:0.5;
+    background-color:rgba(101,189,235,1);
+}
+
+.toggle-button{
+    border-radius: 50px;
+    border-style: none;
+    opacity:0.5;
+    background-color:rgba(101,189,235,1);
+}
+
+.control-label{
+    font-size: 15px;
+}
+
+.grid-folder-content-box{
+    background-color:white;
+    border-radius: 35px;
+}
+
+.grid-folder-content{
+    margin: 35px 35px 35px 35px;
+}
+
+.grid-folder-box{
+    /*filter:blur(10px);*/
+    background-color:rgba(0,0,0,0.3);
+}
+
+.grid-folder-title{
+    font-size: 30px;
+}
+
+fixed { min-width: 100%; min-height: 100%; }
+
+.nolabel{
+    /*color:white;*/
+    background-color:rgba(255,255,255,0.3);
+}
+
+.keyboard{
+    background: rgba(255,100,100,0.5);
+    border: 0px;
+    border-radius: 100px;
+    transition:border-radius 0.1s,min-width 1s,min-height 1s , transform 1s;
+    font-size: 50px;
+}
+
+.keyboard:hover{
+    background: rgba(200,50,50,0.7);
+    border-radius: 25px;
+    min-width: 10px;
+    min-height: 10px;
+    /*animation: myfirst 5s;*/
+    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+    /*transform: rotate(180deg);*/
+    box-shadow: 3px 3px 3px rgba(160,30,30,1), 3px 3px 3px rgba(160,30,30,1);
+}
+
+/*@keyframes myfirst
+{
+    0%   {background: red; }
+    25%  {background: yellow; }
+    50%  {background: blue;}
+    75%  {background: green;}
+    100% {background: red; }
+}*/
+
+.time_viewer{
+    font-size:80px;
+    font-family: "Times New Roman", Georgia, serif;
+    color:rgba(230,200,100,1);
+}
+
+.layer_back {
+    /*background-image: url('file:///home/gzx/Pictures/wallpaper3.png');*/
+    background-color: rgba(255, 200, 200, 0.80);
+    background-size: cover;
+    /*filter: blur(10px);*/
+}
