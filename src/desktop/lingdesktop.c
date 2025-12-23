@@ -93,152 +93,141 @@ static void ling_desktop_class_init(LingDesktopClass * klass){
 }
 
 
-gboolean drawerup_animation(gdouble velocity_x,gdouble velocity_y,gpointer data){
-    LingShell * shell=(LingShell *)data;
-    int top = gtk_widget_get_margin_top(shell->drawer);
-    int h = gtk_widget_get_height(shell->bodybox);
+// void drawerup_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data){
+//     LingShell * shell=(LingShell *)data;
+//     int top = gtk_widget_get_margin_top(shell->drawer);
+//     int h = gtk_widget_get_height(shell->bodybox);
+//     //FIX
+//     gdouble min = top/20;
+//     min+=5+fabs(velocity_y)/100;
+//     gtk_widget_set_margin_top(shell->drawer,top-min);
+//     ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
+// }
 
-    if(top>0){
-        gdouble min = top/20;
-        min+=5+fabs(velocity_y)/100;
-        gtk_widget_set_margin_top(shell->drawer,top-min);
-        ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-    }else{
-        return LING_OPERATE_ANIMATION_REMOVE;
+
+
+// void drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data){
+//     LingShell * shell = (LingShell*)user_data;
+//     int top = gtk_widget_get_margin_top(shell->drawer);
+//     int h = gtk_widget_get_height(shell->bodybox);
+
+//     if(top<h){
+//         gdouble plus = (h-top)/20;
+//         plus+=5+fabs(velocity_y)/100;
+//         gtk_widget_set_margin_top(shell->drawer,top+plus);
+//         ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
+//     }/*else{
+//         return LING_OPERATE_ANIMATION_REMOVE;
+//     }
+//     return LING_OPERATE_ANIMATION_CONTINUE;*/
+// }
+
+// void drawerup_finish(gpointer data){
+//     LingShell * shell=(LingShell *)(data);
+//     gtk_widget_set_opacity(shell->drawer,1.0);
+//     gtk_widget_set_opacity(shell->bodybox,1.0);
+//     gtk_widget_set_margin_top(shell->drawer,0);
+//     gtk_widget_set_visible(shell->drawer,TRUE);
+//     gtk_widget_set_visible(shell->bodybox,FALSE);
+// }
+
+// void drawerdown_finish(gpointer data){
+//     LingShell * shell=(LingShell *)data;
+//     gtk_widget_set_opacity(shell->drawer,1.0);
+//     gtk_widget_set_opacity(shell->bodybox,1.0);
+//     gtk_widget_set_margin_top(shell->drawer,gtk_widget_get_height(shell->bodybox));
+//     gtk_widget_set_visible(shell->drawer,FALSE);
+//     gtk_widget_set_visible(shell->bodybox,TRUE);
+// }
+
+
+// static void lks_ani_up(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
+//     if(shell->mode==SHELL_MODE_LOCKSCREEN){
+//         // int level;
+//         // gtk_widget_set_visible(s->main->widget,TRUE);
+//         // gtk_widget_set_visible(s->sub->widget,TRUE);
+//         // gtk_widget_set_margin_top(s->main->widget,-(progress/100.00f)*30);
+//         // gtk_widget_set_margin_top(s->sub->widget,30-(progress/100.00f)*30);
+
+//         // gtk_widget_set_opacity(s->main->widget,1-(progress/100));
+//         // gtk_widget_set_opacity(s->sub->widget,progress/100);
+//         // ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(progress/100));
+//     }
+//     if(shell->mode==SHELL_MODE_DESKTOP){
+//         switcher * s = (switcher*)user_data;
+//         gtk_widget_set_visible(s->main->widget,TRUE);
+//         gtk_widget_set_visible(s->sub->widget,TRUE);
+//         gtk_widget_set_margin_top(s->main->widget,-(progress/100.00f)*30);
+//         gtk_widget_set_margin_top(s->sub->widget,30-(progress/100.00f)*30);
+
+//         gtk_widget_set_opacity(s->main->widget,1-(progress/100));
+//         gtk_widget_set_opacity(s->sub->widget,progress/100);
+//         ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(progress/100));
+
+//         ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(1-progress/100)*20);
+//     }
+// }
+
+void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    switcher * s = user_data;
+    gtk_widget_set_visible(s->sub->widget,TRUE);
+    gtk_widget_set_visible(s->main->widget,TRUE);
+    gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
+    gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
+
+    gtk_widget_set_opacity(s->sub->widget,(args.progress/100));
+    gtk_widget_set_opacity(s->main->widget,1-args.progress/100);
+    ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(args.progress/100));
+
+    if(shell->mode==SHELL_MODE_DESKTOP){
+       // ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(1-args.progress/100)*20); //IPT FIX:switch添加user_data
     }
-    return LING_OPERATE_ANIMATION_CONTINUE;
 }
 
-void drawerup_finish(gpointer data){
-    LingShell * shell=(LingShell *)(data);
-    gtk_widget_set_opacity(shell->drawer,1.0);
-    gtk_widget_set_opacity(shell->bodybox,1.0);
-    gtk_widget_set_margin_top(shell->drawer,0);
-    gtk_widget_set_visible(shell->drawer,TRUE);
-    gtk_widget_set_visible(shell->bodybox,FALSE);
-}
+// static void lks_ani2(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+//     switcher * s = user_data;
+//     gtk_widget_set_visible(s->sub->widget,TRUE);
+//     gtk_widget_set_visible(s->main->widget,TRUE);
+//     gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
+//     gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
 
-gboolean drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gpointer user_data){
-    LingShell * shell = (LingShell*)user_data;
-    int top = gtk_widget_get_margin_top(shell->drawer);
-    int h = gtk_widget_get_height(shell->bodybox);
+//     if(shell->mode==SHELL_MODE_LOCKSCREEN){
+//         gtk_widget_set_opacity(s->sub->widget,(args.progress/100));
+//         gtk_widget_set_opacity(s->main->widget,1-args.progress/100);
+//         ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(args.progress/100));
+//     }
+//     //ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(args.progress/100)*20); //IPT FIX:switch添加user_data
+// }
 
-    if(top<h){
-        gdouble plus = (h-top)/20;
-        plus+=5+fabs(velocity_y)/100;
-        gtk_widget_set_margin_top(shell->drawer,top+plus);
-        ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-    }else{
-        return LING_OPERATE_ANIMATION_REMOVE;
-    }
-    return LING_OPERATE_ANIMATION_CONTINUE;
-}
+static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    switcher * s = (switcher*)user_data;
+    gtk_widget_set_visible(s->main->widget,TRUE);
+    gtk_widget_set_visible(s->sub->widget,TRUE);
+    gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
+    gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
 
-void drawerdown_finish(gpointer data){
-    LingShell * shell=(LingShell *)data;
-    gtk_widget_set_opacity(shell->drawer,1.0);
-    gtk_widget_set_opacity(shell->bodybox,1.0);
-    gtk_widget_set_margin_top(shell->drawer,gtk_widget_get_height(shell->bodybox));
-    gtk_widget_set_visible(shell->drawer,FALSE);
-    gtk_widget_set_visible(shell->bodybox,TRUE);
-}
+    gtk_widget_set_opacity(s->main->widget,1-(args.progress/100));
+    gtk_widget_set_opacity(s->sub->widget,args.progress/100);
+    //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-progress/100));
 
-
-static gdouble x,y,ison;
-static void on_drag_begin (GtkGestureDrag* gedture,gdouble start_x,
-                           gdouble start_y,LingDesktop * self){
-    x=start_x;
-    y=start_y;
-    ison=0;
-}
-
-static void on_drag_update(GtkGestureDrag *gesture,
-                           gdouble offset_x,
-                           gdouble offset_y,
-                           LingDesktop * self) {
-    if(ison!=0);
-    else if((fabs(offset_x)>=fabs(offset_y))&&fabs(offset_x)>10&&y<gtk_widget_get_height(self->view_pager)){
-        ison=1;
-    }
-    else if(offset_y<0){
-        ison=2;
-    }else if(offset_y>10){   //
-        ison=3;
-        if(x<gtk_widget_get_width(GTK_WIDGET(self))/2){
-            ling_status_bar_set_page(LING_STATUS_BAR(shell->statusbar),SB_PAGE_NOTICE);
-        }else {
-            ling_status_bar_set_page(LING_STATUS_BAR(shell->statusbar),SB_PAGE_CONTROL);
-        }
-    }
-
-    /*if(ison==1){
-    LingOperate * op=ling_operate_get(shell.controler,"page");
-    if(ling_operate_start_operating(op)){
-      GtkWidget * visible = gtk_stack_get_visible_child(GTK_STACK(self->stack));
-      uint pos;
-      int w = gtk_widget_get_width(shell.appview);
-      if(offset_x<0){
-        ling_operate_set_animation_cb(op,page_left_animation,op->animation_data);
-        ling_operate_set_finish_cb(op,page_left_finish,op->finish_data);
-      }
-      if(offset_x>0){
-        ling_operate_set_animation_cb(op,page_right_animation,op->animation_data);
-        ling_operate_set_finish_cb(op,page_right_finish,op->finish_data);
-      }
-
-      //gtk_widget_set_margin_start(visible,offset_x);
-    }
-  }*/
-    if(ison==2){
-        LingOperate * op=ling_operate_get(shell->controler,"drawer");
-        if(ling_operate_start_operating(op)){
-            gtk_widget_set_visible(shell->drawer,1);
-            int h = gtk_widget_get_height(shell->bodybox);
-            int top = gtk_widget_get_margin_top(shell->drawer);
-            int up = h+offset_y;
-            if(up<0)up=0;
-            if(up>h)up=h;
-            if((h-up)>h/6){
-                ling_operate_set_animation_cb(op,drawerup_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drawerup_finish,op->finish_data);
-            }
-            else{
-                ling_operate_set_animation_cb(op,drawerdown_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drawerdown_finish,op->finish_data);
-            }
-            ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-            float blur = ((((h-top)*1000)/h)*CENTER_BLUR_PX)/1000;
-            ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),blur);
-            gtk_widget_set_margin_top(shell->drawer,up);
-        }
-    }
-    if(ison==3){
-        LingOperate * op=ling_operate_get(shell->controler,"status_bar_drop");
-        if(ling_operate_start_operating(op))
-        {
-            gdouble a= offset_y/300;
-            ling_status_bar_set_drop_degree(LING_STATUS_BAR(shell->statusbar),a);
-            if(offset_y>100){
-                ling_operate_set_animation_cb(op,drop_down_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_down_finish,op->finish_data);
-            }else{
-                ling_operate_set_animation_cb(op,drop_up_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_up_finish,op->finish_data);
-            }
-        }
-    }
+    ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(args.progress/100)*20);
 }
 
 
 
-static void on_drag_end(GtkGestureDrag *gesture,
-                        gdouble offset_x,
-                        gdouble offset_y,
-                        LingDesktop * self) {
-    ling_operate_run_animation(ling_operate_get(shell->controler,"drawer"));
-    ling_operate_run_animation(ling_operate_get(shell->controler,"page"));
-    ling_operate_run_animation(ling_operate_get(shell->controler,"status_bar_drop"));
-}
+// static void lks_ani_down2(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
+//     switcher * s = (switcher*)user_data;
+//     gtk_widget_set_visible(s->sub->widget,TRUE);
+//     gtk_widget_set_visible(s->main->widget,TRUE);
+//     gtk_widget_set_margin_top(s->sub->widget,-(progress/100.00f)*30);
+//     gtk_widget_set_margin_top(s->main->widget,30-(progress/100.00f)*30);
+
+//     gtk_widget_set_opacity(s->sub->widget,1-(progress/100));
+//     gtk_widget_set_opacity(s->main->widget,progress/100);
+//     //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-progress/100));
+
+//     ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(progress/100)*20); //IPT FIX:switch添加user_data
+// }
 
 
 void ling_desktop_init(LingDesktop * self){
@@ -318,28 +307,49 @@ GtkWidget * ling_desktop_new(){
     //壁纸
     ling_desktop_set_wallpaper(self,"/home/gzx/Pictures/wallpaper3.png");
 
-    //页面拖拽手势
-    LingOperate * op_drawerup=ling_operate_add(shell->controler,"drawer",
-                                               drawerdown_animation,shell,
-                                               NULL,NULL,
-                                               drawerdown_finish,shell);
+    //抽屉拖拽手势
+    //uint level;
+    //LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&level);
+    LingOperate * bodybox_op = ling_operate_add(shell->controler,LING_DESKTOP_BODYBOX_OP_NAME,self->bodybox);
+    LingOperate * drawer_op  = ling_operate_add(shell->controler,"drawer_switch",self->drawer);
 
-    GtkGesture * drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self->bodybox), GTK_EVENT_CONTROLLER(drag));
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), self);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), self);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), self);
+    ling_layer_add_switch(bodybox_op,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
+                          drawer_op,LING_OVERLAY(self->overlay),LAYER_DRAWER,
+                          LING_ACTION_DRAG_UP,drawer_ani,ling_layer_progress,ling_layer_release,
+                          ling_layer_main_finish,ling_layer_sub_finish);
 
-    GtkGesture * swipe = gtk_gesture_swipe_new();
-    gtk_widget_add_controller(GTK_WIDGET(self->bodybox), GTK_EVENT_CONTROLLER(swipe));
-    g_signal_connect(swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op_drawerup);
+    // uint level;
+    // LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&level);
+
+    // ling_layer_add_switch(ling_operate_get(shell->controler,LING_STATUSBAR_CENTERBOX_OP_NAME),sb_overlay,level,
+    //                       bodybox_op,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
+    //                       LING_ACTION_DRAG_UP,center_ani,ling_layer_progress,ling_layer_release,
+    //                       ling_layer_main_finish,ling_layer_sub_finish);
+
+    // LingLayer * cover=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_COVER);
+    // LingLayer * verify=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_VERIFY);
+    // sb * s = malloc(sizeof(sb));
+    // s->main = cover->widget;
+    // s->sub = verify->widget;
+
+    // LingOperate * op = ling_operate_add(shell->controler,"drawer",verify->widget);
+    // ling_operate_add_action(op2,LING_ACTION_DRAG_DOWN,ling_overlay_layer_progress,
+    //                         verify->widget,lks_ani,s,
+    //                         lks_release,1,
+    //                         lks_main_finish,lks_sub_finish,s);
+    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_BODYBOX,
+    //                         OP_UPDATE_TYPE_UP,LING_OVERLAY(self->overlay),LAYER_DRAWER,
+    //                         lks_ani_up2,switch_main_finish,switch_sub_finish);
+
+    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_DRAWER,
+    //                         OP_UPDATE_TYPE_DOWN,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
+    //                         lks_ani_down2,switch_main_finish,switch_sub_finish);
 
     //self->data_saver = ling_data_saver_new();
     //ling_data_saver_save_pages_to_db(self->data_saver,LING_VIEW_PAGER(self->view_pager));
 
     ling_desktop_load_page(self);
 
-    //g_timeout_add(500,f_timeout,self);
     return GTK_WIDGET(self);
 }
 
@@ -559,4 +569,9 @@ int ling_app_view_pager_load_from_data(LingDesktop * self){
     fv_data_load_dock(self);
 
     return 1;
+}
+
+LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,uint * level){
+    *level = LAYER_BODYBOX;
+    return LING_OVERLAY(self->overlay);
 }

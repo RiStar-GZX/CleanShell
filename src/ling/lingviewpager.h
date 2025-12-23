@@ -33,6 +33,5 @@ gboolean ling_view_pager_next(LingViewPager * self,gboolean animate);
 
 gboolean ling_view_pager_prev(LingViewPager * self,gboolean animate);
 
-void ling_view_pager_page_move(LingViewPager * self,gdouble x);
 
 

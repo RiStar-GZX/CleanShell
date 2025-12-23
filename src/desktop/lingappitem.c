@@ -114,7 +114,7 @@ static void drag_end(GtkGestureDrag *gesture,
                      LingAppItem *self) {
 
     //gtk_overlay_remove_overlay(GTK_OVERLAY(shell->overlay),self->drag_image);
-    ling_operate_run_finish(ling_operate_get(shell->controler,"app_drag"));
+    ling_operate_run_animation(ling_operate_get(shell->controler,"app_drag"));
 }
 
 

@@ -7,7 +7,7 @@
 
 G_BEGIN_DECLS
 
-
+#define LING_DESKTOP_BODYBOX_OP_NAME "bodybox_layer"
 
 #define LING_TYPE_DESKTOP (ling_desktop_get_type())
 G_DECLARE_FINAL_TYPE(LingDesktop,ling_desktop,LING,DESKTOP,GtkBox)
@@ -90,12 +90,14 @@ GtkWidget * ling_desktop_new();
 
 void ling_desktop_set_opacity(GtkWidget * body,GtkWidget * up,uint win_height);
 
-gboolean drawerup_animation(gdouble velocity_x,gdouble velocity_y,gpointer data);
+void drawerup_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data);
 void drawerup_finish(gpointer data);
-gboolean drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gpointer user_data);
+void drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data);
 void drawerdown_finish(gpointer data);
 
 void ling_desktop_set_wallpaper_blur(LingDesktop *self,uint px);
 uint ling_desktop_get_wallpaper_blur(LingDesktop *self);
 
+void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,uint * level);
 G_END_DECLS

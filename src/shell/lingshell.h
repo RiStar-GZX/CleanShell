@@ -17,8 +17,15 @@ enum{
 #define LING_TYPE_SHELL (ling_shell_get_type())
 G_DECLARE_FINAL_TYPE(LingShell,ling_shell,LING,SHELL,GtkBox)
 
+enum{
+    SHELL_MODE_LOCKSCREEN,
+    SHELL_MODE_DESKTOP,
+};
+
 struct _LingShell{
     GtkBox parent;
+    uint mode;  //SHELL_MODE
+
     GtkWidget * statusbar;
     GtkWidget * desktop;
     GtkWidget * lockscreen;

@@ -71,7 +71,7 @@ struct _LingStatusBar{
 
     GtkWidget * overlay;
     GtkWidget * statusbar;
-    GtkWidget * background;
+    //GtkWidget * background;
 
     GtkWidget * viewpager;
     GtkWidget * page_notify;
@@ -88,12 +88,6 @@ struct _LingStatusBar{
     GtkWidget * time;
 
     GtkCssProvider *provider;
-
-    //LingOpControler * controler;
-
-    //uint center_mode;
-
-    //shell * shell;
 };
 
 
@@ -147,28 +141,14 @@ static gboolean update_status(gpointer user_data){
     return 1;
 }
 
-gboolean drop_up_animation(gdouble velocity_x,gdouble velocity_y,gpointer data){
+void drop_up_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
     LingStatusBar * self = LING_STATUS_BAR(data);
-
-    double opacity = gtk_widget_get_opacity(self->viewpager);
-
-    if(opacity<=0)return LING_OPERATE_ANIMATION_REMOVE;
-    opacity-=0.01;
-    //opacity-=velocity_y;
-    ling_status_bar_set_drop_degree(self,opacity);
-    return LING_OPERATE_ANIMATION_CONTINUE;
+    gtk_widget_set_opacity(self->viewpager,progress/100);
 }
 
-gboolean drop_down_animation(gdouble velocity_x,gdouble velocity_y,gpointer data){
+void drop_down_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
     LingStatusBar * self = LING_STATUS_BAR(data);
-
-    double opacity = gtk_widget_get_opacity(self->viewpager);
-
-    if(opacity>=1.0)return LING_OPERATE_ANIMATION_REMOVE;
-    opacity+=0.01;
-    //opacity+=velocity_y;
-    ling_status_bar_set_drop_degree(self,opacity);
-    return LING_OPERATE_ANIMATION_CONTINUE;
+    gtk_widget_set_opacity(self->viewpager,progress/100);
 }
 
 void drop_down_finish(gpointer data){
@@ -186,94 +166,6 @@ void drop_up_finish(gpointer data){
 
     //self->center_mode=CENTER_MODE_NONE;
 }
-
-static int ison,x,y;
-static void ling_status_bar_drag_begin (GtkGestureDrag* drag,gdouble start_x,
-                                        gdouble start_y,LingStatusBar * self){
-    ison=0;
-    x=start_x;
-    //if(self->center_mode!=CENTER_MODE_NONE)return;
-}
-
-static void ling_status_bar_drag_update (GtkGestureDrag* drag,
-                                         gdouble offset_x,gdouble offset_y,LingStatusBar * self){
-    g_print("update\n");
-    //if(ison==0&&self->center_mode!=CENTER_MODE_NONE)return;
-    if(ison!=0);
-    else if(offset_y>0){
-        ison=1;
-        if(x<gtk_widget_get_width(GTK_WIDGET(self))/2){
-            //self->center_mode = CENTER_MODE_NOTICE;
-            ling_view_pager_show_page(LING_VIEW_PAGER(self->viewpager),1);
-        }else{
-            //self->center_mode = CENTER_MODE_CONTROL;
-            ling_view_pager_show_page(LING_VIEW_PAGER(self->viewpager),2);
-        }
-    }else{
-        ison=2;
-    }
-
-
-    if(ison==1){
-        LingOperate * op=ling_operate_get(shell->controler,"status_bar_drop");
-        if(ling_operate_start_operating(op))
-        {
-            gdouble a= offset_y/300;
-            ling_status_bar_set_drop_degree(self,a);
-            if(offset_y>100){
-                ling_operate_set_animation_cb(op,drop_down_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_down_finish,op->finish_data);
-            }else{
-                ling_operate_set_animation_cb(op,drop_up_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_up_finish,op->finish_data);
-            }
-        }
-    }
-}
-
-static void ling_status_bar_drag_end (GtkGestureDrag* drag,gdouble offset_x,
-                                      gdouble offset_y,LingStatusBar * self){
-    ling_operate_run_animation(ling_operate_get(shell->controler,"status_bar_drop"));
-}
-
-
-static void ling_status_bar_page_drag_begin (GtkGestureDrag* drag,gdouble start_x,
-                                        gdouble start_y,LingStatusBar * self){
-    ison=0;
-}
-
-static void ling_status_bar_page_drag_update (GtkGestureDrag* drag,
-                                         gdouble offset_x,gdouble offset_y,LingStatusBar * self){
-    if(ison!=0);
-    else if(offset_y<0){
-        ison=1;
-    }else{
-        ison=2;
-    }
-
-    if(ison==1){
-        LingOperate * op=ling_operate_get(shell->controler,"status_bar_drop");
-        if(ling_operate_start_operating(op))
-        {
-            gdouble a= 1+offset_y/300;
-            ling_status_bar_set_drop_degree(self,a);
-            if(offset_y>-100){
-                ling_operate_set_animation_cb(op,drop_down_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_down_finish,op->finish_data);
-            }else{
-                ling_operate_set_animation_cb(op,drop_up_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_up_finish,op->finish_data);
-            }
-        }
-    }
-}
-
-static void ling_status_bar_page_drag_end (GtkGestureDrag* drag,gdouble offset_x,
-                                      gdouble offset_y,LingStatusBar * self){
-    ling_operate_run_animation(ling_operate_get(shell->controler,"status_bar_drop"));
-}
-
-
 
 static void ling_status_bar_class_init(LingStatusBarClass * kalss){
 
@@ -333,40 +225,24 @@ static void ling_status_bar_init(LingStatusBar * self){
 
 }
 
-static void ling_status_bar_set_operate(LingStatusBar * self){
-    //拖拽
-    LingOperate * op_notice=ling_operate_add(shell->controler,"status_bar_drop",
-                                             drop_down_animation,self,
-                                             NULL,NULL,
-                                             drop_down_finish,self);
-    GtkGesture * drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self->statusbar),GTK_EVENT_CONTROLLER(drag));
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(ling_status_bar_drag_begin), self);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(ling_status_bar_drag_update), self);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(ling_status_bar_drag_end), self);
-
-    GtkGesture * swipe = gtk_gesture_swipe_new();
-    gtk_widget_add_controller(GTK_WIDGET(self->statusbar), GTK_EVENT_CONTROLLER(swipe));
-    g_signal_connect(swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op_notice);
-
+static void ling_status_bar_setting(LingStatusBar * self){
+    //页面
     self->viewpager = ling_view_pager_new();
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->viewpager),FALSE);
     ling_view_pager_set_dot_indicator(LING_VIEW_PAGER(self->viewpager),FALSE);
     gtk_widget_set_visible(self->viewpager,0);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->viewpager,LAYER_CENTER);
-    //gtk_widget_insert_before(self->viewpager,self->overlay,self->statusbar);
+    gtk_widget_set_size_request(self->viewpager,500,//gtk_widget_get_width(shell->lingoverlay),
+                                1000);//gtk_widget_get_height(shell->lingoverlay));
+    ling_operate_add(shell->controler,LING_STATUSBAR_CENTERBOX_OP_NAME,self->viewpager);
 
-    GtkGesture * drag_up = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self->viewpager),GTK_EVENT_CONTROLLER(drag_up));
-    g_signal_connect(drag_up, "drag-begin", G_CALLBACK(ling_status_bar_page_drag_begin), self);
-    g_signal_connect(drag_up, "drag-update", G_CALLBACK(ling_status_bar_page_drag_update), self);
-    g_signal_connect(drag_up, "drag-end", G_CALLBACK(ling_status_bar_page_drag_end), self);
-
+    //通知页
     self->page_notify = ling_notify_center_new();
     gtk_widget_set_hexpand(self->page_notify,1);
     gtk_widget_set_vexpand(self->page_notify,1);
     ling_view_pager_add_page(LING_VIEW_PAGER(self->viewpager),self->page_notify);
 
+    //控制页
     self->page_control = ling_control_center_new(self->overlay);
     gtk_widget_set_hexpand(self->page_control,1);
     gtk_widget_set_vexpand(self->page_control,1);
@@ -375,7 +251,7 @@ static void ling_status_bar_set_operate(LingStatusBar * self){
 
 GtkWidget * ling_status_bar_new(){
     LingStatusBar * self = LING_STATUS_BAR(g_object_new(LING_TYPE_STATUS_BAR,NULL));
-    ling_status_bar_set_operate(self);
+    ling_status_bar_setting(self);
     return GTK_WIDGET(self);
 }
 
@@ -386,41 +262,6 @@ int ling_status_bar_set_css_color(LingStatusBar * self){
     return 1;
 }
 
-void ling_status_bar_set_drop_degree(LingStatusBar *self,gdouble opacity){
-    if(opacity<=0)opacity=0;
-    if(opacity>1.0)opacity=1.0;
-    //self->center_mode = center_mode;
-    //GtkWidget * show,*hide;
-    int pos=ling_view_pager_get_pos(LING_VIEW_PAGER(self->viewpager));
-//    if(self->center_mode==CENTER_MODE_NOTICE){
-//        pos=1;
-//        //show=self->page_notify;
-//        //hide=self->page_control;
-//    }
-//    else{
-//        pos=2;
-//        //show=self->page_control;
-//        //hide=self->page_notify;
-//    }
-    if(opacity==0){
-        gtk_widget_set_opacity(self->statusbar,1);
-    }
-    else{
-        gtk_widget_set_opacity(self->statusbar,0);
-    }
-    gtk_widget_set_size_request(self->viewpager,gtk_widget_get_width(shell->bodybox),
-                                gtk_widget_get_height(shell->bodybox));
-    gtk_widget_set_visible(self->viewpager,TRUE);
-    ling_view_pager_show_page(LING_VIEW_PAGER(self->viewpager),pos);
-    //gtk_widget_set_visible(show,TRUE);
-    //gtk_widget_set_visible(hide,FALSE);
-    //gtk_widget_set_visible(shell->bodybox,0);
-
-    gtk_widget_set_opacity(self->viewpager,opacity);
-    uint blur = (uint)(opacity*CENTER_BLUR_PX);
-    ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),blur);
-}
-
 void ling_status_bar_set_page(LingStatusBar * self,uint center_mode){
     ling_view_pager_show_page(LING_VIEW_PAGER(self->viewpager),center_mode);
 }
@@ -429,4 +270,8 @@ LingOverlay * ling_status_bar_get_layer_center(LingStatusBar * self,uint * level
 //测试用，以后找更好的办法
     *level = LAYER_CENTER;
     return LING_OVERLAY(self->overlay);
+}
+
+void ling_status_bar_set_status_bar_opacity(LingStatusBar * self,gdouble opacity){
+    gtk_widget_set_opacity(self->statusbar,opacity);
 }

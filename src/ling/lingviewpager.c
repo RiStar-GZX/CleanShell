@@ -18,11 +18,11 @@ struct _LingViewPager{
     gboolean dots_able;
 
     //拖拽
-    gdouble start_x;
-    gdouble start_y;
+    // gdouble start_x;
+    // gdouble start_y;
     int ison;
 
-    gdouble offset_x;
+    //gdouble offset_x;
 };
 
 G_DEFINE_FINAL_TYPE(LingViewPager,ling_view_pager,GTK_TYPE_BOX)
@@ -40,127 +40,131 @@ gboolean gtk_widget_have_child(GtkWidget * parent,GtkWidget * child){
     return FALSE;
 }
 
-static gboolean ling_view_pager_animate(gpointer data,uint mode){
-    LingViewPager * self = LING_VIEW_PAGER(data);
-    GtkWidget * old = ling_view_pager_get_page_now(self);
-    double * old_x,old_y;
-    int x= self->offset_x;
-    int w = gtk_widget_get_width(old);
+void ling_view_pager_page_move(LingViewPager * self,gdouble x){
+    GtkWidget * page = ling_view_pager_get_page_now(self);
+    GtkWidget * page_new=NULL;
 
-    if(mode==LING_VIEW_PAGER_ANIMATE_MODE_LEFT){
-        x-=(w-abs(x))/10+3;
-        ling_view_pager_page_move(self,x);
-        if(x<=-gtk_widget_get_width(old)){
-            return LING_OPERATE_ANIMATION_REMOVE;
-        }
-    }
-    if(mode==LING_VIEW_PAGER_ANIMATE_MODE_RIGHT){
-        x+=(w-abs(x))/10+3;
-        ling_view_pager_page_move(self,x);
-        if(x>=gtk_widget_get_width(old)){
-            return LING_OPERATE_ANIMATION_REMOVE;
-        }
-        return LING_OPERATE_ANIMATION_CONTINUE;
-    }
-    if(mode==LING_VIEW_PAGER_ANIMATE_MODE_CENTER){
-        if(x<0){
-            x+=abs(x)/20+2;
-            if(x>=0){
-                ling_view_pager_page_move(self,0);
-                return LING_OPERATE_ANIMATION_REMOVE;
-            }
-            ling_view_pager_page_move(self,x);
-        }
-        if(x>=0){
-            x-=abs(x)/20+2;
-            if(x<=0){
-                ling_view_pager_page_move(self,0);
-                return LING_OPERATE_ANIMATION_REMOVE;
-            }
-            ling_view_pager_page_move(self,x);
+
+    gtk_fixed_move(GTK_FIXED(self->fixed),page,x,0);
+
+    int w = gtk_widget_get_width(page);
+    for(GtkWidget * c = gtk_widget_get_first_child(self->fixed);c!=NULL;c=gtk_widget_get_next_sibling(c)){
+        if(c!=page){
+            g_object_ref(c);
+            gtk_fixed_remove(GTK_FIXED(self->fixed),c);
         }
     }
 
-    return LING_OPERATE_ANIMATION_CONTINUE;
+    if(self->page_num<=1);
+    else if(x<0){
+        if(self->page_now_pos==self->page_num&&self->page_cycle){
+            page_new = ling_view_pager_get_page_by_pos(self,1);
+        }
+        else {
+            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos+1);
+        }
+
+        if(page_new!=NULL){
+            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x+w,0);
+            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x+w,0);
+        }
+    }
+    else if(x>0){
+        gtk_fixed_move(GTK_FIXED(self->fixed),page,x,0);
+        if(self->page_now_pos==1&&self->page_cycle){
+            page_new = ling_view_pager_get_page_by_pos(self,self->page_num);
+        }
+        else {
+            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos-1);
+        }
+
+        if(page_new!=NULL){
+            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x-w,0);
+            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x-w,0);
+        }
+    }
 }
 
-static gboolean ling_view_pager_animate_left(gdouble velocity_x,gdouble velocity_y,gpointer data){
-    return ling_view_pager_animate(data,LING_VIEW_PAGER_ANIMATE_MODE_LEFT);
+void ling_view_pager_page_move_ani(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
+    if(mode==1)ling_view_pager_page_move(user_data,(-progress)*5);
+    else ling_view_pager_page_move(user_data,(progress)*5);
 }
 
-static gboolean ling_view_pager_animate_right(gdouble velocity_x,gdouble velocity_y,gpointer data){
-    return ling_view_pager_animate(data,LING_VIEW_PAGER_ANIMATE_MODE_RIGHT);
-}
-
-static gboolean ling_view_pager_animate_center(gdouble velocity_x,gdouble velocity_y,gpointer data){
-    return ling_view_pager_animate(data,LING_VIEW_PAGER_ANIMATE_MODE_CENTER);
-}
-
-static void ling_view_pager_operate_finish_left(gpointer data){
+static void finish_left(GtkWidget * widget,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
-    ling_view_pager_next(self,FALSE);
+    //ling_view_pager_next(self,FALSE);
+    ling_view_pager_show_page(self,self->page_now_pos-1);
 }
 
-static void ling_view_pager_operate_finish_right(gpointer data){
+static void finish_right(GtkWidget * widget,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
-    ling_view_pager_prev(self,FALSE);
+    ling_view_pager_show_page(self,self->page_now_pos+1);
 }
 
-static void ling_view_pager_operate_finish_center(gpointer data){
+static void finish_center(GtkWidget * widget,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
     ling_view_pager_show_page(self,self->page_now_pos);
 }
 
-static void on_drag_begin (GtkGestureDrag* gedture,gdouble start_x,
-                          gdouble start_y,LingViewPager * self){
-    self->start_x = start_x;
-    self->start_y = start_y;
-    self->ison = 0;
-}
+static void drag_update(uint type,gdouble offset_x,gdouble offset_y,gpointer user_data){
+    LingViewPager * self = user_data;
+    LingOperate * op = self->op;
+    double p=fabs(offset_x/5);    //500
+    // op->ani_mode=0;
+    // if(offset_x<0)op->ani_mode=1;
+    // if(p>100)p=100;
 
-static void on_drag_update(GtkGestureDrag *gesture,
-                           gdouble offset_x,gdouble offset_y,LingViewPager * self) {
-    if(self->ison!=0);
-    else if((fabs(offset_x)>=fabs(offset_y))){
-        self->ison=1;
-    }
+    // if(offset_x<0&&type==OP_UPDATE_TYPE_LEFT){
+    //     if(ling_operate_start_operating(op)){
+    //         if((!self->page_cycle||self->page_num==1)&&self->page_now_pos==self->page_num){
+    //             if(p>30)p=30;
+    //             ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //             ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
+    //             op->ani_dir = LING_OPERATE_ANIMATION_DIR_BACK;
+    //         }
+    //         else{
+    //             if(p>20){
+    //                 ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //                 ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_left,self);
+    //                 op->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
+    //             }
+    //             else{
+    //                 ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //                 ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
+    //                 op->ani_dir = LING_OPERATE_ANIMATION_DIR_BACK;
+    //             }
+    //         }
+    //         op->ani_progress = fabs(p);
+    //         ling_view_pager_page_move_ani(0,0,p,self,op->ani_mode);
+    //     }
+    // }
+    // if(offset_x>0&&type==OP_UPDATE_TYPE_RIGHT){
+    //     if(ling_operate_start_operating(op)){
 
-    if(self->ison==1){
-        LingOperate * op = ling_operate_get(shell->controler,"view_pager");
-        if(ling_operate_start_operating(op)){
-            ling_view_pager_page_move(self,offset_x);
-            if(offset_x<-100){
-                if((!self->page_cycle||self->page_num==1)&&self->page_now_pos==self->page_num){
-                    ling_operate_set_animation_cb(op,ling_view_pager_animate_center,self);
-                    ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
-                }
-                else{
-                    ling_operate_set_animation_cb(op,ling_view_pager_animate_left,self);
-                    ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_left,self);
-                }
-            }
-            else if(offset_x>100){
-                if((!self->page_cycle||self->page_num==1)&&self->page_now_pos==1){
-                    ling_operate_set_animation_cb(op,ling_view_pager_animate_center,self);
-                    ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
-                }
-                else{
-                    ling_operate_set_animation_cb(op,ling_view_pager_animate_right,self);
-                    ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_right,self);
-                }
-            }
-            else{
-                ling_operate_set_animation_cb(op,ling_view_pager_animate_center,self);
-                ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
-            }
-        }
-    }
-}
+    //         if((!self->page_cycle||self->page_num==1)&&self->page_now_pos==1){
+    //             if(p>30)p=30;
+    //             ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //             ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
+    //             op->ani_dir = LING_OPERATE_ANIMATION_DIR_BACK;
+    //         }
+    //         else{
+    //             if(p>20){
+    //                 ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //                 ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_right,self);
+    //                 op->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
+    //             }
+    //             else{
+    //                 ling_operate_set_animation_cb(op,ling_view_pager_page_move_ani,self,op->ani_mode);
+    //                 ling_operate_set_finish_cb(op,ling_view_pager_operate_finish_center,self);
+    //                 op->ani_dir = LING_OPERATE_ANIMATION_DIR_BACK;
+    //             }
+    //         }
+    //         op->ani_progress = p;
+    //         ling_view_pager_page_move_ani(0,0,p,self,op->ani_mode);
+    //     }
+    // }
 
-static void on_drag_end(GtkGestureDrag *gesture,
-                        gdouble offset_x,gdouble offset_y,LingViewPager * self) {
-    ling_operate_run_animation(ling_operate_get(shell->controler,"view_pager"));
-    int i=1;
+    //g_print("p:%f\n",p);
 }
 
 static void ling_view_pager_class_init(LingViewPagerClass * klass){
@@ -193,16 +197,60 @@ static void ling_view_pager_init(LingViewPager * self){
     gtk_widget_set_valign(self->dots,GTK_ALIGN_END);
 }
 
+static gdouble progress_left(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    gdouble p= fabs(args.offset_x)/500*100;
+    LingViewPager * self = user_data;
+    if(self->page_now_pos==1&&p>30)p=30;
+    return p;
+}
+
+static gboolean release_left(GtkWidget * widget,LingActionArgs args,uint data){
+    LingViewPager * self = LING_VIEW_PAGER(widget);
+    if(self->page_now_pos==1)return LING_OPERATE_ANIMATION_DIR_BACK;
+    gdouble t=args.progress+fabs(args.offset_x)*0.5;
+    if(t>20)return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    else return LING_OPERATE_ANIMATION_DIR_BACK;
+}
+
+static gdouble progress_right(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    gdouble p= fabs(args.offset_x)/500*100;
+    LingViewPager * self = user_data;
+    if(self->page_now_pos==self->page_num&&p>30)p=30;
+    return p;
+}
+
+static gboolean release_right(GtkWidget * widget,LingActionArgs args,uint data){
+    LingViewPager * self = LING_VIEW_PAGER(widget);
+    if(self->page_now_pos==self->page_num)return LING_OPERATE_ANIMATION_DIR_BACK;
+    gdouble t=args.progress+fabs(args.offset_x)*0.5;
+    if(t>20)return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    else return LING_OPERATE_ANIMATION_DIR_BACK;
+}
+
+static void animation_left(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ling_view_pager_page_move_ani(args.offset_x,args.offset_y,args.progress,user_data,0);
+}
+
+static void animation_right(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ling_view_pager_page_move_ani(args.offset_x,args.offset_y,args.progress,user_data,1);
+}
+
 GtkWidget * ling_view_pager_new(){
     LingViewPager * self = LING_VIEW_PAGER(g_object_new(LING_TYPE_VIEW_PAGER,NULL));
     //gtk_widget_set_size_request(GTK_WIDGET(self->fixed), 500, 850);
-    self->op = ling_operate_add(shell->controler,"view_pager",NULL,self,NULL,self,NULL,self);
+    self->op = ling_operate_add(shell->controler,"view_pager",GTK_WIDGET(self));
+    ling_operate_add_action(self->op,LING_ACTION_DRAG_LEFT,
+                            progress_right,self,
+                            animation_right,self,
+                            release_right,0,
+                            finish_center,finish_right,self);
 
-    GtkGesture * drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(drag));
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), self);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), self);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), self);
+    ling_operate_add_action(self->op,LING_ACTION_DRAG_RIGHT,
+                            progress_left,self,
+                            animation_left,self,
+                            release_left,0,
+                            finish_center,finish_left,self);
+    //ling_operate_add_action(self->op,GTK_WIDGET(self),drag_update,self);
 
     return GTK_WIDGET(self);
 }
@@ -319,104 +367,64 @@ void ling_view_pager_set_page_cycle(LingViewPager * self,gboolean able){
     self->page_cycle = able;
 }
 
-gboolean ling_view_pager_next(LingViewPager * self,gboolean animate){
-    if(self->page_num==0)return FALSE;
-    //LingOperate * op = ling_operate_get(self->controler,"view_pager");
-    if(self->page_now_pos==self->page_num){
-        if(self->page_cycle&&self->page_num>1){
-            if(!animate)ling_view_pager_show_page(self,1);
-            else{
+// gboolean ling_view_pager_next(LingViewPager * self,gboolean animate){
+//     // if(self->page_num==0)return FALSE;
+//     // //LingOperate * op = ling_operate_get(self->controler,"view_pager");
+//     // if(self->page_now_pos==self->page_num){
+//     //     if(self->page_cycle&&self->page_num>1){
+//     //         if(!animate)ling_view_pager_show_page(self,1);
+//     //         else{
 
-                g_print("animate\n");
-                ling_operate_set_animation_cb(self->op,ling_view_pager_animate_left,self);
-                ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_left,self);
-                ling_operate_start_operating(self->op);
-                ling_operate_run_animation(self->op);
-            }
-        }
-        else return FALSE;
-    }
-    else {
-        if(!animate)ling_view_pager_show_page(self,self->page_now_pos+1);
-        else{
-            g_print("animate\n");
-            ling_operate_set_animation_cb(self->op,ling_view_pager_animate_left,self);
-            ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_left,self);
-            ling_operate_start_operating(self->op);
-            ling_operate_run_animation(self->op);
-        }
-    }
-    return TRUE;
-}
+//     //             g_print("animate\n");
+//     //             ling_operate_set_animation_cb(self->op,ling_view_pager_page_move_ani,self,0);
+//     //             ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_left,self);
+//     //             ling_operate_start_operating(self->op);
+//     //             ling_operate_run_animation(self->op);
+//     //         }
+//     //     }
+//     //     else return FALSE;
+//     // }
+//     // else {
+//     //     if(!animate)ling_view_pager_show_page(self,self->page_now_pos+1);
+//     //     else{
+//     //         g_print("animate\n");
+//     //         ling_operate_set_animation_cb(self->op,ling_view_pager_page_move_ani,self,0);
+//     //         ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_left,self);
+//     //         ling_operate_start_operating(self->op);
+//     //         ling_operate_run_animation(self->op);
+//     //     }
+//     // }
+//     return TRUE;
+// }
 
-gboolean ling_view_pager_prev(LingViewPager * self,gboolean animate){
-    if(self->page_num==0)return FALSE;
-    //LingOperate * op = ling_operate_get(self->controler,"view_pager");
-    if(self->page_now_pos==1){
-        if(self->page_cycle&&self->page_num>1){
-            if(!animate)ling_view_pager_show_page(self,self->page_num);
-            else{
+// gboolean ling_view_pager_prev(LingViewPager * self,gboolean animate){
+//     // if(self->page_num==0)return FALSE;
+//     // //LingOperate * op = ling_operate_get(self->controler,"view_pager");
+//     // if(self->page_now_pos==1){
+//     //     if(self->page_cycle&&self->page_num>1){
+//     //         if(!animate)ling_view_pager_show_page(self,self->page_num);
+//     //         else{
 
-                self->op->state=LING_OPERATE_STATE_WAITTING;
-                ling_operate_set_animation_cb(self->op,ling_view_pager_animate_right,self);
-                ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_right,self);
-                ling_operate_start_operating(self->op);
-                ling_operate_run_animation(self->op);
-            }
-        }
-        else return FALSE;
-    }
-    else {
-        if(!animate)ling_view_pager_show_page(self,self->page_now_pos-1);
-        else{
+//     //             self->op->state=LING_OPERATE_STATE_WAITTING;
+//     //             ling_operate_set_animation_cb(self->op,ling_view_pager_page_move_ani,self,0);
+//     //             ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_right,self);
+//     //             ling_operate_start_operating(self->op);
+//     //             ling_operate_run_animation(self->op);
+//     //         }
+//     //     }
+//     //     else return FALSE;
+//     // }
+//     // else {
+//     //     if(!animate)ling_view_pager_show_page(self,self->page_now_pos-1);
+//     //     else{
 
-            self->op->state=LING_OPERATE_STATE_WAITTING;
-            ling_operate_set_animation_cb(self->op,ling_view_pager_animate_right,self);
-            ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_right,self);
-            ling_operate_start_operating(self->op);
-            ling_operate_run_animation(self->op);
-        }
-    }
-    return TRUE;
-}
+//     //         self->op->state=LING_OPERATE_STATE_WAITTING;
+//     //         ling_operate_set_animation_cb(self->op,ling_view_pager_page_move_ani,self,0);
+//     //         ling_operate_set_finish_cb(self->op,ling_view_pager_operate_finish_right,self);
+//     //         ling_operate_start_operating(self->op);
+//     //         ling_operate_run_animation(self->op);
+//     //     }
+//     // }
+//     return TRUE;
+// }
 
-void ling_view_pager_page_move(LingViewPager * self,gdouble x){
-    GtkWidget * page = ling_view_pager_get_page_now(self);
-    GtkWidget * page_new=NULL;
-    gtk_fixed_move(GTK_FIXED(self->fixed),page,x,0);
-    int w = gtk_widget_get_width(page);
-    for(GtkWidget * c = gtk_widget_get_first_child(self->fixed);c!=NULL;c=gtk_widget_get_next_sibling(c)){
-        if(c!=page){
-            g_object_ref(c);
-            gtk_fixed_remove(GTK_FIXED(self->fixed),c);
-        }
-    }
-    if(self->page_num<=1);
-    else if(x<0){
-        if(self->page_now_pos==self->page_num&&self->page_cycle){
-            page_new = ling_view_pager_get_page_by_pos(self,1);
-        }
-        else {
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos+1);
-        }
-
-        if(page_new!=NULL){
-            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x+w,0);
-            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x+w,0);
-        }
-    }
-    else if(x>0){
-        if(self->page_now_pos==1&&self->page_cycle){
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_num);
-        }
-        else {
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos-1);
-        }
-
-        if(page_new!=NULL){
-            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x-w,0);
-            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x-w,0);
-        }
-    }
-    self->offset_x = x;
-}

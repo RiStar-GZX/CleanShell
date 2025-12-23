@@ -35,53 +35,53 @@ void ling_app_view_page_set_style(LingAppViewPage * page,style_info style){
                                //page->style_info.column_space-);
 }
 
-static int page_turn_timer_id=0;
+// static int page_turn_timer_id=0;
 
-static gboolean pager_prev_timeout(gpointer user_data){
-    LingViewPager * self = user_data;
+// static gboolean pager_prev_timeout(gpointer user_data){
+//     LingViewPager * self = user_data;
 
-    ling_view_pager_prev(self,TRUE);
-    return G_SOURCE_REMOVE;
-}
+//     ling_view_pager_prev(self,TRUE);
+//     return G_SOURCE_REMOVE;
+// }
 
-GdkDragAction left_enter (GtkDropTarget* drop,
-                          gdouble x,gdouble y,gpointer user_data){
-    g_print("left_enter\n");
-    LingAppViewPage * self = user_data;
-    GtkWidget * view_pager = gtk_widget_get_parent(GTK_WIDGET(self));
-    view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
-    view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
+// GdkDragAction left_enter (GtkDropTarget* drop,
+//                           gdouble x,gdouble y,gpointer user_data){
+//     g_print("left_enter\n");
+//     LingAppViewPage * self = user_data;
+//     GtkWidget * view_pager = gtk_widget_get_parent(GTK_WIDGET(self));
+//     view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
+//     view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
 
-    page_turn_timer_id = g_timeout_add(200,pager_prev_timeout,view_pager);
-    return GDK_ACTION_MOVE;
-}
+//     page_turn_timer_id = g_timeout_add(200,pager_prev_timeout,view_pager);
+//     return GDK_ACTION_MOVE;
+// }
 
-static gboolean pager_next_timeout(gpointer user_data){
-    LingViewPager * self = user_data;
-    ling_view_pager_next(self,TRUE);
-    return G_SOURCE_REMOVE;
-}
+// static gboolean pager_next_timeout(gpointer user_data){
+//     LingViewPager * self = user_data;
+//     ling_view_pager_next(self,TRUE);
+//     return G_SOURCE_REMOVE;
+// }
 
-GdkDragAction right_enter (GtkDropTarget* drop,
-                          gdouble x,gdouble y,gpointer user_data){
-    g_print("right_enter\n");
-    LingAppViewPage * self = user_data;
-    GtkWidget * view_pager = gtk_widget_get_parent(GTK_WIDGET(self));
-    view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
-    view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
+// GdkDragAction right_enter (GtkDropTarget* drop,
+//                           gdouble x,gdouble y,gpointer user_data){
+//     g_print("right_enter\n");
+//     LingAppViewPage * self = user_data;
+//     GtkWidget * view_pager = gtk_widget_get_parent(GTK_WIDGET(self));
+//     view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
+//     view_pager=gtk_widget_get_parent(GTK_WIDGET(view_pager));
 
-    page_turn_timer_id = g_timeout_add(200,pager_next_timeout,view_pager);
-    return GDK_ACTION_MOVE;
-}
+//     page_turn_timer_id = g_timeout_add(200,pager_next_timeout,view_pager);
+//     return GDK_ACTION_MOVE;
+// }
 
-static void drop_target_leave (GtkDropTarget* drop,gpointer user_data){
-    g_print("leave\n");
-    LingAppViewPage * self = user_data;
-    if(page_turn_timer_id!=0){
-        g_source_remove(page_turn_timer_id);
-        page_turn_timer_id=0;
-    }
-}
+// static void drop_target_leave (GtkDropTarget* drop,gpointer user_data){
+//     g_print("leave\n");
+//     LingAppViewPage * self = user_data;
+//     if(page_turn_timer_id!=0){
+//         g_source_remove(page_turn_timer_id);
+//         page_turn_timer_id=0;
+//     }
+// }
 
 
 GtkWidget * ling_app_view_page_new(style_info style_info){
@@ -104,15 +104,15 @@ GtkWidget * ling_app_view_page_new(style_info style_info){
     gtk_widget_set_hexpand(self->page_left,TRUE);
     gtk_widget_set_hexpand(self->page_right,TRUE);
 
-    GtkDropTarget * drop_left = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
-    g_signal_connect(drop_left,"enter",G_CALLBACK(left_enter),self);
-    g_signal_connect(drop_left,"leave",G_CALLBACK(drop_target_leave),self);
-    gtk_widget_add_controller(self->page_left,GTK_EVENT_CONTROLLER(drop_left));
+    // GtkDropTarget * drop_left = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
+    // g_signal_connect(drop_left,"enter",G_CALLBACK(left_enter),self);
+    // g_signal_connect(drop_left,"leave",G_CALLBACK(drop_target_leave),self);
+    // gtk_widget_add_controller(self->page_left,GTK_EVENT_CONTROLLER(drop_left));
 
-    GtkDropTarget * drop_right = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
-    g_signal_connect(drop_right,"enter",G_CALLBACK(right_enter),self);
-    g_signal_connect(drop_right,"leave",G_CALLBACK(drop_target_leave),self);
-    gtk_widget_add_controller(self->page_right,GTK_EVENT_CONTROLLER(drop_right));
+    // GtkDropTarget * drop_right = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
+    // g_signal_connect(drop_right,"enter",G_CALLBACK(right_enter),self);
+    // g_signal_connect(drop_right,"leave",G_CALLBACK(drop_target_leave),self);
+    // gtk_widget_add_controller(self->page_right,GTK_EVENT_CONTROLLER(drop_right));
 
     gtk_box_append(GTK_BOX(self),self->page_left);
     gtk_box_append(GTK_BOX(self),self->fixed_view);

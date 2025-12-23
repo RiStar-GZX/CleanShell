@@ -22,5 +22,6 @@ GtkWidget * ling_wallpaper_new(const char * path){
     gtk_picture_set_can_shrink(GTK_PICTURE(self->picture),1);
     gtk_widget_set_vexpand(self->picture,1);
     gtk_widget_set_hexpand(self->picture,1);
+    gtk_widget_add_css_class(GTK_WIDGET(self),"picture");
     return GTK_WIDGET(self);
 }

@@ -122,10 +122,79 @@ void ling_shell_class_init(LingShellClass * klass){
 void ling_shell_lock_screen_passed(LingLockScreen * lockscreen,gpointer user_data){
     LingShell * self = (LingShell *)user_data;
     gtk_widget_set_visible(self->lockscreen,FALSE);
+    gtk_widget_set_opacity(shell->statusbar,1);
+    self->mode = SHELL_MODE_DESKTOP;
+    gtk_widget_set_visible(self->desktop,TRUE);
 }
 
 void ling_shell_init(LingShell * self){
 
+}
+
+typedef struct switch3{
+    LingLayer * statusbar;
+    LingLayer * desktop;
+    LingLayer * lockscreen;
+}switch3;
+
+static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    switch3 * s = user_data;
+    GtkWidget * main=s->statusbar->widget,*sub;
+    if(shell->mode==SHELL_MODE_LOCKSCREEN){
+        sub=s->lockscreen->widget;
+        ling_lock_screen_set_wallpaper_blur(LING_LOCK_SCREEN(shell->lockscreen),(1-args.progress/100)*20);
+    }
+    if(shell->mode==SHELL_MODE_DESKTOP){
+        sub=s->desktop->widget;
+        ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(1-args.progress/100)*20);
+    }
+
+    gtk_widget_set_visible(main,TRUE);
+    gtk_widget_set_visible(sub,TRUE);
+    gtk_widget_set_margin_top(main,-(args.progress/100.00f)*30);
+    gtk_widget_set_margin_top(sub,30-(args.progress/100.00f)*30);
+
+    gtk_widget_set_opacity(sub,(args.progress/100));
+    gtk_widget_set_opacity(main,1-args.progress/100);
+    ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(args.progress/100));
+}
+
+void statusbar_center_s_finish(GtkWidget * widget,gpointer user_data){
+    switch3 * s = user_data;
+    GtkWidget * main=s->statusbar->widget,*sub;
+    if(shell->mode==SHELL_MODE_LOCKSCREEN){
+        sub=s->lockscreen->widget;
+        //gtk_widget_set_visible(s->desktop->widget,TRUE);
+    }
+    if(shell->mode==SHELL_MODE_DESKTOP){
+        sub=s->desktop->widget;
+        //gtk_widget_set_visible(s->lockscreen->widget,TRUE);
+    }
+    gtk_widget_set_visible(main,TRUE);
+    gtk_widget_set_visible(sub,FALSE);
+    gtk_widget_set_margin_top(main,0);
+    gtk_widget_set_margin_top(sub,0);
+    gtk_widget_set_opacity(main,1);
+    gtk_widget_set_opacity(sub,1);
+}
+
+void statusbar_center_e_finish(GtkWidget * widget,gpointer user_data){
+    switch3 * s = user_data;
+    GtkWidget * main=s->statusbar->widget,*sub;
+    if(shell->mode==SHELL_MODE_LOCKSCREEN){
+        sub=s->lockscreen->widget;
+        //gtk_widget_set_visible(s->desktop->widget,TRUE);
+    }
+    if(shell->mode==SHELL_MODE_DESKTOP){
+        sub=s->desktop->widget;
+        //gtk_widget_set_visible(s->lockscreen->widget,TRUE);
+    }
+    gtk_widget_set_visible(main,FALSE);
+    gtk_widget_set_visible(sub,TRUE);
+    gtk_widget_set_margin_top(main,0);
+    gtk_widget_set_margin_top(sub,0);
+    gtk_widget_set_opacity(main,1);
+    gtk_widget_set_opacity(sub,1);
 }
 
 void ling_shell_setting(LingShell * self){
@@ -139,16 +208,12 @@ void ling_shell_setting(LingShell * self){
     //更新器
     self->updater = ling_sys_info_updater_new();
     ling_sys_info_updater_add_type(self->updater,INFO_UPDATER_TIME,update_time_info_cb,NULL);
+
     //层叠
     self->lingoverlay = ling_overlay_new();
     gtk_widget_set_hexpand(self->lingoverlay,1);
     gtk_widget_set_vexpand(self->lingoverlay,1);
     gtk_box_append(GTK_BOX(self),self->lingoverlay);
-
-
-
-    self->desktop = ling_desktop_new();
-    ling_overlay_add_layer(LING_OVERLAY(self->lingoverlay),self->desktop,LAYER_DESKTOP);
 
     //状态栏
     self->statusbar = ling_status_bar_new();
@@ -157,21 +222,51 @@ void ling_shell_setting(LingShell * self){
     ling_overlay_add_layer(LING_OVERLAY(self->lingoverlay),self->statusbar,LAYER_STATUSBAR);
     gtk_widget_set_valign(self->statusbar,GTK_ALIGN_START);
 
+    //桌面
+    self->desktop = ling_desktop_new();
+    ling_overlay_add_layer(LING_OVERLAY(self->lingoverlay),self->desktop,LAYER_DESKTOP);
+
+
     //锁屏
     self->lockscreen = ling_lock_screen_new();
     ling_overlay_add_layer(LING_OVERLAY(self->lingoverlay),self->lockscreen,LAYER_LOCKSCREEN);
     g_signal_connect(self->lockscreen,"passed",G_CALLBACK(ling_shell_lock_screen_passed),self);
+    self->mode = SHELL_MODE_LOCKSCREEN;
+    gtk_widget_set_visible(self->desktop,FALSE);
 
-    // GtkWidget * fixed = gtk_fixed_new();
-    // gtk_widget_set_vexpand(fixed,TRUE);
-    // gtk_widget_set_hexpand(fixed,TRUE);
-    // GtkWidget * button = gtk_label_new("das");
-    // gtk_widget_set_valign(button,GTK_ALIGN_FILL);
-    // gtk_widget_set_halign(button,GTK_ALIGN_FILL);
-    // gtk_widget_add_css_class(button,"keyboard");
-    // gtk_fixed_put(GTK_FIXED(fixed),button,20,20);
+    //ling_shell_lock_screen_passed(LING_LOCK_SCREEN(self->lockscreen),self);
 
-    // gtk_box_append(GTK_BOX(self),fixed);
+    //下拉状态栏
+    switch3 * s = malloc(sizeof(switch3));
+    uint sb_level,dt_level,ls_level;
+    LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sb_level);
+    LingLayer * sb_lay=ling_overlay_get_layer(sb_overlay,sb_level);
+    s->statusbar = sb_lay;
+    LingOverlay * dt_overlay =  ling_desktop_get_layer_bodybox(LING_DESKTOP(shell->desktop),&dt_level);
+    LingLayer * dt_lay=ling_overlay_get_layer(dt_overlay,dt_level);
+    s->desktop = dt_lay;
+    LingOverlay * ls_overlay =  ling_lock_screen_get_layer_cover(LING_LOCK_SCREEN(shell->lockscreen),&ls_level);
+    LingLayer * ls_lay=ling_overlay_get_layer(ls_overlay,ls_level);
+    s->lockscreen = ls_lay;
+
+    ling_operate_add_action(ling_operate_get(shell->controler,LING_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,
+                            ling_layer_progress,NULL,
+                            statusbar_center_ani,s,
+                            ling_layer_release,1,
+                            statusbar_center_s_finish,statusbar_center_e_finish,s);
+
+    ling_operate_add_action(ling_operate_get(shell->controler,LING_DESKTOP_BODYBOX_OP_NAME),LING_ACTION_DRAG_DOWN,
+                            ling_layer_progress,NULL,
+                            statusbar_center_ani,s,
+                            ling_layer_release,1,
+                            statusbar_center_s_finish,statusbar_center_e_finish,s);
+
+    ling_operate_add_action(ling_operate_get(shell->controler,LING_STATUSBAR_CENTERBOX_OP_NAME),LING_ACTION_DRAG_UP,
+                            ling_layer_progress,NULL,
+                            statusbar_center_ani,s,
+                            ling_layer_release,0,
+                            statusbar_center_s_finish,statusbar_center_e_finish,s);
+
 }
 
 GtkWidget * ling_shell_start(){

@@ -421,20 +421,20 @@ int ling_fixed_view_add_item_free(LingFixedView * fixed_view,LingFixedViewItem *
     item->y=y;
     gtk_fixed_put(GTK_FIXED(fixed_view->fixed),GTK_WIDGET(item),x,y);
 
-    GtkGesture * drag = gtk_gesture_drag_new();
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), item);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), item);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), item);
-    gtk_widget_add_controller(GTK_WIDGET(item), GTK_EVENT_CONTROLLER(drag));
-    item->drag = drag;
+    // GtkGesture * drag = gtk_gesture_drag_new();
+    // g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), item);
+    // g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), item);
+    // g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), item);
+    // gtk_widget_add_controller(GTK_WIDGET(item), GTK_EVENT_CONTROLLER(drag));
+    // item->drag = drag;
 
-    GtkDragSource * drag_source = gtk_drag_source_new ();
-    gtk_drag_source_set_actions(drag_source, GDK_ACTION_MOVE);
-    //g_signal_connect (drag_source, "prepare", G_CALLBACK (on_drag_source_prepare), item);
-    g_signal_connect (drag_source, "drag-begin", G_CALLBACK (on_drag_source_begin), item);
-    g_signal_connect (drag_source, "drag-end", G_CALLBACK (on_drag_source_end), item);
-    gtk_widget_add_controller (GTK_WIDGET (item), GTK_EVENT_CONTROLLER (drag_source));
-    item->drag_source = drag_source;
+    // GtkDragSource * drag_source = gtk_drag_source_new ();
+    // gtk_drag_source_set_actions(drag_source, GDK_ACTION_MOVE);
+    // //g_signal_connect (drag_source, "prepare", G_CALLBACK (on_drag_source_prepare), item);
+    // g_signal_connect (drag_source, "drag-begin", G_CALLBACK (on_drag_source_begin), item);
+    // g_signal_connect (drag_source, "drag-end", G_CALLBACK (on_drag_source_end), item);
+    // gtk_widget_add_controller (GTK_WIDGET (item), GTK_EVENT_CONTROLLER (drag_source));
+    // item->drag_source = drag_source;
 
     return 1;
 }
@@ -719,7 +719,7 @@ a:
     return 1;
 }
 
-static gboolean chain_move_animate(gdouble velocity_x,gdouble velocity_y,gpointer user_data){
+static void chain_move_animate(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
     LingFixedView * fv = user_data;
     int num=0;
     for(GtkWidget * w=gtk_widget_get_first_child(fv->fixed);w!=NULL;w=gtk_widget_get_next_sibling(w)){
@@ -746,10 +746,10 @@ static gboolean chain_move_animate(gdouble velocity_x,gdouble velocity_y,gpointe
     }
     if(num==0){
         //fv->is_moving=0;
-        return LING_OPERATE_ANIMATION_REMOVE;
+        // return LING_OPERATE_ANIMATION_REMOVE;
     }
     fv->is_moving=1;
-    return LING_OPERATE_ANIMATION_CONTINUE;
+    // return LING_OPERATE_ANIMATION_CONTINUE;
 }
 
 static void chain_move_end(gpointer user_data){
@@ -811,7 +811,7 @@ GtkWidget * ling_fixed_view_new(uint arrange,uint column_num,uint row_num,uint c
     LingFixedView * self = LING_FIXED_VIEW(g_object_new(LING_TYPE_FIXED_VIEW,NULL));
     ling_fixed_view_set_grid_info(self,arrange,column_num,row_num,column_space,row_space);
 
-    self->chain_move_op = ling_operate_add(shell->controler,"chain_move",chain_move_animate,self,NULL,self,chain_move_end,self);
+    //self->chain_move_op = ling_operate_add(shell->controler,"chain_move",self);
     return GTK_WIDGET(self);
 }
 
@@ -924,11 +924,11 @@ static void ling_fixed_view_init(LingFixedView * self){
     self->fixed = gtk_fixed_new();
     gtk_box_append(GTK_BOX(self),self->fixed);
 
-    GtkDropTarget * drop_target = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
-    g_signal_connect (drop_target, "motion", G_CALLBACK (motion), self);
-    g_signal_connect (drop_target, "drop", G_CALLBACK (drop), self);
-    g_signal_connect (drop_target, "accept", G_CALLBACK (accept), self);
-    gtk_widget_add_controller (GTK_WIDGET (self), GTK_EVENT_CONTROLLER (drop_target));
+    // GtkDropTarget * drop_target = gtk_drop_target_new(LING_TYPE_FIXED_VIEW_ITEM,GDK_ACTION_MOVE);
+    // g_signal_connect (drop_target, "motion", G_CALLBACK (motion), self);
+    // g_signal_connect (drop_target, "drop", G_CALLBACK (drop), self);
+    // g_signal_connect (drop_target, "accept", G_CALLBACK (accept), self);
+    // gtk_widget_add_controller (GTK_WIDGET (self), GTK_EVENT_CONTROLLER (drop_target));
 
     g_signal_connect(self,"state_flags_changed",G_CALLBACK(state_flags_changed),self);
     //g_signal_connect(self,"show",G_CALLBACK(show),self);

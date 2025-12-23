@@ -1,18 +1,5 @@
 #include "lingoverlay.h"
 
-typedef struct LingLayer{
-    GtkWidget * widget;
-    uint8_t level;
-    GtkGesture * drag;
-    GtkGesture * swipe;
-    GList * switchers;
-}LingLayer;
-
-typedef struct switcher{
-    LingLayer * to;
-    uint op_type;   //操作类型
-    uint ani_type;  //动画类型
-}switcher;
 
 struct _LingOverlay{
     GtkBox parent;
@@ -38,7 +25,7 @@ GtkWidget * ling_overlay_new(){
 }
 
 
-static LingLayer * get_layer(LingOverlay * overlay,uint lay){
+LingLayer * ling_overlay_get_layer(LingOverlay * overlay,uint lay){
     for(GList * l=overlay->layers;l!=NULL;l=l->next){
         LingLayer * layer = (LingLayer *)l->data;
         if(layer->level==lay)return layer;
@@ -46,89 +33,12 @@ static LingLayer * get_layer(LingOverlay * overlay,uint lay){
     return NULL;
 }
 
-static switcher * get_switcher(LingLayer * layer,uint op_type){
-    for(GList * l=layer->switchers;l!=NULL;l=l->next){
-        switcher * s = (switcher*)l->data;
-        if(s->op_type==op_type)return s;
-    }
-    return NULL;
-}
-
-// static void layer_set_blur(LingLayer * layer,uint blur){
-//     char str[100];
-//     sprintf(str,"box { filter: blur(%dpx); }",blur);
-//     GtkCssProvider * provider = gtk_css_provider_new();
-//     gtk_css_provider_load_from_data(provider,
-//                                     str, -1);
-//     gtk_style_context_add_provider(gtk_widget_get_style_context(layer->widget),
-//                                    GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-// }
-
-void drag_begin(GtkGestureDrag* self,
-                   gdouble start_x,gdouble start_y,gpointer user_data){
-}
-
-static void fade_animate(LingLayer * main,LingLayer * sub,gdouble offset_x,gdouble offset_y){
-    if(offset_y<-300){
-        gtk_widget_set_visible(main->widget,FALSE);
-        gtk_widget_set_visible(sub->widget,TRUE);
-    }
-    else if(offset_y<0){
-        gtk_widget_set_margin_top(main->widget,offset_y*0.1);
-        gtk_widget_set_margin_top(sub->widget,30+offset_y*0.1);
-        gtk_widget_set_visible(main->widget,TRUE);
-        gtk_widget_set_visible(sub->widget,TRUE);
-        gtk_widget_set_opacity(main->widget,1-fabs(offset_y)/300);
-        gtk_widget_set_opacity(sub->widget,fabs(offset_y)/300);
-    }
-    if(offset_y>300){
-        gtk_widget_set_visible(main->widget,FALSE);
-        gtk_widget_set_visible(sub->widget,TRUE);
-    }
-    else if(offset_y>0){
-        gtk_widget_set_margin_top(main->widget,30+offset_y*0.1);
-        gtk_widget_set_margin_top(sub->widget,-30+offset_y*0.1);
-        gtk_widget_set_visible(main->widget,TRUE);
-        gtk_widget_set_visible(sub->widget,TRUE);
-        gtk_widget_set_opacity(main->widget,1-fabs(offset_y)/300);
-        gtk_widget_set_opacity(sub->widget,fabs(offset_y)/300);
-    }
-}
-
-void drag_update(GtkGestureDrag* self,
-                    gdouble offset_x,gdouble offset_y,gpointer user_data){
-    LingLayer * layer = (LingLayer*)user_data;
-    if(offset_y<-10){
-        switcher * s = get_switcher(layer,LING_OVERLAY_OP_SWIPE_UP);
-        if(s&&s->ani_type==LING_OVERLAY_ANIMATE_FADE){
-            fade_animate(layer,s->to,offset_x,offset_y);
-        }
-    }
-    if(offset_y>10){
-        switcher * s = get_switcher(layer,LING_OVERLAY_OP_SWIPE_DOWN);
-        if(s&&s->ani_type==LING_OVERLAY_ANIMATE_FADE){
-            fade_animate(layer,s->to,offset_x,offset_y);
-        }
-    }
-}
-
-void drag_end(GtkGestureDrag* self,
-                 gdouble offset_x,gdouble offset_y,gpointer user_data){
-
-}
 
 int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level){
     //从小到大排列，小在上，大在下
     LingLayer * layer_new = malloc(sizeof(LingLayer));
     layer_new->widget = widget;
     layer_new->level = level;
-    layer_new->switchers=NULL;
-    layer_new->drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(layer_new->widget), GTK_EVENT_CONTROLLER(layer_new->drag));
-    g_signal_connect(layer_new->drag, "drag-begin", G_CALLBACK(drag_begin), layer_new);
-    g_signal_connect(layer_new->drag, "drag-update", G_CALLBACK(drag_update), layer_new);
-    g_signal_connect(layer_new->drag, "drag-end", G_CALLBACK(drag_end), layer_new);
-
 
     int pos=0;
     for(GList * now = self->layers;now!=NULL;now = now->next){
@@ -152,27 +62,78 @@ int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level){
 }
 
 
-//前主后从
-void ling_overlay_add_switch(LingOverlay * overlay_m,uint lay_main,
-                             uint op_type,uint ani_type,
-                             LingOverlay * overlay_s,uint lay_sub){
-    LingLayer * lay_m = get_layer(overlay_m,lay_main);
-    LingLayer * lay_s  = get_layer(overlay_s,lay_sub);
-    if(lay_m==NULL||lay_s==NULL)return;
-
-    switcher * s;
-    if((s=get_switcher(lay_m,op_type))!=NULL){
-        //对已经有的进行修改
-        s->op_type = op_type;
-        s->ani_type =ani_type;
-        s->to = lay_s;
-        return;
+gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    //y正方向起点为100，终点为0
+    gdouble p;
+    gdouble y = args.offset_y;
+    if(y<0){
+        if(y<-300)y=-300;
+        p=-(y/300)*100;
     }
-
-    s = malloc(sizeof(switcher));
-    s->op_type = op_type;
-    s->ani_type =ani_type;
-    s->to = lay_s;
-    lay_m->switchers = g_list_append(lay_m->switchers,s);
+    else{
+        if(y>300)y=300;
+        p=100-(y/300)*100;
+    }
+    //g_print("p:%f\n",p);
+    return p;
 }
 
+gboolean ling_layer_release(GtkWidget * widget,LingActionArgs args,uint user_data){
+    gdouble t=fabs(args.offset_y)+fabs(args.velocity_y);
+    if(t<100){
+        if(user_data==1)return LING_OPERATE_ANIMATION_DIR_FORWARD;
+        else return LING_OPERATE_ANIMATION_DIR_BACK;
+    }
+    else{
+        if(user_data==1)return LING_OPERATE_ANIMATION_DIR_BACK;
+        else LING_OPERATE_ANIMATION_DIR_FORWARD;
+    }
+    return LING_OPERATE_ANIMATION_DIR_FORWARD;
+}
+
+
+void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
+                           LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
+                           uint m_op_type,
+                           ANIMATION ani,PROGRESS progress,RELEASE release,FINISH main_f,FINISH sub_f){
+    switcher * s = malloc(sizeof(switcher));
+    LingLayer * main=ling_overlay_get_layer(overlay_m,lay_main);
+    LingLayer * sub=ling_overlay_get_layer(overlay_s,lay_sub);
+    s->main = main;
+    s->sub = sub;
+
+    ling_operate_add_action(op_m,m_op_type,
+                            progress,NULL,       //0->100
+                            ani,s,
+                            release,0,
+                            main_f,sub_f,s);
+
+    uint s_op_type=LING_ACTION_DRAG_NONE;
+    if(m_op_type==LING_ACTION_DRAG_UP)s_op_type = LING_ACTION_DRAG_DOWN;
+    if(m_op_type==LING_ACTION_DRAG_DOWN)s_op_type = LING_ACTION_DRAG_UP;
+    ling_operate_add_action(op_s,s_op_type,
+                            progress,NULL,       //100->0
+                            ani,s,
+                            release,1,                          //1反转使成功操作变成100->0
+                            main_f,sub_f,s);
+}
+
+void ling_layer_main_finish(GtkWidget * widget,gpointer user_data){
+    switcher * s = user_data;
+    gtk_widget_set_visible(s->main->widget,TRUE);
+    gtk_widget_set_visible(s->sub->widget,FALSE);
+    gtk_widget_set_margin_top(s->main->widget,0);
+    gtk_widget_set_margin_top(s->sub->widget,0);
+    gtk_widget_set_opacity(s->main->widget,1);
+    gtk_widget_set_opacity(s->sub->widget,1);
+}
+
+void ling_layer_sub_finish(GtkWidget * widget,gpointer user_data){
+    switcher * s = user_data;
+    gtk_widget_set_visible(s->main->widget,FALSE);
+    gtk_widget_set_visible(s->sub->widget,TRUE);
+    gtk_widget_set_margin_top(s->main->widget,0);
+    gtk_widget_set_margin_top(s->sub->widget,0);
+    gtk_widget_set_opacity(s->main->widget,1);
+    gtk_widget_set_opacity(s->sub->widget,1);
+}

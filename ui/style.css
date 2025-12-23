@@ -246,10 +246,10 @@ fixed { min-width: 100%; min-height: 100%; }
     font-family: "Times New Roman", Georgia, serif;
     color:rgba(230,200,100,1);
 }
-
+/*
 .layer_back {
     /*background-image: url('file:///home/gzx/Pictures/wallpaper3.png');*/
-    background-color: rgba(255, 200, 200, 0.80);
+    /*background-color: rgba(255, 200, 200, 0.80);
     background-size: cover;
-    /*filter: blur(10px);*/
-}
+    /*filter: blur(10px);
+}*/

@@ -42,47 +42,6 @@ gboolean brightess_change_value (GtkRange* range,GtkScrollType* scroll,
     return FALSE;
 }
 
-
-static int ison;
-static gdouble x;
-static void on_drag_begin (GtkGestureDrag* gedture,gdouble start_x,
-                           gdouble start_y,LingControlCenter * self){
-    ison=0;
-}
-
-static void on_drag_update(GtkGestureDrag *gesture,
-                           gdouble offset_x,gdouble offset_y,LingControlCenter * self) {
-    if(fabs(offset_x)>fabs(offset_y)){
-        ison=1;
-    }else if(offset_y<0){
-        ison=2;
-    }
-    else ison=3;
-
-    if(ison==2){
-        LingOperate * op=ling_operate_get(shell->controler,"status_bar_drop");
-        if(ling_operate_start_operating(op))
-        {
-            gdouble a= 1.0-(-offset_y)/300;
-            ling_status_bar_set_drop_degree(LING_STATUS_BAR(shell->statusbar),a);
-            if(offset_y>-100){
-                ling_operate_set_animation_cb(op,drop_down_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_down_finish,op->finish_data);
-            }else{
-                ling_operate_set_animation_cb(op,drop_up_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drop_up_finish,op->finish_data);
-            }
-        }
-    }
-}
-
-static void on_drag_end(GtkGestureDrag *gesture,
-                        gdouble offset_x,gdouble offset_y,LingControlCenter * self) {
-    ling_operate_run_animation(ling_operate_get(shell->controler,"status_bar_drop"));
-}
-
-
-
 static void ling_control_center_class_init(LingControlCenterClass * klass){
 
 }
@@ -92,12 +51,6 @@ static void ling_control_center_init(LingControlCenter * self){
 
     self->center_head = ling_center_head_new();
     gtk_box_append(GTK_BOX(self),self->center_head);
-
-    GtkGesture * drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self),GTK_EVENT_CONTROLLER(drag));
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), self);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), self);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), self);
 }
 
 
@@ -108,7 +61,6 @@ GtkWidget * ling_control_center_new(GtkWidget * overlay){
     self->overlay = overlay;
 
     self->grid = ling_fixed_view_new(LING_FIXED_VIEW_ARRANGE_GRID,4,7,10,10);
-    //ling_grid_set_press_cb(LING_GRID(self->grid),LING_GRID_PRESS_MIDDLE,LING_GRID_PRESS_CB_FOLDER);
     //gtk_widget_set_margin_top(self->grid,20);
     gtk_widget_set_margin_bottom(self->grid,64);
     gtk_widget_set_margin_start(self->grid,20);

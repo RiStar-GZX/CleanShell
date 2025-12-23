@@ -26,54 +26,54 @@ G_DEFINE_FINAL_TYPE(LingAppDrawer,ling_app_drawer,GTK_TYPE_BOX)
 //    return G_SOURCE_REMOVE;
 //}
 
-static int x,y,ison;
-void ling_app_drawer_drag_begin (GtkGestureDrag* gedture,gdouble start_x,
-                                 gdouble start_y,LingAppDrawer *self){
-    ison=0;
-    //self->timer_id = g_timeout_add(500,press_timeout,self);
-}
+// static int x,y,ison;
+// void ling_app_drawer_drag_begin (GtkGestureDrag* gedture,gdouble start_x,
+//                                  gdouble start_y,LingAppDrawer *self){
+//     ison=0;
+//     //self->timer_id = g_timeout_add(500,press_timeout,self);
+// }
 
-static void ling_app_drawer_drag_update(GtkGestureDrag *gesture,
-                                        gdouble offset_x,gdouble offset_y,LingAppDrawer *self) {
-    int top =gtk_widget_get_margin_top(shell->drawer);
-    int h = gtk_widget_get_height(shell->bodybox);
-    gdouble up = top+offset_y;
-    if(ison!=0);
-    else if(up>0){
-        ison=1;
-        g_source_remove(self->timer_id);
-        self->timer_id=0;
-    }
-    if(ison==1){
-        LingOperate * op = ling_operate_get(shell->controler,"drawer");
-        if(ling_operate_start_operating(op)){
-            if(up<0)up=0;
-            if(up>h/9){
-                ling_operate_set_animation_cb(op,drawerdown_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drawerdown_finish,op->finish_data);
-            }
-            else{
-                ling_operate_set_animation_cb(op,drawerup_animation,op->animation_data);
-                ling_operate_set_finish_cb(op,drawerup_finish,op->finish_data);
-            }
-            gtk_widget_set_visible(shell->bodybox,1);
-            ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-            ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),0);
-            gtk_widget_set_margin_top(shell->drawer,up);
-        }
-    }
-    if(ison==2){
+// static void ling_app_drawer_drag_update(GtkGestureDrag *gesture,
+//                                         gdouble offset_x,gdouble offset_y,LingAppDrawer *self) {
+//     int top =gtk_widget_get_margin_top(shell->drawer);
+//     int h = gtk_widget_get_height(shell->bodybox);
+//     gdouble up = top+offset_y;
+//     if(ison!=0);
+//     else if(up>0){
+//         ison=1;
+//         g_source_remove(self->timer_id);
+//         self->timer_id=0;
+//     }
+//     if(ison==1){
+//         LingOperate * op = ling_operate_get(shell->controler,"drawer");
+//         if(ling_operate_start_operating(op)){
+//             if(up<0)up=0;
+//             if(up>h/9){
+//                 ling_operate_set_animation_cb(op,drawerdown_animation,op->animation_data);
+//                 ling_operate_set_finish_cb(op,drawerdown_finish,op->finish_data);
+//             }
+//             else{
+//                 ling_operate_set_animation_cb(op,drawerup_animation,op->animation_data);
+//                 ling_operate_set_finish_cb(op,drawerup_finish,op->finish_data);
+//             }
+//             gtk_widget_set_visible(shell->bodybox,1);
+//             ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
+//             ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),0);
+//             gtk_widget_set_margin_top(shell->drawer,up);
+//         }
+//     }
+//     if(ison==2){
 
-    }
-}
+//     }
+// }
 
-static void ling_app_drawer_drag_end(GtkGestureDrag *gesture,
-                                     gdouble offset_x,
-                                     gdouble offset_y,
-                                     LingAppDrawer *self) {
-    ling_operate_run_animation(ling_operate_get(shell->controler,"drawer"));
-    ling_operate_run_animation(ling_operate_get(shell->controler,"drawer_app"));
-}
+// static void ling_app_drawer_drag_end(GtkGestureDrag *gesture,
+//                                      gdouble offset_x,
+//                                      gdouble offset_y,
+//                                      LingAppDrawer *self) {
+//     ling_operate_run_animation(ling_operate_get(shell->controler,"drawer"));
+//     ling_operate_run_animation(ling_operate_get(shell->controler,"drawer_app"));
+// }
 
 void ling_app_drawer_class_init(LingAppDrawerClass * klass){
 
@@ -157,21 +157,21 @@ GtkWidget * ling_app_drawer_new(){
     //gtk_grid_set_row_spacing(GTK_GRID(self->drawer),row_space);
 
 
-    LingOperate * op = ling_operate_add(shell->controler,"drawer_app",NULL,self,NULL,self,NULL,self);
+    //LingOperate * op = ling_operate_add(shell->controler,"drawer_app",NULL,self,NULL,self,NULL,self);
     //gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(self->sw),self->drawer);
     //gtk_box_append(GTK_BOX(self),self->sw);
     gtk_box_append(GTK_BOX(self),self->drawer);
 
 
-    GtkGesture * drag = gtk_gesture_drag_new();
-    gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(drag));
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(ling_app_drawer_drag_begin), self);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(ling_app_drawer_drag_update), self);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(ling_app_drawer_drag_end), self);
+    // GtkGesture * drag = gtk_gesture_drag_new();
+    // gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(drag));
+    // g_signal_connect(drag, "drag-begin", G_CALLBACK(ling_app_drawer_drag_begin), self);
+    // g_signal_connect(drag, "drag-update", G_CALLBACK(ling_app_drawer_drag_update), self);
+    // g_signal_connect(drag, "drag-end", G_CALLBACK(ling_app_drawer_drag_end), self);
 
-    GtkGesture * swipe = gtk_gesture_swipe_new();
-    gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(swipe));
-    g_signal_connect(swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op);
+    // GtkGesture * swipe = gtk_gesture_swipe_new();
+    // gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(swipe));
+    // g_signal_connect(swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op);
 
     gtk_widget_add_css_class(GTK_WIDGET(self),"app-drawer");
 
