@@ -86,27 +86,27 @@ void ling_app_drawer_init(LingAppDrawer * self){
 
 }
 
-static void drag_start(LingFixedViewItem * item,gpointer user_data){
-    LingAppDrawer * drawer = user_data;
-    ling_fixed_view_item_set_drag_source_content(item);
-    gtk_widget_set_margin_top(GTK_WIDGET(drawer),gtk_widget_get_height(shell->drawer));
-    //gtk_widget_set_margin_top(GTK_WIDGET(drawer->share_info->drawer),gtk_widget_get_height(drawer->share_info->drawer));
-    gtk_widget_set_opacity(shell->bodybox,1);
-    //gtk_widget_set_opacity(GTK_WIDGET(drawer),0);
-    //gtk_widget_set_visible(GTK_WIDGET(drawer),0);
-    gtk_widget_set_visible(GTK_WIDGET(shell->bodybox),1);
-    //gtk_widget_set_visible(GTK_WIDGET(fv),FALSE);
-}
+// static void drag_start(LingFixedViewItem * item,gpointer user_data){
+//     LingAppDrawer * drawer = user_data;
+//     ling_fixed_view_item_set_drag_source_content(item);
+//     gtk_widget_set_margin_top(GTK_WIDGET(drawer),gtk_widget_get_height(shell->drawer));
+//     //gtk_widget_set_margin_top(GTK_WIDGET(drawer->share_info->drawer),gtk_widget_get_height(drawer->share_info->drawer));
+//     gtk_widget_set_opacity(shell->bodybox,1);
+//     //gtk_widget_set_opacity(GTK_WIDGET(drawer),0);
+//     //gtk_widget_set_visible(GTK_WIDGET(drawer),0);
+//     gtk_widget_set_visible(GTK_WIDGET(shell->bodybox),1);
+//     //gtk_widget_set_visible(GTK_WIDGET(fv),FALSE);
+// }
 
 gboolean ling_app_drawer_add_item(LingAppDrawer *self,app_info * info,
                                   int column,int row,int width,int height){
     GtkWidget * item =ling_app_item_new();
     ling_app_item_set(LING_APP_ITEM(item),info,64,TRUE);
-    GtkWidget * fixed_item = ling_fixed_view_item_new(item);
-    ling_fixed_view_add_grid(LING_FIXED_VIEW(self->drawer),LING_FIXED_VIEW_ITEM(fixed_item),width,height,column,row);
-    ling_fixed_view_item_set_remove_on_drag(LING_FIXED_VIEW_ITEM(fixed_item),TRUE);
+    //GtkWidget * fixed_item = ling_fixed_view_item_new(item);
+    ling_grid_attach_item(LING_GRID(self->drawer),item,column,row,width,height);
+    //ling_fixed_view_item_set_remove_on_drag(LING_FIXED_VIEW_ITEM(fixed_item),TRUE);
     //ling_fixed_view_item_set_content_copy_func(LING_FIXED_VIEW_ITEM(fixed_item),ling_app_item_copy);
-    ling_fixed_view_item_set_middle_press_cb(LING_FIXED_VIEW_ITEM(fixed_item),drag_start,NULL,self);
+    //ling_fixed_view_item_set_middle_press_cb(LING_FIXED_VIEW_ITEM(fixed_item),drag_start,NULL,self);
 
     return 1;
 }
@@ -148,7 +148,7 @@ GtkWidget * ling_app_drawer_new(){
     //ling_grid_set_press_cb(LING_GRID(self->drawer),LING_GRID_PRESS_MIDDLE,hide_drawer,self);
     int column_space=30;
     int row_space=30;
-    self->drawer = ling_fixed_view_new(LING_FIXED_VIEW_ARRANGE_GRID,5,10,10,10);
+    self->drawer = ling_grid_new(5,10,column_space,row_space);
     gtk_widget_set_margin_top(self->drawer,row_space);
     gtk_widget_set_margin_bottom(self->drawer,row_space);
     gtk_widget_set_margin_start(self->drawer,column_space);

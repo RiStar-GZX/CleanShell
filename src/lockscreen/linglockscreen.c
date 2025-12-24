@@ -82,6 +82,7 @@ static void lks_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     gtk_widget_set_visible(s->sub->widget,TRUE);
     gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
     gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
+    gtk_widget_set_margin_bottom(s->sub->widget,(args.progress/100.00f)*30);
 
     gtk_widget_set_opacity(s->main->widget,1-(args.progress/100));
     gtk_widget_set_opacity(s->sub->widget,args.progress/100);
@@ -112,17 +113,17 @@ GtkWidget * ling_lock_screen_new(){
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),GTK_WIDGET(self->cover_box),LAYER_COVER);
 
     //验证页
-    self->verify_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,200);
+    self->verify_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
 
     self->dots = ling_dots_new(6,DOTS_MODE_MULTI);
     gtk_widget_set_halign(self->dots,GTK_ALIGN_BASELINE_CENTER);
-    gtk_widget_set_margin_top(self->dots,150);
+    gtk_widget_set_margin_top(self->dots,240);
     ling_dots_ativate(LING_DOTS(self->dots),0);
     self->keyboard = ling_keyboard_new();
-    gtk_widget_set_margin_top(self->keyboard,100);
-    gtk_widget_set_margin_bottom(self->keyboard,150);
-    gtk_widget_set_margin_end(self->keyboard,30);
-    gtk_widget_set_margin_start(self->keyboard,30);
+    gtk_widget_set_margin_top(self->keyboard,80);
+    gtk_widget_set_margin_bottom(self->keyboard,220);
+    gtk_widget_set_margin_end(self->keyboard,80);
+    gtk_widget_set_margin_start(self->keyboard,80);
     g_signal_connect(self->keyboard, "clicked",
                      G_CALLBACK(keyboard_clicked), self);
     gtk_box_append(GTK_BOX(self->verify_box),self->dots);
@@ -143,60 +144,6 @@ GtkWidget * ling_lock_screen_new(){
                           LING_ACTION_DRAG_UP,lks_ani,ling_layer_progress,ling_layer_release,
                           ling_layer_main_finish,ling_layer_sub_finish);
 
-
-    // ling_layer_add_switch(ling_operate_get(shell->controler,LING_STATUSBAR_CENTERBOX_NAME),sb_overlay,level,
-    //                       cover_op,LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                       LING_ACTION_DRAG_UP,center_ani,ling_overlay_layer_progress,ling_overlay_layer_release,
-    //                       ling_layer_main_finish,ling_layer_sub_finish);
-
-    // switcher * s2 = malloc(sizeof(switcher));
-    // s2->main = cover;
-    // s2->sub  = center_box;
-    // ling_operate_add_action(cover_op,LING_ACTION_DRAG_DOWN,
-    //                         ling_overlay_layer_progress,cover->widget,
-    //                         lks_ani2,s2,
-    //                         lks_release,1,
-    //                         lks_sub_finish,lks_sub_finish,s2);
-
-
-    // LingOperate * status_op = ling_operate_add(shell->controler,"lockscreen_verify",verify->widget);
-    // ling_operate_add_action(cover_op,LING_ACTION_DRAG_DOWN,
-    //                         ling_overlay_layer_progress,cover->widget,
-    //                         lks_ani2,s2,
-    //                         lks_release,1,
-    //                         lks_sub_finish,lks_sub_finish,s2);
-
-
-
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                         OP_UPDATE_TYPE_UP,LING_OVERLAY(self->overlay),LAYER_VERIFY,
-    //                         lks_ani_up,switch_main_finish,switch_sub_finish);
-
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_VERIFY,
-    //                         OP_UPDATE_TYPE_DOWN,LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                         lks_ani_down,switch_main_finish,switch_sub_finish);
-
-
-
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                         OP_UPDATE_TYPE_DOWN,sb_overlay,level,
-    //                         lks_ani_down2,switch_main_finish,
-    //                         switch_sub_finish);
-
-    // ling_overlay_add_switch(sb_overlay,level,
-    //                         OP_UPDATE_TYPE_UP,LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                         lks_ani_up2,switch_main_finish,switch_sub_finish);
-
-    // uint level;
-    // LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&level);
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_COVER,
-    //                         LING_OVERLAY_OP_SWIPE_DOWN,LING_OVERLAY_ANIMATE_FADE,sb_overlay,level);
-
-    // ling_overlay_add_switch(sb_overlay,level,
-    //                         LING_OVERLAY_OP_SWIPE_UP,LING_OVERLAY_ANIMATE_FADE,LING_OVERLAY(self->overlay),LAYER_COVER);
-
-    //ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_COVER,LAYER_VERIFY,0,0,LING_OVERLAY_SHOW_UP);
-
     return GTK_WIDGET(self);
 }
 
@@ -204,6 +151,7 @@ LingOverlay * ling_lock_screen_get_layer_cover(LingLockScreen * self,uint * leve
     *level = LAYER_COVER;
     return LING_OVERLAY(self->overlay);
 }
+
 
 void ling_lock_screen_set_wallpaper_blur(LingLockScreen * self,uint blur){
     GString * str=g_string_new("");

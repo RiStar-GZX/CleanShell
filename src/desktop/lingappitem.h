@@ -3,7 +3,6 @@
 #include <gtk/gtk.h>
 #include <lingshell.h>
 #include <lingdesktop.h>
-#include <lingfixedview.h>
 
 G_BEGIN_DECLS
 
@@ -21,8 +20,8 @@ void ling_app_item_set_label_visible(LingAppItem * self,gboolean visible);
 
 app_info * ling_app_item_get_app_info(LingAppItem * self);
 
-void ling_app_item_drag_start(LingFixedViewItem * item,gpointer user_data);
+// void ling_app_item_drag_start(LingFixedViewItem * item,gpointer user_data);
 
-void ling_app_item_drag_end(LingFixedViewItem * item,gpointer item_data,gpointer fv_data);
+// void ling_app_item_drag_end(LingFixedViewItem * item,gpointer item_data,gpointer fv_data);
 
 G_END_DECLS

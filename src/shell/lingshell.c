@@ -234,7 +234,7 @@ void ling_shell_setting(LingShell * self){
     self->mode = SHELL_MODE_LOCKSCREEN;
     gtk_widget_set_visible(self->desktop,FALSE);
 
-    //ling_shell_lock_screen_passed(LING_LOCK_SCREEN(self->lockscreen),self);
+    ling_shell_lock_screen_passed(LING_LOCK_SCREEN(self->lockscreen),self);
 
     //下拉状态栏
     switch3 * s = malloc(sizeof(switch3));
@@ -252,21 +252,28 @@ void ling_shell_setting(LingShell * self){
     ling_operate_add_action(ling_operate_get(shell->controler,LING_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
-                            ling_layer_release,1,
+                            ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
     ling_operate_add_action(ling_operate_get(shell->controler,LING_DESKTOP_BODYBOX_OP_NAME),LING_ACTION_DRAG_DOWN,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
-                            ling_layer_release,1,
+                            ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
     ling_operate_add_action(ling_operate_get(shell->controler,LING_STATUSBAR_CENTERBOX_OP_NAME),LING_ACTION_DRAG_UP,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
-                            ling_layer_release,0,
+                            ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
+    uint sbb_level;
+    ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sbb_level);
+    ling_operate_add_action(ling_operate_get(shell->controler,LING_STATUSBAR_BAR_OP_NAME),LING_ACTION_DRAG_DOWN,
+                            ling_layer_progress,NULL,
+                            statusbar_center_ani,s,
+                            ling_layer_release,NULL,
+                            statusbar_center_s_finish,statusbar_center_e_finish,s);
 }
 
 GtkWidget * ling_shell_start(){

@@ -10,7 +10,7 @@ static void ling_dot_class_init(LingDotClass * klass){
 }
 
 static void ling_dot_init(LingDot * self){
-    gtk_widget_set_size_request(GTK_WIDGET(self), 10, 10);
+    //gtk_widget_set_size_request(GTK_WIDGET(self), 10, 10);
     gtk_widget_add_css_class(GTK_WIDGET(self), "dot");
 }
 //gtk_widget_remove_css_class(dot, "dot");
@@ -108,7 +108,10 @@ void ling_dots_set_num(LingDots * dots,uint num){
     dots->dots_num = num;
     if(a>0){
         for(int i=0;i<a;i++){
-            GtkWidget * dot = ling_dot_new();
+            GtkWidget * dot = gtk_button_new();//ling_dot_new();
+            gtk_widget_set_hexpand(dot,TRUE);
+            gtk_widget_set_vexpand(dot,TRUE);
+            gtk_widget_add_css_class(dot, "dot");
             gtk_box_append(GTK_BOX(dots),dot);
         }
     }
@@ -170,7 +173,7 @@ static void ling_dots_class_init(LingDotsClass * klass){
 }
 
 static void ling_dots_init(LingDots * self){
-
+    gtk_box_set_spacing(GTK_BOX(self),10);
 }
 
 GtkWidget * ling_dots_new(uint num,uint mode){

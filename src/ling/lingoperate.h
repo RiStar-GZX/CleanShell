@@ -51,11 +51,12 @@ typedef struct LingActionArgs{
     gdouble velocity_x;
     gdouble velocity_y;
     gdouble progress;
+    uint action;
 }LingActionArgs;
 
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
-typedef gboolean (*RELEASE)(GtkWidget * widget,LingActionArgs args,uint data);  //pos
+typedef gboolean (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
 
 typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
@@ -71,7 +72,7 @@ typedef struct LingAction{
 
     //松手
     RELEASE release;
-    uint release_data;
+    gpointer release_data;
     //gpointer release_data;
 
     //动画
@@ -156,7 +157,7 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
 void ling_operate_add_action(LingOperate * op,uint type,
                              PROGRESS progress,gpointer progress_data,
                              ANIMATION animate,gpointer animate_data,
-                             RELEASE release,uint release_data,
+                             RELEASE release,gpointer release_data,
                              FINISH finish_s,FINISH finish_e,gpointer finish_data);
 
 #endif // LINGOPERATE_H

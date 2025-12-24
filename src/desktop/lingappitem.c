@@ -72,50 +72,50 @@ void ling_app_item_drag_finish(gpointer data){
 static int ison;
 static gdouble x,y;
 static int timeout;
-static gboolean long_press_timeout(gpointer user_data){
-    timeout =1;
-    LingAppItem * self = LING_APP_ITEM(user_data);
-    LingOperate * op=ling_operate_get(shell->controler,"app_drag");
-    if(ling_operate_start_operating(op)){
-        //ling_app_item_set_drag(self,x,y);
-    }
-    return 0;
-}
-static void drag_begin (GtkGestureDrag* gesture,gdouble start_x,
-                        gdouble start_y,LingAppItem *self){
-    ison=0;
-    timeout=0;
-    x=start_x;
-    y=start_y;
-    self->timer_id = g_timeout_add(500, long_press_timeout, self);
-}
+// static gboolean long_press_timeout(gpointer user_data){
+//     timeout =1;
+//     LingAppItem * self = LING_APP_ITEM(user_data);
+//     LingOperate * op=ling_operate_get(shell->controler,"app_drag");
+//     if(ling_operate_start_operating(op)){
+//         //ling_app_item_set_drag(self,x,y);
+//     }
+//     return 0;
+// }
+// static void drag_begin (GtkGestureDrag* gesture,gdouble start_x,
+//                         gdouble start_y,LingAppItem *self){
+//     ison=0;
+//     timeout=0;
+//     x=start_x;
+//     y=start_y;
+//     self->timer_id = g_timeout_add(500, long_press_timeout, self);
+// }
 
-static void drag_update(GtkGestureDrag *gesture,
-                        gdouble offset_x,
-                        gdouble offset_y,
-                        LingAppItem *self) {
-    if(ison!=0);
-    else if(timeout==1){
-        ison=1;
-    }
-    if(ison==1){
-        LingOperate * op=ling_operate_get(shell->controler,"app_drag");
-        if(ling_operate_start_operating(op)){
-            //g_print("update\n");
-            //gtk_widget_set_margin_start(shell->drag_icon,offset_x);
-            //gtk_widget_set_margin_top(shell->drag_icon,offset_y);
-        }
-    }
-}
+// static void drag_update(GtkGestureDrag *gesture,
+//                         gdouble offset_x,
+//                         gdouble offset_y,
+//                         LingAppItem *self) {
+//     if(ison!=0);
+//     else if(timeout==1){
+//         ison=1;
+//     }
+//     if(ison==1){
+//         LingOperate * op=ling_operate_get(shell->controler,"app_drag");
+//         if(ling_operate_start_operating(op)){
+//             //g_print("update\n");
+//             //gtk_widget_set_margin_start(shell->drag_icon,offset_x);
+//             //gtk_widget_set_margin_top(shell->drag_icon,offset_y);
+//         }
+//     }
+// }
 
-static void drag_end(GtkGestureDrag *gesture,
-                     gdouble offset_x,
-                     gdouble offset_y,
-                     LingAppItem *self) {
+// static void drag_end(GtkGestureDrag *gesture,
+//                      gdouble offset_x,
+//                      gdouble offset_y,
+//                      LingAppItem *self) {
 
-    //gtk_overlay_remove_overlay(GTK_OVERLAY(shell->overlay),self->drag_image);
-    ling_operate_run_animation(ling_operate_get(shell->controler,"app_drag"));
-}
+//     //gtk_overlay_remove_overlay(GTK_OVERLAY(shell->overlay),self->drag_image);
+//     ling_operate_run_animation(ling_operate_get(shell->controler,"app_drag"));
+// }
 
 
 
@@ -171,18 +171,18 @@ void ling_app_item_set_label_visible(LingAppItem * self,gboolean visible){
 }
 
 
-void ling_app_item_drag_start(LingFixedViewItem * item,gpointer user_data){
-    LingFixedView * fv = user_data;
-    //GtkWidget * w = gtk_image_new_from_icon_name("firefox");
-    ling_fixed_view_item_set_drag_source_content(item);
+// void ling_app_item_drag_start(LingFixedViewItem * item,gpointer user_data){
+//     LingFixedView * fv = user_data;
+//     //GtkWidget * w = gtk_image_new_from_icon_name("firefox");
+//     ling_fixed_view_item_set_drag_source_content(item);
 
-    GtkWidget * app_item = ling_fixed_view_item_get_content(item);
-    ling_app_item_set_label_visible(LING_APP_ITEM(app_item),FALSE);
-}
+//     GtkWidget * app_item = ling_fixed_view_item_get_content(item);
+//     ling_app_item_set_label_visible(LING_APP_ITEM(app_item),FALSE);
+// }
 
-void ling_app_item_drag_end(LingFixedViewItem * item,gpointer item_data,gpointer fv_data){
-    if(item_data==NULL||fv_data==NULL)return;
-    GtkWidget * app_item = ling_fixed_view_item_get_content(item);
-    int * visible = fv_data;
-    ling_app_item_set_label_visible(LING_APP_ITEM(app_item),*visible);
-}
+// void ling_app_item_drag_end(LingFixedViewItem * item,gpointer item_data,gpointer fv_data){
+//     if(item_data==NULL||fv_data==NULL)return;
+//     GtkWidget * app_item = ling_fixed_view_item_get_content(item);
+//     int * visible = fv_data;
+//     ling_app_item_set_label_visible(LING_APP_ITEM(app_item),*visible);
+// }

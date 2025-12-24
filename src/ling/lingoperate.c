@@ -135,6 +135,7 @@ static LingActionArgs operate_action_args(LingOperate * op,uint action_type){
     args.velocity_x = op->velocity_x;
     args.velocity_y = op->velocity_y;
     args.progress = op->actions[action_type].ani_progress;
+    args.action = action_type;
     return args;
 }
 
@@ -338,7 +339,7 @@ static void operate_drag_end(GtkGestureDrag* self,
 void ling_operate_add_action(LingOperate * op,uint type,
                              PROGRESS progress,gpointer progress_data,
                              ANIMATION animate,gpointer animate_data,
-                             RELEASE release,uint release_data,
+                             RELEASE release,gpointer release_data,
                              FINISH finish_s,FINISH finish_e,gpointer finish_data){
     LingAction * act = &op->actions[type];
     act->progress = progress;

@@ -6,7 +6,7 @@
 #include <lingnotifyitem.h>
 #include <lingdesktop.h>
 #include <lingstatusbar.h>
-#include <lingfixedview.h>
+#include <linggrid.h>
 #include <lingcontrolbutton.h>
 #include <lingcontrolmedia.h>
 #include <lingwlanlist.h>

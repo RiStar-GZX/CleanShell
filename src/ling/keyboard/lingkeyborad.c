@@ -1,5 +1,5 @@
 #include "lingkeyborad.h"
-#include <lingfixedview.h>
+#include <linggrid.h>
 
 enum {
     CLICKED,
@@ -49,12 +49,12 @@ static void button_clicked (GtkButton* self,gpointer user_data){
     g_signal_emit_by_name(arg->keyboard,"clicked",arg->c);
 }
 
-static void add_item(LingKeyboard * self,LingFixedView * fv,char * label,char out,uint column,uint row){
+static void add_item(LingKeyboard * self,LingGrid * grid,char * label,char out,uint column,uint row){
     GtkWidget * button = gtk_button_new_with_label(label);
     gtk_widget_set_vexpand(button,TRUE);
     gtk_widget_set_hexpand(button,TRUE);
-    GtkWidget * item = ling_fixed_view_item_new(button);
-    ling_fixed_view_add_grid(LING_FIXED_VIEW(fv),LING_FIXED_VIEW_ITEM(item),1,1,column,row);
+    //GtkWidget * item = ling_fixed_view_item_new(button);
+    ling_grid_attach_item(LING_GRID(grid),button,column,row,1,1);
     click_args * arg = malloc(sizeof(click_args));
     arg->c = out;
     arg->keyboard=self;
@@ -63,21 +63,21 @@ static void add_item(LingKeyboard * self,LingFixedView * fv,char * label,char ou
 }
 
 static void keyboard_init(LingKeyboard * self){
-    self->fv = ling_fixed_view_new(LING_FIXED_VIEW_ARRANGE_GRID,3,4,20,20);
+    self->fv = ling_grid_new(3,4,30,30);
     gtk_box_append(GTK_BOX(self),self->fv);
     gtk_widget_set_vexpand(GTK_WIDGET(self->fv),TRUE);
     gtk_widget_set_hexpand(GTK_WIDGET(self->fv),TRUE);
-    add_item(self,LING_FIXED_VIEW(self->fv),"0",'0',2,4);
-    add_item(self,LING_FIXED_VIEW(self->fv),"1",'1',1,1);
-    add_item(self,LING_FIXED_VIEW(self->fv),"2",'2',2,1);
-    add_item(self,LING_FIXED_VIEW(self->fv),"3",'3',3,1);
-    add_item(self,LING_FIXED_VIEW(self->fv),"4",'4',1,2);
-    add_item(self,LING_FIXED_VIEW(self->fv),"5",'5',2,2);
-    add_item(self,LING_FIXED_VIEW(self->fv),"6",'6',3,2);
-    add_item(self,LING_FIXED_VIEW(self->fv),"7",'7',1,3);
-    add_item(self,LING_FIXED_VIEW(self->fv),"8",'8',2,3);
-    add_item(self,LING_FIXED_VIEW(self->fv),"9",'9',3,3);
-    add_item(self,LING_FIXED_VIEW(self->fv),"X",'X',1,4);
+    add_item(self,LING_GRID(self->fv),"0",'0',2,4);
+    add_item(self,LING_GRID(self->fv),"1",'1',1,1);
+    add_item(self,LING_GRID(self->fv),"2",'2',2,1);
+    add_item(self,LING_GRID(self->fv),"3",'3',3,1);
+    add_item(self,LING_GRID(self->fv),"4",'4',1,2);
+    add_item(self,LING_GRID(self->fv),"5",'5',2,2);
+    add_item(self,LING_GRID(self->fv),"6",'6',3,2);
+    add_item(self,LING_GRID(self->fv),"7",'7',1,3);
+    add_item(self,LING_GRID(self->fv),"8",'8',2,3);
+    add_item(self,LING_GRID(self->fv),"9",'9',3,3);
+    add_item(self,LING_GRID(self->fv),"X",'X',1,4);
 }
 
 GtkWidget * ling_keyboard_new(){

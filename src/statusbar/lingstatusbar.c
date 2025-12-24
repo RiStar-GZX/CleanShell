@@ -160,7 +160,10 @@ void drop_up_finish(gpointer data){
     LingStatusBar * self = LING_STATUS_BAR(data);
 //    gtk_widget_set_visible(self->page_control,0);
 //    gtk_widget_set_visible(self->page_notify,0);
-    gtk_widget_set_visible(LING_DESKTOP(shell->desktop)->bodybox,1);
+    uint level;
+    LingOverlay * overlay = ling_desktop_get_layer_bodybox(LING_DESKTOP(shell->desktop),&level);
+    LingLayer * layer = ling_overlay_get_layer(overlay,level);
+    gtk_widget_set_visible(layer->widget,1);
     gtk_widget_set_visible(self->viewpager,0);
     gtk_widget_set_opacity(self->statusbar,1);
 
@@ -184,6 +187,7 @@ static void ling_status_bar_init(LingStatusBar * self){
     self->statusbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,3);
     gtk_widget_set_margin_top(self->statusbar,3);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->statusbar,LAYER_STATUSBAR);
+    ling_operate_add(shell->controler,LING_STATUSBAR_BAR_OP_NAME,self->statusbar);
 
 
     //添加控件
@@ -227,7 +231,7 @@ static void ling_status_bar_init(LingStatusBar * self){
 
 static void ling_status_bar_setting(LingStatusBar * self){
     //页面
-    self->viewpager = ling_view_pager_new();
+    self->viewpager = ling_view_pager_new_with_op();
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->viewpager),FALSE);
     ling_view_pager_set_dot_indicator(LING_VIEW_PAGER(self->viewpager),FALSE);
     gtk_widget_set_visible(self->viewpager,0);
@@ -267,8 +271,12 @@ void ling_status_bar_set_page(LingStatusBar * self,uint center_mode){
 }
 
 LingOverlay * ling_status_bar_get_layer_center(LingStatusBar * self,uint * level){
-//测试用，以后找更好的办法
     *level = LAYER_CENTER;
+    return LING_OVERLAY(self->overlay);
+}
+
+LingOverlay * ling_status_bar_get_layer_bar(LingStatusBar * self,uint * level){
+    *level = LAYER_STATUSBAR;
     return LING_OVERLAY(self->overlay);
 }
 

@@ -15,8 +15,8 @@ add_executable(clean-shell main.c
     src/ling/lingoperate.h
     src/ling/lingsysinfo.c
     src/ling/lingsysinfo.h
-    src/ling/lingfixedview.h
-    src/ling/lingfixedview.c
+    src/ling/linggrid.c
+    src/ling/linggrid.h
     src/ling/lingviewpager.h
     src/ling/lingviewpager.c
     src/ling/lingdots.c
@@ -60,7 +60,8 @@ add_executable(clean-shell main.c
     src/ling/lingsysinfoupdater.c
     src/ling/lingsysinfoupdater.h
 
-
+    src/taskswitcher/lingtaskswitcher.c
+    src/taskswitcher/lingtaskswitcher.c
 )
 
 find_package(PkgConfig REQUIRED)
@@ -125,9 +126,11 @@ include_directories(./src/ling)
 include_directories(./src/ling/keyboard)
 include_directories(./src/ling/assembly)
 include_directories(./src/ling/notify)
+include_directories(./src/taskswitcher)
 include_directories(./src/lockscreen)
 include_directories(./ui)
 include_directories(./src/shell)
+
 
 file(GLOB MY_RESOURCES "./ui/*.css")
 

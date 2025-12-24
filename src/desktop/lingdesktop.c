@@ -3,18 +3,54 @@
 #include <lingappitem.h>
 #include <lingappdrawer.h>
 #include <lingstatusbar.h>
-#include <lingfixedview.h>
 #include <lingdatasaver.h>
 #include <lingwallpaper.h>
+#include <lingtaskswitcher.h>
 
 #define DESKTOP_ICON_INI_PATH "~/.local/share/clean/desktop_icon.ini"
 
 enum{
     LAYER_TOP = 0,
     LAYER_DRAWER,
+    LAYER_TASK_SWITCHER,
+    LAYER_APP,
     LAYER_BODYBOX,
     LAYER_WALLPAPER,
     LAYER_END = 255
+};
+
+struct _LingDesktop{
+    GtkBox parent;
+
+    GtkWidget * overlay;
+    //状态栏
+    //GtkWidget * status_bar;
+    //主体
+    GtkWidget * bodybox;
+
+    //页面
+    GtkWidget * view_pager;
+
+    //底栏
+    GtkWidget * dock; //gtkgrid
+    //GList * dock_app_items;
+
+
+    GtkWidget * drawer; //抽屉
+
+    //
+    GtkWidget * task_switcher;
+
+    uint app_num;   //只在ling_desktop_page_load_test使用(抛弃)
+
+    style_info style_info;
+
+    //share_info share_info; //共享信息
+
+    GtkWidget * wallpaper;  //GtkPicture
+    uint blur;
+
+    //LingDataSaver * data_saver;
 };
 
 G_DEFINE_FINAL_TYPE(LingDesktop,ling_desktop,GTK_TYPE_BOX)
@@ -39,7 +75,7 @@ gboolean ling_desktop_page_load_test(LingDesktop * self,LingAppViewPage * page){
     GList * app = shell->app_info;
     for(int i=0;i<self->app_num;i++)app=app->next;
 
-    for(int r=5;r<=self->style_info.row_num;r++){
+    for(int r=6;r<=self->style_info.row_num;r++){
         for(int c=1;c<=self->style_info.column_num;c++){
             app_info * info = (app_info*)app->data;
             GtkWidget * item = ling_app_item_new();
@@ -54,27 +90,12 @@ gboolean ling_desktop_page_load_test(LingDesktop * self,LingAppViewPage * page){
     return 1;
 }
 
-//static void drag_start(LingFixedViewItem * item,gpointer user_data){
-//    LingFixedView * fv = user_data;
-//    ling_fixed_view_item_set_drag_source_content(item);
-
-//    GtkWidget * app_item = ling_fixed_view_item_get_content(item);
-//    ling_app_item_set_label_visible(LING_APP_ITEM(app_item),FALSE);
-//}
-
-//static void drag_end(LingFixedViewItem * item,gpointer user_data){
-//    GtkWidget * app_item = ling_fixed_view_item_get_content(item);
-//    ling_app_item_set_label_visible(LING_APP_ITEM(app_item),FALSE);
-//}
 
 gboolean ling_desktop_dock_add_item(LingDesktop * self,app_info * info,uint column){
     LingAppItem * item = LING_APP_ITEM(ling_app_item_new());
     ling_app_item_set(item,info,self->style_info.icon_size,FALSE);
 
-    GtkWidget * fixed_item =ling_fixed_view_item_new(GTK_WIDGET(item));
-    ling_fixed_view_item_set_remove_on_drag(LING_FIXED_VIEW_ITEM(fixed_item),TRUE);
-    ling_fixed_view_add_grid(LING_FIXED_VIEW(self->dock),LING_FIXED_VIEW_ITEM(fixed_item),1,1,column,1);
-    ling_fixed_view_item_set_middle_press_cb(LING_FIXED_VIEW_ITEM(fixed_item),ling_app_item_drag_start,ling_app_item_drag_end,self->dock);
+    ling_grid_attach_item(LING_GRID(self->dock),GTK_WIDGET(item),column,1,1,1);
 
     return 1;
 }
@@ -92,82 +113,6 @@ static void ling_desktop_class_init(LingDesktopClass * klass){
     object_class->dispose = ling_desktop_dispose;
 }
 
-
-// void drawerup_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data){
-//     LingShell * shell=(LingShell *)data;
-//     int top = gtk_widget_get_margin_top(shell->drawer);
-//     int h = gtk_widget_get_height(shell->bodybox);
-//     //FIX
-//     gdouble min = top/20;
-//     min+=5+fabs(velocity_y)/100;
-//     gtk_widget_set_margin_top(shell->drawer,top-min);
-//     ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-// }
-
-
-
-// void drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data){
-//     LingShell * shell = (LingShell*)user_data;
-//     int top = gtk_widget_get_margin_top(shell->drawer);
-//     int h = gtk_widget_get_height(shell->bodybox);
-
-//     if(top<h){
-//         gdouble plus = (h-top)/20;
-//         plus+=5+fabs(velocity_y)/100;
-//         gtk_widget_set_margin_top(shell->drawer,top+plus);
-//         ling_desktop_set_opacity(shell->bodybox,shell->drawer,h);
-//     }/*else{
-//         return LING_OPERATE_ANIMATION_REMOVE;
-//     }
-//     return LING_OPERATE_ANIMATION_CONTINUE;*/
-// }
-
-// void drawerup_finish(gpointer data){
-//     LingShell * shell=(LingShell *)(data);
-//     gtk_widget_set_opacity(shell->drawer,1.0);
-//     gtk_widget_set_opacity(shell->bodybox,1.0);
-//     gtk_widget_set_margin_top(shell->drawer,0);
-//     gtk_widget_set_visible(shell->drawer,TRUE);
-//     gtk_widget_set_visible(shell->bodybox,FALSE);
-// }
-
-// void drawerdown_finish(gpointer data){
-//     LingShell * shell=(LingShell *)data;
-//     gtk_widget_set_opacity(shell->drawer,1.0);
-//     gtk_widget_set_opacity(shell->bodybox,1.0);
-//     gtk_widget_set_margin_top(shell->drawer,gtk_widget_get_height(shell->bodybox));
-//     gtk_widget_set_visible(shell->drawer,FALSE);
-//     gtk_widget_set_visible(shell->bodybox,TRUE);
-// }
-
-
-// static void lks_ani_up(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
-//     if(shell->mode==SHELL_MODE_LOCKSCREEN){
-//         // int level;
-//         // gtk_widget_set_visible(s->main->widget,TRUE);
-//         // gtk_widget_set_visible(s->sub->widget,TRUE);
-//         // gtk_widget_set_margin_top(s->main->widget,-(progress/100.00f)*30);
-//         // gtk_widget_set_margin_top(s->sub->widget,30-(progress/100.00f)*30);
-
-//         // gtk_widget_set_opacity(s->main->widget,1-(progress/100));
-//         // gtk_widget_set_opacity(s->sub->widget,progress/100);
-//         // ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(progress/100));
-//     }
-//     if(shell->mode==SHELL_MODE_DESKTOP){
-//         switcher * s = (switcher*)user_data;
-//         gtk_widget_set_visible(s->main->widget,TRUE);
-//         gtk_widget_set_visible(s->sub->widget,TRUE);
-//         gtk_widget_set_margin_top(s->main->widget,-(progress/100.00f)*30);
-//         gtk_widget_set_margin_top(s->sub->widget,30-(progress/100.00f)*30);
-
-//         gtk_widget_set_opacity(s->main->widget,1-(progress/100));
-//         gtk_widget_set_opacity(s->sub->widget,progress/100);
-//         ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(progress/100));
-
-//         ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(1-progress/100)*20);
-//     }
-// }
-
 void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = user_data;
     gtk_widget_set_visible(s->sub->widget,TRUE);
@@ -184,21 +129,6 @@ void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     }
 }
 
-// static void lks_ani2(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-//     switcher * s = user_data;
-//     gtk_widget_set_visible(s->sub->widget,TRUE);
-//     gtk_widget_set_visible(s->main->widget,TRUE);
-//     gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
-//     gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
-
-//     if(shell->mode==SHELL_MODE_LOCKSCREEN){
-//         gtk_widget_set_opacity(s->sub->widget,(args.progress/100));
-//         gtk_widget_set_opacity(s->main->widget,1-args.progress/100);
-//         ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(args.progress/100));
-//     }
-//     //ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(args.progress/100)*20); //IPT FIX:switch添加user_data
-// }
-
 static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = (switcher*)user_data;
     gtk_widget_set_visible(s->main->widget,TRUE);
@@ -212,22 +142,6 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
 
     ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(args.progress/100)*20);
 }
-
-
-
-// static void lks_ani_down2(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
-//     switcher * s = (switcher*)user_data;
-//     gtk_widget_set_visible(s->sub->widget,TRUE);
-//     gtk_widget_set_visible(s->main->widget,TRUE);
-//     gtk_widget_set_margin_top(s->sub->widget,-(progress/100.00f)*30);
-//     gtk_widget_set_margin_top(s->main->widget,30-(progress/100.00f)*30);
-
-//     gtk_widget_set_opacity(s->sub->widget,1-(progress/100));
-//     gtk_widget_set_opacity(s->main->widget,progress/100);
-//     //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-progress/100));
-
-//     ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(progress/100)*20); //IPT FIX:switch添加user_data
-// }
 
 
 void ling_desktop_init(LingDesktop * self){
@@ -249,27 +163,27 @@ GtkWidget * ling_desktop_new(){
 
     //设置页面style(后续改成根据显示器大小自动调整)
     self->style_info.column_num= 4;
-    self->style_info.row_num = 6;
+    self->style_info.row_num = 7;
     self->style_info.column_space = 50;
-    self->style_info.row_space = 50;
+    self->style_info.top_space = 40;
+    self->style_info.row_space = 20;
     self->style_info.icon_size = 64;
 
     //新建页面
-    self->view_pager = ling_view_pager_new();
+    self->view_pager = ling_view_pager_new_with_op();
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->view_pager),FALSE);
 
     //底部dock创建
     GtkWidget * dock_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    //gtk_widget_set_vexpand(dock_box,1);
-    gtk_widget_set_hexpand(dock_box,1);
-    self->dock = ling_fixed_view_new(LING_FIXED_VIEW_ARRANGE_GRID,4,1,self->style_info.column_space,self->style_info.row_space);
-    int * drop_data=malloc(sizeof(int));
-    *drop_data=0;   //不显示文字
-    ling_fixed_view_set_item_drop_data(LING_FIXED_VIEW(self->dock),drop_data);
-    ling_fixed_view_set_margin(LING_FIXED_VIEW(self->dock),10,20,20,20);
-
-
+    gtk_widget_set_vexpand(dock_box,FALSE);
+    gtk_widget_set_hexpand(dock_box,TRUE);
+    self->dock = ling_grid_new(4,1,self->style_info.column_space,self->style_info.row_space);
     gtk_widget_set_hexpand(self->dock,1);
+
+    gtk_widget_set_margin_top(self->dock,10);
+    gtk_widget_set_margin_bottom(self->dock,10);
+    //gtk_widget_set_valign(self->dock,GTK_ALIGN_END);
+    //gtk_widget_set_valign(dock_box,GTK_ALIGN_END);
 
     gtk_box_append(GTK_BOX(dock_box),self->dock);
 
@@ -286,6 +200,10 @@ GtkWidget * ling_desktop_new(){
     gtk_box_set_homogeneous(GTK_BOX(self->drawer),1);
     gtk_widget_set_vexpand(self->drawer, FALSE);
     shell->drawer = self->drawer;
+
+    //
+    self->task_switcher = ling_task_switcher_new();
+    ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->task_switcher,LAYER_TASK_SWITCHER);
 
     //添加dock的应用(测试)
     GList * app_now = shell->app_info;
@@ -308,8 +226,6 @@ GtkWidget * ling_desktop_new(){
     ling_desktop_set_wallpaper(self,"/home/gzx/Pictures/wallpaper3.png");
 
     //抽屉拖拽手势
-    //uint level;
-    //LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&level);
     LingOperate * bodybox_op = ling_operate_add(shell->controler,LING_DESKTOP_BODYBOX_OP_NAME,self->bodybox);
     LingOperate * drawer_op  = ling_operate_add(shell->controler,"drawer_switch",self->drawer);
 
@@ -318,32 +234,6 @@ GtkWidget * ling_desktop_new(){
                           LING_ACTION_DRAG_UP,drawer_ani,ling_layer_progress,ling_layer_release,
                           ling_layer_main_finish,ling_layer_sub_finish);
 
-    // uint level;
-    // LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&level);
-
-    // ling_layer_add_switch(ling_operate_get(shell->controler,LING_STATUSBAR_CENTERBOX_OP_NAME),sb_overlay,level,
-    //                       bodybox_op,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
-    //                       LING_ACTION_DRAG_UP,center_ani,ling_layer_progress,ling_layer_release,
-    //                       ling_layer_main_finish,ling_layer_sub_finish);
-
-    // LingLayer * cover=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_COVER);
-    // LingLayer * verify=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_VERIFY);
-    // sb * s = malloc(sizeof(sb));
-    // s->main = cover->widget;
-    // s->sub = verify->widget;
-
-    // LingOperate * op = ling_operate_add(shell->controler,"drawer",verify->widget);
-    // ling_operate_add_action(op2,LING_ACTION_DRAG_DOWN,ling_overlay_layer_progress,
-    //                         verify->widget,lks_ani,s,
-    //                         lks_release,1,
-    //                         lks_main_finish,lks_sub_finish,s);
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_BODYBOX,
-    //                         OP_UPDATE_TYPE_UP,LING_OVERLAY(self->overlay),LAYER_DRAWER,
-    //                         lks_ani_up2,switch_main_finish,switch_sub_finish);
-
-    // ling_overlay_add_switch(LING_OVERLAY(self->overlay),LAYER_DRAWER,
-    //                         OP_UPDATE_TYPE_DOWN,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
-    //                         lks_ani_down2,switch_main_finish,switch_sub_finish);
 
     //self->data_saver = ling_data_saver_new();
     //ling_data_saver_save_pages_to_db(self->data_saver,LING_VIEW_PAGER(self->view_pager));
@@ -422,36 +312,36 @@ uint ling_desktop_get_wallpaper_blur(LingDesktop *self){
 }
 
 
-static void fv_data_save(GKeyFile *keyfile,const char * group,LingFixedView * fixed_view){
-    int grid_column,grid_row;
-    char page_num[100],grid_c[100],grid_r[100];
-    ling_fixed_view_get_grid_size(fixed_view,&grid_column,&grid_row);
-    sprintf(grid_c,"%d",grid_column);
-    sprintf(grid_r,"%d",grid_row);
-    ling_data_saver_save(DESKTOP_ICON_INI_PATH,keyfile,group,"size",grid_c,grid_r,NULL);
+// static void grid_data_save(GKeyFile *keyfile,const char * group,LingGrid * grid){
+//     int grid_column,grid_row;
+//     char page_num[100],grid_c[100],grid_r[100];
+//     ling_fixed_view_get_grid_size(grid,&grid_column,&grid_row);
+//     sprintf(grid_c,"%d",grid_column);
+//     sprintf(grid_r,"%d",grid_row);
+//     ling_data_saver_save(DESKTOP_ICON_INI_PATH,keyfile,group,"size",grid_c,grid_r,NULL);
 
-    //遍历fixed_view下所有成员
-    for(GtkWidget * w=gtk_widget_get_first_child(gtk_widget_get_first_child(GTK_WIDGET(fixed_view)));w!=NULL;w=gtk_widget_get_next_sibling(w)){
-        uint column,row,width,height;
-        ling_fixed_view_item_get_grid_pos(LING_FIXED_VIEW_ITEM(w),&column,&row);
-        ling_fixed_view_item_get_size(LING_FIXED_VIEW_ITEM(w),&width,&height);
+//     //遍历fixed_view下所有成员
+//     //for(int r=1;r<grid)
+//         uint column,row,width,height;
+//         ling_fixed_view_item_get_grid_pos(LING_FIXED_VIEW_ITEM(w),&column,&row);
+//         ling_fixed_view_item_get_size(LING_FIXED_VIEW_ITEM(w),&width,&height);
 
-        //fixed_view_item内容为ling_app_item,获取app_item的信息
-        GtkWidget * app_item=ling_fixed_view_item_get_content(LING_FIXED_VIEW_ITEM(w));
-        app_info * app_info = ling_app_item_get_app_info(LING_APP_ITEM(app_item));
+//         //fixed_view_item内容为ling_app_item,获取app_item的信息
+//         GtkWidget * app_item=ling_fixed_view_item_get_content(LING_FIXED_VIEW_ITEM(w));
+//         app_info * app_info = ling_app_item_get_app_info(LING_APP_ITEM(app_item));
 
-        //以坐标来命名区别不同图标
-        GString * key_name = g_string_new("");
-        g_string_printf(key_name,"pos%d%d",column,row);
-        char c[100],r[100],w[100],h[100];
-        sprintf(c,"%d",column);
-        sprintf(r,"%d",row);
-        sprintf(w,"%d",width);
-        sprintf(h,"%d",height);
-        ling_data_saver_save(DESKTOP_ICON_INI_PATH,keyfile,group,key_name->str,c,r,w,h,app_info->desktop_path->str,NULL);
-        g_free(key_name);
-    }
-}
+//         //以坐标来命名区别不同图标
+//         GString * key_name = g_string_new("");
+//         g_string_printf(key_name,"pos%d%d",column,row);
+//         char c[100],r[100],w[100],h[100];
+//         sprintf(c,"%d",column);
+//         sprintf(r,"%d",row);
+//         sprintf(w,"%d",width);
+//         sprintf(h,"%d",height);
+//         ling_data_saver_save(DESKTOP_ICON_INI_PATH,keyfile,group,key_name->str,c,r,w,h,app_info->desktop_path->str,NULL);
+//         g_free(key_name);
+//     }
+// }
 
 //存储桌面应用页面的数据
 void ling_app_view_pager_save_data(LingDesktop * self){
@@ -468,12 +358,12 @@ void ling_app_view_pager_save_data(LingDesktop * self){
         g_string_printf(group,"page%d",i);
         GtkWidget * page=ling_view_pager_get_page_by_pos(LING_VIEW_PAGER(self->view_pager),i);
         GtkWidget * fixed_view = ling_app_view_page_get_fixed_view(LING_APP_VIEW_PAGE(page));
-        fv_data_save(keyfile,group->str,LING_FIXED_VIEW(fixed_view));
+        //grid_data_save(keyfile,group->str,LING_FIXED_VIEW(fixed_view));
         g_free(group);
     }
 
     //添加dock的
-    fv_data_save(keyfile,"dock",LING_FIXED_VIEW(self->dock));
+    //grid_data_save(keyfile,"dock",LING_FIXED_VIEW(self->dock));
 }
 
 static void fv_data_load(LingDesktop *self,const char * page_name){

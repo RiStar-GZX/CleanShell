@@ -4,7 +4,6 @@
 #include <lingshell.h>
 #include <lingappviewpage.h>
 #include <lingappitem.h>
-#include <lingfixedview.h>
 
 G_BEGIN_DECLS
 

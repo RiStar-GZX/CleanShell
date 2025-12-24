@@ -1,7 +1,6 @@
 #include <gtk/gtk.h>
 #include <lingdesktop.h>
 #include <lingviewpager.h>
-#include <lingfixedview.h>
 #include <lingdatasaver.h>
 #include <linglockscreen.h>
 

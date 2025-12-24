@@ -15,6 +15,7 @@ void ling_overlay_class_init(LingOverlayClass * class){
 
 void ling_overlay_init(LingOverlay * self){
     self->overlay = gtk_overlay_new();
+
     gtk_widget_set_vexpand(self->overlay,TRUE);
     gtk_widget_set_hexpand(self->overlay,TRUE);
     gtk_box_append(GTK_BOX(self),self->overlay);
@@ -50,13 +51,16 @@ int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level){
         if(layer_now->level<level){
             self->layers = g_list_insert(self->layers,layer_new,pos);
             gtk_overlay_add_overlay(GTK_OVERLAY(self->overlay),layer_new->widget);
+            //gtk_overlay_set_clip_overlay(GTK_OVERLAY(self->overlay),layer_new->widget,TRUE);
             gtk_widget_insert_before(layer_new->widget,self->overlay,layer_now->widget);
             return 1;
         }
         pos++;
     }
     self->layers = g_list_insert(self->layers,layer_new,pos);
+
     gtk_overlay_add_overlay(GTK_OVERLAY(self->overlay),layer_new->widget);
+    //gtk_overlay_set_clip_overlay(GTK_OVERLAY(self->overlay),layer_new->widget,TRUE);
     self->layers = g_list_append(self->layers,layer_new);
     return 1;
 }
@@ -78,17 +82,16 @@ gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user
     return p;
 }
 
-gboolean ling_layer_release(GtkWidget * widget,LingActionArgs args,uint user_data){
+gboolean ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     gdouble t=fabs(args.offset_y)+fabs(args.velocity_y);
-    if(t<100){
-        if(user_data==1)return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    if(t<20){
+        if(args.action==LING_ACTION_DRAG_DOWN)return LING_OPERATE_ANIMATION_DIR_FORWARD;
         else return LING_OPERATE_ANIMATION_DIR_BACK;
     }
     else{
-        if(user_data==1)return LING_OPERATE_ANIMATION_DIR_BACK;
-        else LING_OPERATE_ANIMATION_DIR_FORWARD;
+        if(args.action==LING_ACTION_DRAG_DOWN)return LING_OPERATE_ANIMATION_DIR_BACK;
+        else return LING_OPERATE_ANIMATION_DIR_FORWARD;
     }
-    return LING_OPERATE_ANIMATION_DIR_FORWARD;
 }
 
 
@@ -105,7 +108,7 @@ void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_m
     ling_operate_add_action(op_m,m_op_type,
                             progress,NULL,       //0->100
                             ani,s,
-                            release,0,
+                            release,NULL,
                             main_f,sub_f,s);
 
     uint s_op_type=LING_ACTION_DRAG_NONE;
@@ -114,7 +117,7 @@ void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_m
     ling_operate_add_action(op_s,s_op_type,
                             progress,NULL,       //100->0
                             ani,s,
-                            release,1,                          //1反转使成功操作变成100->0
+                            release,NULL,
                             main_f,sub_f,s);
 }
 

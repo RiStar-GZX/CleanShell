@@ -9,6 +9,8 @@ G_BEGIN_DECLS
 #define LING_TYPE_VIEW_PAGER (ling_view_pager_get_type())
     G_DECLARE_FINAL_TYPE(LingViewPager,ling_view_pager,LING,VIEW_PAGER,GtkBox)
 
+GtkWidget * ling_view_pager_new_with_op();
+
 GtkWidget * ling_view_pager_new();
 
 void ling_view_pager_add_page(LingViewPager * self,GtkWidget * page);
@@ -35,3 +37,17 @@ gboolean ling_view_pager_prev(LingViewPager * self,gboolean animate);
 
 
 
+
+void ling_view_pager_finish_left(GtkWidget * widget,gpointer data);
+
+void ling_view_pager_finish_right(GtkWidget * widget,gpointer data);
+
+void ling_view_pager_finish_center(GtkWidget * widget,gpointer data);
+
+gdouble ling_view_pager_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+
+gboolean ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data);
+
+void ling_view_pager_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+
+G_END_DECLS

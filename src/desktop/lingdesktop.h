@@ -45,6 +45,7 @@ typedef struct share_info{
 
 
 typedef struct style_info{
+    uint top_space;
     uint column_num;
     uint row_num;
     uint column_space;
@@ -52,38 +53,6 @@ typedef struct style_info{
     uint icon_size;
 }style_info;
 
-struct _LingDesktop{
-    GtkBox parent;
-
-    GtkWidget * overlay;
-    //状态栏
-    //GtkWidget * status_bar;
-    //主体
-    GtkWidget * bodybox;
-
-    //页面
-    GtkWidget * view_pager;
-
-    //底栏
-    GtkWidget * dock; //gtkgrid
-    //GList * dock_app_items;
-
-
-    GtkWidget * drawer; //抽屉
-
-
-
-    uint app_num;   //只在ling_desktop_page_load_test使用(抛弃)
-
-    style_info style_info;
-
-    //share_info share_info; //共享信息
-
-    GtkWidget * wallpaper;  //GtkPicture
-    uint blur;
-
-    //LingDataSaver * data_saver;
-};
 
 
 GtkWidget * ling_desktop_new();

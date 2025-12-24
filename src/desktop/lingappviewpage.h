@@ -4,13 +4,13 @@
 #include <lingshell.h>
 #include <lingdesktop.h>
 #include <lingappitem.h>
-#include <lingfixedview.h>
+#include <linggrid.h>
 #include <lingdatasaver.h>
 
 G_BEGIN_DECLS
 
 #define LING_TYPE_APP_VIEW_PAGE (ling_app_view_page_get_type())
-G_DECLARE_FINAL_TYPE(LingAppViewPage,ling_app_view_page,LING,APP_VIEW_PAGE,LingFixedView)
+G_DECLARE_FINAL_TYPE(LingAppViewPage,ling_app_view_page,LING,APP_VIEW_PAGE,GtkBox)
 
 GtkWidget * ling_app_view_page_new(style_info style_info);
 
