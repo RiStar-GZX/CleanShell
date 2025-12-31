@@ -67,6 +67,7 @@ LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,
     g_signal_connect(op->drag, "drag-begin", G_CALLBACK(operate_drag_begin), op);
     g_signal_connect(op->drag, "drag-update", G_CALLBACK(operate_drag_update), op);
     g_signal_connect(op->drag, "drag-end", G_CALLBACK(operate_drag_end), op);
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(op->drag), GTK_PHASE_CAPTURE);
 
     op->swipe = gtk_gesture_swipe_new();
     gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->swipe));
@@ -128,6 +129,7 @@ void ling_operate_change_breaker(LingOperate * op,const char * op_name){
 //-------------------------------------------------------------------------------------------
 static LingActionArgs operate_action_args(LingOperate * op,uint action_type){
     LingActionArgs args;
+    args.op = op;
     args.offset_x= op->offset_x;
     args.offset_y= op->offset_y;
     args.start_x = op->start_x;
@@ -135,6 +137,7 @@ static LingActionArgs operate_action_args(LingOperate * op,uint action_type){
     args.velocity_x = op->velocity_x;
     args.velocity_y = op->velocity_y;
     args.progress = op->actions[action_type].ani_progress;
+    args.progress_end = op->actions[action_type].ani_progress_end;
     args.action = action_type;
     return args;
 }
@@ -143,8 +146,8 @@ void ling_operate_run_finish(LingOperate * op,gboolean s_e){
     if(op==NULL||op->state==LING_OPERATE_STATE_WAITTING)return;
     op->state = LING_OPERATE_STATE_WAITTING;
     LingAction * act = &op->actions[op->action_now];
-    if(s_e==LING_ACTION_FINISH_E&&act->finish_e!=NULL)act->finish_e(op->widget,act->finish_data);
-    if(s_e==LING_ACTION_FINISH_S&&act->finish_s!=NULL)act->finish_s(op->widget,act->finish_data);
+    if(s_e==LING_ACTION_FINISH_E&&act->finish_e!=NULL)act->finish_e(op->widget,operate_action_args(op,op->action_now),act->finish_data);
+    if(s_e==LING_ACTION_FINISH_S&&act->finish_s!=NULL)act->finish_s(op->widget,operate_action_args(op,op->action_now),act->finish_data);
 }
 
 gboolean ling_operate_animation_timeout(gpointer user_data){
@@ -152,8 +155,8 @@ gboolean ling_operate_animation_timeout(gpointer user_data){
     LingAction * act = &op->actions[op->action_now];
     //IPT FIX
     if(act->ani_dir==LING_OPERATE_ANIMATION_DIR_FORWARD){
-        act->ani_progress+=1+0.05*(100-act->ani_progress);//00/op->controler->frames;
-        if(act->ani_progress>=100){
+        act->ani_progress+=1+0.05*(act->ani_progress_end-act->ani_progress);//00/op->controler->frames;
+        if(act->ani_progress>=act->ani_progress_end){
             ling_operate_run_finish(op,LING_ACTION_FINISH_E);
             op->animation_timer_id=0;
             return G_SOURCE_REMOVE;
@@ -181,9 +184,15 @@ void ling_operate_run_animation(LingOperate * op){
     if(op==NULL||op->state!=LING_OPERATE_STATE_OPERATING)return;
     op->state = LING_OPERATE_STATE_ANIMATION;
     LingAction * act = &op->actions[op->action_now];
-    act->ani_dir = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
+    if(act->release!=NULL)act->ani_dir = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
+    else act->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
     if(act->animation==NULL){
-        ling_operate_run_finish(op,LING_ACTION_FINISH_E);
+        if(act->ani_dir==LING_OPERATE_ANIMATION_DIR_FORWARD){
+            ling_operate_run_finish(op,LING_ACTION_FINISH_E);
+        }
+        else{
+            ling_operate_run_finish(op,LING_ACTION_FINISH_S);
+        }
         return;
     }
     op->animation_timer_id = g_timeout_add(1000/op->controler->frames, ling_operate_animation_timeout, op);
@@ -243,12 +252,23 @@ gboolean ling_operate_start_operating(LingOperate * op){
     return FALSE;
 }
 
-
-void ling_operate_set_change(LingOperate * op,const char * opname){
-    //1.5.操作改变,如抽屉上下
-    if(op==NULL||opname==NULL)return;
-    g_string_printf(op->operate_name,"%s",opname);
+int ling_operate_get_action_now(LingOperate * op){
+    return op->action_now;
 }
+
+void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progress_end){
+    op->actions[action].ani_progress_end = progress_end;
+}
+
+gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action){
+    return op->actions[action].ani_progress_end;
+}
+
+// void ling_operate_set_change(LingOperate * op,const char * opname){
+//     //1.5.操作改变,如抽屉上下
+//     if(op==NULL||opname==NULL)return;
+//     g_string_printf(op->operate_name,"%s",opname);
+// }
 
 // 1.6 改变打断者 ling_operate_change_breaker
 
@@ -286,7 +306,7 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
 static void operate_drag_begin(GtkGestureDrag* self,
                              gdouble start_x,gdouble start_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
-    op->action_now=LING_ACTION_DRAG_NONE;
+    op->action_now=LING_ACTION_CLICK;
     op->start_x = start_x;
     op->start_y = start_y;
 }
@@ -301,7 +321,7 @@ static void operate_drag_update(GtkGestureDrag* self,
     //     ling_operate_run_finish(op);
     // }
 
-    if(op->action_now!=LING_ACTION_DRAG_NONE);
+    if(op->action_now!=LING_ACTION_CLICK);
     else if(fabs(offset_x)>fabs(offset_y)){
         if(offset_x<0)op->action_now=LING_ACTION_DRAG_LEFT;
         else if(offset_x>0)op->action_now=LING_ACTION_DRAG_RIGHT;
@@ -312,9 +332,11 @@ static void operate_drag_update(GtkGestureDrag* self,
     }
 
     if(op->actions[op->action_now].able==FALSE){
-        op->action_now=LING_ACTION_DRAG_NONE;
+        //op->action_now=LING_ACTION_CLICK;
         return;
     }
+
+    if(op->action_now==LING_ACTION_CLICK)return;
 
     if(op->action_now==LING_ACTION_DRAG_LEFT&&offset_x>0)return;
     if(op->action_now==LING_ACTION_DRAG_RIGHT&&offset_x<0)return;
@@ -323,16 +345,21 @@ static void operate_drag_update(GtkGestureDrag* self,
 
     LingAction * act = &op->actions[op->action_now];
     if(ling_operate_start_operating(op)){
-        act->ani_progress = act->progress(op->widget,operate_action_args(op,op->action_now),op->actions[op->action_now].progress_data);
+        if(act->progress!=NULL)act->ani_progress = act->progress(op->widget,operate_action_args(op,op->action_now),op->actions[op->action_now].progress_data);
+        else act->ani_progress = 0;
         if(act->ani_progress>100)act->ani_progress=100;
         if(act->ani_progress<0)act->ani_progress=0;
         if(act->animation!=NULL)act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
+        //g_print("update\n");
     }
 }
 
 static void operate_drag_end(GtkGestureDrag* self,
                              gdouble offset_x,gdouble offset_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
+    if(op->action_now == LING_ACTION_CLICK && op->actions[op->action_now].able){
+        ling_operate_start_operating(op);
+    }
     ling_operate_run_animation(op);
 }
 
@@ -352,6 +379,7 @@ void ling_operate_add_action(LingOperate * op,uint type,
     act->finish_e = finish_e;
     act->finish_s = finish_s;
     act->finish_data = finish_data;
+    act->ani_progress_end = 100;
     // op->widget = widget;
 
     // op->drag =gtk_gesture_drag_new();

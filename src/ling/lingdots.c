@@ -116,7 +116,7 @@ void ling_dots_set_num(LingDots * dots,uint num){
         }
     }
     if(a<0){
-        for(int i=0;i<a;i++){
+        for(int i=0;i<-a;i++){
             GtkWidget * last=gtk_widget_get_last_child(GTK_WIDGET(dots));
             gtk_box_remove(GTK_BOX(dots),last);
         }

@@ -6,6 +6,7 @@ struct _LingViewPager{
 
     GtkWidget * overlay;
     GtkWidget * fixed;
+    gboolean size_adapt;
 
     LingOperate * op;
 
@@ -33,50 +34,54 @@ gboolean gtk_widget_have_child(GtkWidget * parent,GtkWidget * child){
     return FALSE;
 }
 
-void ling_view_pager_page_move(LingViewPager * self,gdouble x){
-    GtkWidget * page = ling_view_pager_get_page_now(self);
-    GtkWidget * page_new=NULL;
+void ling_view_pager_fixed_get_page_pos(LingViewPager * self,uint pos,gdouble * x,gdouble * y){
+    GtkWidget * page = ling_view_pager_get_page_by_pos(self,pos);
+    if(!page)return;
+    LingFixedChild * child = ling_fixed_get_child_info(LING_FIXED(self->fixed),page);
+    *x = child->x;
+    *y = child->y;
+}
 
+void ling_view_pager_fixed_set_page_pos(LingViewPager * self,uint pos,gdouble x,gdouble y,int level){
+    GtkWidget * page = ling_view_pager_get_page_by_pos(self,pos);
+    if(!page)return;
+    if(!gtk_widget_have_child(self->fixed,page))ling_fixed_put(LING_FIXED(self->fixed),page,x,y,level);
+    else ling_fixed_move(LING_FIXED(self->fixed),page,x,y);
+}
 
-    gtk_fixed_move(GTK_FIXED(self->fixed),page,x,0);
-
-    int w = gtk_widget_get_width(page);
-    for(GtkWidget * c = gtk_widget_get_first_child(self->fixed);c!=NULL;c=gtk_widget_get_next_sibling(c)){
-        if(c!=page){
-            g_object_ref(c);
-            gtk_fixed_remove(GTK_FIXED(self->fixed),c);
-        }
-    }
-
-    if(self->page_num<=1);
-    else if(x<0){
-        if(self->page_now_pos==self->page_num&&self->page_cycle){
-            page_new = ling_view_pager_get_page_by_pos(self,1);
-        }
-        else {
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos+1);
-        }
-
-        if(page_new!=NULL){
-            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x+w,0);
-            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x+w,0);
-        }
-    }
-    else if(x>0){
-        gtk_fixed_move(GTK_FIXED(self->fixed),page,x,0);
-        if(self->page_now_pos==1&&self->page_cycle){
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_num);
-        }
-        else {
-            page_new = ling_view_pager_get_page_by_pos(self,self->page_now_pos-1);
-        }
-
-        if(page_new!=NULL){
-            if(!gtk_widget_have_child(self->fixed,page_new))gtk_fixed_put(GTK_FIXED(self->fixed),page_new,x-w,0);
-            gtk_fixed_move(GTK_FIXED(self->fixed),page_new,x-w,0);
-        }
+void ling_view_pager_fixed_hide_page(LingViewPager * self,uint pos){
+    GtkWidget * page = ling_view_pager_get_page_by_pos(self,pos);
+    if(page!=NULL){
+        //g_object_ref(page);
+        ling_fixed_remove(LING_FIXED(self->fixed),page);
     }
 }
+
+void ling_view_paper_hide_all(LingViewPager * self){
+    for(GtkWidget * w=gtk_widget_get_first_child(self->fixed);w!=NULL;w=gtk_widget_get_first_child(w)){
+        //g_object_ref(w);
+        //g_print("AA\n");
+        ling_fixed_remove(LING_FIXED(self->fixed),w);
+    }
+}
+
+// void ling_view_pager_page_move(LingViewPager * self,gdouble x){
+//     uint pos;
+//     int w = gtk_widget_get_width(GTK_WIDGET(self));
+//     ling_view_pager_fixed_set_page_pos(self,self->page_now_pos,x,0);
+
+//     if(self->page_num<=1);
+//     else if(x<0){
+//         if(self->page_now_pos==self->page_num&&self->page_cycle)pos=1;
+//         else pos=self->page_now_pos+1;
+//         ling_view_pager_fixed_set_page_pos(self,pos,x+w,0);
+//     }
+//     else if(x>0){
+//         if(self->page_now_pos==1&&self->page_cycle)pos = self->page_num;
+//         else pos = self->page_now_pos-1;
+//         ling_view_pager_fixed_set_page_pos(self,pos,x-w,0);
+//     }
+// }
 
 
 
@@ -87,7 +92,8 @@ static void ling_view_pager_class_init(LingViewPagerClass * klass){
 static void ling_view_pager_init(LingViewPager * self){
     gtk_orientable_set_orientation(GTK_ORIENTABLE(self),GTK_ORIENTATION_VERTICAL);
     self->overlay = gtk_overlay_new();
-    self->fixed = gtk_fixed_new();
+    self->fixed = ling_fixed_new();
+
     gtk_widget_set_hexpand(self->overlay, TRUE);
     gtk_widget_set_vexpand(self->overlay, TRUE);
     gtk_widget_set_hexpand(self->fixed, TRUE);
@@ -110,25 +116,19 @@ static void ling_view_pager_init(LingViewPager * self){
     gtk_widget_set_valign(self->dots,GTK_ALIGN_END);
 }
 
-
 /*--------------------------------------动画部分-----------------------------------------------------------------------------------------*/
-void ling_view_pager_page_move_ani(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data,uint mode){
-    if(mode==LING_ACTION_DRAG_LEFT)ling_view_pager_page_move(user_data,(-progress)*5);
-    if(mode==LING_ACTION_DRAG_RIGHT) ling_view_pager_page_move(user_data,(progress)*5);
-}
-
-void ling_view_pager_finish_left(GtkWidget * widget,gpointer data){
+void ling_view_pager_finish_left(GtkWidget * widget,LingActionArgs args,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
     //ling_view_pager_next(self,FALSE);
     ling_view_pager_show_page(self,self->page_now_pos-1);
 }
 
-void ling_view_pager_finish_right(GtkWidget * widget,gpointer data){
+void ling_view_pager_finish_right(GtkWidget * widget,LingActionArgs args,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
     ling_view_pager_show_page(self,self->page_now_pos+1);
 }
 
-void ling_view_pager_finish_center(GtkWidget * widget,gpointer data){
+void ling_view_pager_finish_center(GtkWidget * widget,LingActionArgs args,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(data);
     ling_view_pager_show_page(self,self->page_now_pos);
 }
@@ -151,67 +151,73 @@ gboolean ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer
 }
 
 void ling_view_pager_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    ling_view_pager_page_move_ani(args.offset_x,args.offset_y,args.progress,widget,args.action);
+    gdouble x;
+    uint pos;
+    LingViewPager * self = LING_VIEW_PAGER(widget);
+    int w = gtk_widget_get_width(GTK_WIDGET(self));
+    if(args.action==LING_ACTION_DRAG_LEFT)x=(-args.progress/100)*w;
+    if(args.action==LING_ACTION_DRAG_RIGHT)x=(args.progress/100)*w;
+
+    ling_view_paper_hide_all(self);
+    for(int i=1;i<=self->page_num;i++){
+        gdouble offset_x=x+(i-(int)self->page_now_pos)*w;
+        ling_view_pager_fixed_set_page_pos(self,i,offset_x,0,LING_FIXED_TOP);
+    }
 }
 
 /*-----------------------------------------------------------------------------------------------------------------------------------*/
 
-GtkWidget * ling_view_pager_new_with_op(){
+GtkWidget * ling_view_pager_new_with_op(gboolean size_adapt){
     LingViewPager * self = LING_VIEW_PAGER(g_object_new(LING_TYPE_VIEW_PAGER,NULL));
     //gtk_widget_set_size_request(GTK_WIDGET(self->fixed), 500, 850);
 
     self->op = ling_operate_add(shell->controler,"view_pager",GTK_WIDGET(self));
-    ling_operate_add_action(self->op,LING_ACTION_DRAG_LEFT,     //右1
+    ling_operate_add_action(self->op,LING_ACTION_DRAG_LEFT,
                             ling_view_pager_progress,NULL,
                             ling_view_pager_ani,NULL,
                             ling_view_pager_release,NULL,
                             ling_view_pager_finish_center,ling_view_pager_finish_right,self);
 
-    ling_operate_add_action(self->op,LING_ACTION_DRAG_RIGHT,    //左0
+    ling_operate_add_action(self->op,LING_ACTION_DRAG_RIGHT,
                             ling_view_pager_progress,NULL,
                             ling_view_pager_ani,NULL,
                             ling_view_pager_release,NULL,
                             ling_view_pager_finish_center,ling_view_pager_finish_left,self);
+    self->size_adapt = size_adapt;
 
     return GTK_WIDGET(self);
 }
 
-GtkWidget * ling_view_pager_new(){
-    return g_object_new(LING_TYPE_VIEW_PAGER,NULL);
+GtkWidget * ling_view_pager_new(gboolean size_adapt){
+    LingViewPager * self =LING_VIEW_PAGER(g_object_new(LING_TYPE_VIEW_PAGER,NULL));
+    self->size_adapt = size_adapt;
+    return GTK_WIDGET(self);
 }
+
 
 static void realize (GtkWidget* page,LingViewPager * self){
     gtk_widget_set_size_request(page,gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
     //g_print("width:%d height:%d\n",gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
 }
 
-// static gboolean resize_timeout(gpointer data){
-//     GtkWidget * widget = data;
-//     GtkWidget * parent = gtk_widget_get_parent(widget);
-//     gtk_widget_set_size_request(widget,gtk_widget_get_width(parent),gtk_widget_get_height(parent));
-
-//     return G_SOURCE_REMOVE;
-// }
-
 void ling_view_pager_add_page(LingViewPager * self,GtkWidget * page){
-    //gtk_widget_set_size_request(GTK_WIDGET(page), 500, 900);
     self->pages = g_list_append(self->pages,page);
     self->page_num++;
     ling_dots_set_num(LING_DOTS(self->dots),self->page_num);
     if(self->page_now_pos==0){
         ling_view_pager_show_page(self,1);
     }
-    g_signal_connect(page, "realize", G_CALLBACK(realize), self);
-    //g_timeout_add(100,resize_timeout,page);
+    if(self->size_adapt)g_signal_connect(page, "realize", G_CALLBACK(realize), self);
 }
 
-void ling_view_pager_add_page_before(LingViewPager * self,GtkWidget * page,GtkWidget * before){
+// void ling_view_pager_add_page_before(LingViewPager * self,GtkWidget * page,GtkWidget * before){
 
-}
+// }
 
-void ling_view_pager_add_page_after(LingViewPager * self,GtkWidget * page,GtkWidget * after){
+// void ling_view_pager_add_page_after(LingViewPager * self,GtkWidget * page,GtkWidget * after){
 
-}
+// }
+
 
 void ling_view_pager_remove_page(LingViewPager * self,GtkWidget * page){
     if(self->page_num==0){
@@ -219,7 +225,7 @@ void ling_view_pager_remove_page(LingViewPager * self,GtkWidget * page){
     }
     GtkWidget * page_now = ling_view_pager_get_page_now(self);
     if(page_now==page){
-        gtk_fixed_remove(GTK_FIXED(self->fixed),page);
+        ling_fixed_remove(LING_FIXED(self->fixed),page);
         self->pages = g_list_remove(self->pages,page);
         self->page_num--;
         ling_dots_set_num(LING_DOTS(self->dots),self->page_num);
@@ -229,7 +235,7 @@ void ling_view_pager_remove_page(LingViewPager * self,GtkWidget * page){
         }
     }
     else{
-        gtk_fixed_remove(GTK_FIXED(self->fixed),page);
+        ling_fixed_remove(LING_FIXED(self->fixed),page);
         self->pages = g_list_remove(self->pages,page);
         self->page_num--;
         GList * l;
@@ -249,6 +255,12 @@ void ling_view_pager_set_dot_indicator(LingViewPager * self,gboolean able){
     gtk_widget_set_visible(self->dots,able);
 }
 
+void ling_view_pager_set_pos(LingViewPager * self,uint pos){
+    if(pos>self->page_num)return;
+    self->page_now_pos = pos;
+    ling_dots_ativate(LING_DOTS(self->dots),self->page_now_pos);
+}
+
 GtkWidget * ling_view_pager_get_page_by_pos(LingViewPager * self,uint pos){
     if(pos>self->page_num||pos<=0)return NULL;
     GList * l=self->pages;
@@ -259,12 +271,27 @@ GtkWidget * ling_view_pager_get_page_by_pos(LingViewPager * self,uint pos){
     return page;
 }
 
+uint ling_view_pager_get_page_pos(LingViewPager * self,GtkWidget * page){
+    for(int i=1;i<=self->page_num;i++){
+        if(page==ling_view_pager_get_page_by_pos(self,i))return i;
+    }
+    return 0;
+}
+
 GtkWidget * ling_view_pager_get_page_now(LingViewPager * self){
     return ling_view_pager_get_page_by_pos(self,self->page_now_pos);
 }
 
+uint ling_view_pager_get_page_now_pos(LingViewPager * self){
+    return self->page_now_pos;
+}
+
 uint ling_view_pager_get_page_num(LingViewPager * self){
     return self->page_num;
+}
+
+gboolean ling_view_pager_get_page_cycle(LingViewPager * self){
+    return self->page_cycle;
 }
 
 int ling_view_pager_get_pos(LingViewPager * self){
@@ -272,23 +299,9 @@ int ling_view_pager_get_pos(LingViewPager * self){
 }
 
 void ling_view_pager_show_page(LingViewPager * self,uint pos){
-    //去除旧的页面
-    GtkWidget * old_page = ling_view_pager_get_page_by_pos(self,self->page_now_pos);
-    if(old_page!=NULL){
-        g_object_ref(old_page);
-        gtk_fixed_remove(GTK_FIXED(self->fixed),old_page);
-    }
-    //换上新的页面
-    GtkWidget * new_page = ling_view_pager_get_page_by_pos(self,pos);
-    if(gtk_widget_have_child(self->fixed,new_page)){
-        g_object_ref(new_page);
-        gtk_fixed_remove(GTK_FIXED(self->fixed),new_page);
-    }
-    //重要
-    //gtk_widget_set_size_request(new_page,gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
-    gtk_fixed_put(GTK_FIXED(self->fixed),new_page,0,0);
-    self->page_now_pos = pos;
-    ling_dots_ativate(LING_DOTS(self->dots),pos);
+    //ling_view_paper_hide_all(self);
+    ling_view_pager_fixed_set_page_pos(self,pos,0,0,LING_FIXED_TOP);
+    ling_view_pager_set_pos(self,pos);
 }
 
 void ling_view_pager_set_page_cycle(LingViewPager * self,gboolean able){

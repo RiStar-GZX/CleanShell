@@ -13,6 +13,7 @@ enum{
     LAYER_TOP = 0,
     LAYER_DRAWER,
     LAYER_TASK_SWITCHER,
+    LAYER_TASK_SWITCH_BAR,
     LAYER_APP,
     LAYER_BODYBOX,
     LAYER_WALLPAPER,
@@ -138,7 +139,14 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
 
     gtk_widget_set_opacity(s->main->widget,1-(args.progress/100));
     gtk_widget_set_opacity(s->sub->widget,args.progress/100);
-    //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-progress/100));
+    //gtk_widget_set_opacity(LING_DESKTOP(shell->desktop)->task_switcher,1-(args.progress/100));
+    LingLayer * switcher,*bar;
+    ling_desktop_get_layer_task_switcher(LING_DESKTOP(shell->desktop),&switcher);
+    ling_desktop_get_layer_task_switch_bar(LING_DESKTOP(shell->desktop),&bar);
+    gtk_widget_set_opacity(switcher->widget,(1-args.progress/100));
+    gtk_widget_set_opacity(bar->widget,(1-args.progress/100));
+
+    //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-args.progress/100));
 
     ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(args.progress/100)*20);
 }
@@ -170,7 +178,7 @@ GtkWidget * ling_desktop_new(){
     self->style_info.icon_size = 64;
 
     //新建页面
-    self->view_pager = ling_view_pager_new_with_op();
+    self->view_pager = ling_view_pager_new_with_op(TRUE);
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->view_pager),FALSE);
 
     //底部dock创建
@@ -203,7 +211,10 @@ GtkWidget * ling_desktop_new(){
 
     //
     self->task_switcher = ling_task_switcher_new();
+    gtk_widget_set_visible(self->task_switcher,FALSE);
+    ling_overlay_add_layer(LING_OVERLAY(self->overlay),ling_task_switcher_get_bar(LING_TASK_SWITCHER(self->task_switcher)),LAYER_TASK_SWITCH_BAR);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->task_switcher,LAYER_TASK_SWITCHER);
+
 
     //添加dock的应用(测试)
     GList * app_now = shell->app_info;
@@ -461,7 +472,20 @@ int ling_app_view_pager_load_from_data(LingDesktop * self){
     return 1;
 }
 
-LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,uint * level){
-    *level = LAYER_BODYBOX;
+LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_BODYBOX);
     return LING_OVERLAY(self->overlay);
 }
+
+
+LingOverlay * ling_desktop_get_layer_task_switcher(LingDesktop * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_TASK_SWITCHER);
+    return LING_OVERLAY(self->overlay);
+}
+
+LingOverlay * ling_desktop_get_layer_task_switch_bar(LingDesktop * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_TASK_SWITCH_BAR);
+    return LING_OVERLAY(self->overlay);
+}
+
+

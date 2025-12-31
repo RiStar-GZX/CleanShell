@@ -111,7 +111,7 @@ void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_m
                             release,NULL,
                             main_f,sub_f,s);
 
-    uint s_op_type=LING_ACTION_DRAG_NONE;
+    uint s_op_type=LING_ACTION_CLICK;
     if(m_op_type==LING_ACTION_DRAG_UP)s_op_type = LING_ACTION_DRAG_DOWN;
     if(m_op_type==LING_ACTION_DRAG_DOWN)s_op_type = LING_ACTION_DRAG_UP;
     ling_operate_add_action(op_s,s_op_type,
@@ -121,7 +121,7 @@ void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_m
                             main_f,sub_f,s);
 }
 
-void ling_layer_main_finish(GtkWidget * widget,gpointer user_data){
+void ling_layer_main_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = user_data;
     gtk_widget_set_visible(s->main->widget,TRUE);
     gtk_widget_set_visible(s->sub->widget,FALSE);
@@ -131,7 +131,7 @@ void ling_layer_main_finish(GtkWidget * widget,gpointer user_data){
     gtk_widget_set_opacity(s->sub->widget,1);
 }
 
-void ling_layer_sub_finish(GtkWidget * widget,gpointer user_data){
+void ling_layer_sub_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = user_data;
     gtk_widget_set_visible(s->main->widget,FALSE);
     gtk_widget_set_visible(s->sub->widget,TRUE);

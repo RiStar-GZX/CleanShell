@@ -14,7 +14,7 @@ G_BEGIN_DECLS
 
 GtkWidget * ling_lock_screen_new();
 
-LingOverlay * ling_lock_screen_get_layer_cover(LingLockScreen * self,uint * level);
+LingOverlay * ling_lock_screen_get_layer_cover(LingLockScreen * self,LingLayer ** layer);
 
 void ling_lock_screen_set_wallpaper_blur(LingLockScreen * self,uint blur);
 

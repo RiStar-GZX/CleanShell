@@ -30,7 +30,7 @@ enum ling_operate_state{
 
 
 enum{
-    LING_ACTION_DRAG_NONE=0,
+    LING_ACTION_CLICK=0,
     LING_ACTION_DRAG_UP,
     LING_ACTION_DRAG_DOWN,
     LING_ACTION_DRAG_LEFT,
@@ -43,7 +43,10 @@ enum{
     LING_ACTION_NUM,
 };
 
+typedef struct LingOperate LingOperate;
+
 typedef struct LingActionArgs{
+    LingOperate * op;
     gdouble start_x;
     gdouble start_y;
     gdouble offset_x;
@@ -51,6 +54,7 @@ typedef struct LingActionArgs{
     gdouble velocity_x;
     gdouble velocity_y;
     gdouble progress;
+    gdouble progress_end;
     uint action;
 }LingActionArgs;
 
@@ -62,7 +66,7 @@ typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_d
 
 typedef gboolean  (*ISBREAKED)(gpointer user_data);
 
-typedef void  (*FINISH)(GtkWidget * widget,gpointer user_data);
+typedef void  (*FINISH)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
 typedef struct LingAction{
     gboolean able;
@@ -80,7 +84,8 @@ typedef struct LingAction{
     gpointer animate_data;
 
     gdouble ani_progress; //进度
-    gdouble ani_time;     //进度从0到100所需要的时间
+    gdouble ani_progress_end;
+    gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
     gboolean ani_dir;     //方向(正反)  //默认正，打断反
 
     //曲线
@@ -148,7 +153,11 @@ void ling_operate_run_isbreaked(LingOperate * op);
 
 gboolean ling_operate_start_operating(LingOperate * op);
 
-void ling_operate_set_change(LingOperate * op,const char * opname);
+int ling_operate_get_action_now(LingOperate * op);
+
+void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progress_end);
+
+gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 
 void ling_operate_swipe_cb(GtkGestureSwipe* self,
     gdouble velocity_x,gdouble velocity_y,gpointer user_data);

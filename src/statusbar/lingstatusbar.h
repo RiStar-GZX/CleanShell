@@ -40,9 +40,9 @@ void drop_down_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,
 void drop_down_finish(gpointer data);
 void drop_up_finish(gpointer data);
 
-LingOverlay * ling_status_bar_get_layer_center(LingStatusBar * self,uint * level);
+LingOverlay * ling_status_bar_get_layer_center(LingStatusBar * self,LingLayer ** layer);
 
-LingOverlay * ling_status_bar_get_layer_bar(LingStatusBar * self,uint * level);
+LingOverlay * ling_status_bar_get_layer_bar(LingStatusBar * self,LingLayer ** layer);
 
 void ling_status_bar_set_status_bar_opacity(LingStatusBar * self,gdouble opacity);
 

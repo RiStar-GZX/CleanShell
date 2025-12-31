@@ -254,3 +254,16 @@ fixed { min-width: 100%; min-height: 100%; }
     background-size: cover;
     /*filter: blur(10px);
 }*/
+
+.task_switcher_bar{
+    background-color: rgba(0,0,0,0.9);
+    border-radius: 10px;
+    font-size:5px;
+    width:10px;
+    transition: background-color 0.3s ease,transform 0.3s;
+}
+
+.task_switcher_bar:hover{
+    background-color: rgba(0,0,0,0.7);
+    transform: scaleX(0.9) /*scaleY(0.95)*/;
+}

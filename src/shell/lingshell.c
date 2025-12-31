@@ -6,6 +6,7 @@
 #include <lingkeyborad.h>
 #include <lingsysinfo.h>
 #include <lingtimeviewer.h>
+#include <lingfixed.h>
 
 LingShell * shell;
 
@@ -140,6 +141,11 @@ typedef struct switch3{
 static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switch3 * s = user_data;
     GtkWidget * main=s->statusbar->widget,*sub;
+
+    LingLayer * switcher,*bar;
+    ling_status_bar_get_layer_bar(LING_STATUS_BAR(shell->statusbar),&switcher);
+    gtk_widget_set_visible(switcher->widget,TRUE);
+
     if(shell->mode==SHELL_MODE_LOCKSCREEN){
         sub=s->lockscreen->widget;
         ling_lock_screen_set_wallpaper_blur(LING_LOCK_SCREEN(shell->lockscreen),(1-args.progress/100)*20);
@@ -147,6 +153,11 @@ static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer
     if(shell->mode==SHELL_MODE_DESKTOP){
         sub=s->desktop->widget;
         ling_desktop_set_wallpaper_blur(LING_DESKTOP(shell->desktop),(1-args.progress/100)*20);
+
+        ling_desktop_get_layer_task_switcher(LING_DESKTOP(shell->desktop),&switcher);
+        ling_desktop_get_layer_task_switch_bar(LING_DESKTOP(shell->desktop),&bar);
+        gtk_widget_set_opacity(switcher->widget,(args.progress/100));
+        gtk_widget_set_opacity(bar->widget,(args.progress/100));
     }
 
     gtk_widget_set_visible(main,TRUE);
@@ -159,7 +170,7 @@ static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer
     ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(args.progress/100));
 }
 
-void statusbar_center_s_finish(GtkWidget * widget,gpointer user_data){
+void statusbar_center_s_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switch3 * s = user_data;
     GtkWidget * main=s->statusbar->widget,*sub;
     if(shell->mode==SHELL_MODE_LOCKSCREEN){
@@ -170,6 +181,11 @@ void statusbar_center_s_finish(GtkWidget * widget,gpointer user_data){
         sub=s->desktop->widget;
         //gtk_widget_set_visible(s->lockscreen->widget,TRUE);
     }
+
+    LingLayer * layer;
+    ling_status_bar_get_layer_bar(LING_STATUS_BAR(shell->statusbar),&layer);
+    gtk_widget_set_visible(layer->widget,FALSE);
+
     gtk_widget_set_visible(main,TRUE);
     gtk_widget_set_visible(sub,FALSE);
     gtk_widget_set_margin_top(main,0);
@@ -178,7 +194,7 @@ void statusbar_center_s_finish(GtkWidget * widget,gpointer user_data){
     gtk_widget_set_opacity(sub,1);
 }
 
-void statusbar_center_e_finish(GtkWidget * widget,gpointer user_data){
+void statusbar_center_e_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switch3 * s = user_data;
     GtkWidget * main=s->statusbar->widget,*sub;
     if(shell->mode==SHELL_MODE_LOCKSCREEN){
@@ -189,6 +205,10 @@ void statusbar_center_e_finish(GtkWidget * widget,gpointer user_data){
         sub=s->desktop->widget;
         //gtk_widget_set_visible(s->lockscreen->widget,TRUE);
     }
+    LingLayer * layer;
+    ling_status_bar_get_layer_bar(LING_STATUS_BAR(shell->statusbar),&layer);
+    gtk_widget_set_visible(layer->widget,TRUE);
+
     gtk_widget_set_visible(main,FALSE);
     gtk_widget_set_visible(sub,TRUE);
     gtk_widget_set_margin_top(main,0);
@@ -197,7 +217,12 @@ void statusbar_center_e_finish(GtkWidget * widget,gpointer user_data){
     gtk_widget_set_opacity(sub,1);
 }
 
+static void test(LingShell * shell);
+
 void ling_shell_setting(LingShell * self){
+    // test(self);
+    // return;
+
     //加载所有应用
     ling_shell_load_apps(self,"/usr/share/applications/");
     ling_shell_load_apps(self,"~/.local/share/applications/");
@@ -238,15 +263,16 @@ void ling_shell_setting(LingShell * self){
 
     //下拉状态栏
     switch3 * s = malloc(sizeof(switch3));
-    uint sb_level,dt_level,ls_level;
-    LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sb_level);
-    LingLayer * sb_lay=ling_overlay_get_layer(sb_overlay,sb_level);
+    //uint sb_level,dt_level,ls_level;
+    LingLayer * sb_lay,*dt_lay,*ls_lay;
+    LingOverlay * sb_overlay =  ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sb_lay);
+    //LingLayer * sb_lay=ling_overlay_get_layer(sb_overlay,sb_level);
     s->statusbar = sb_lay;
-    LingOverlay * dt_overlay =  ling_desktop_get_layer_bodybox(LING_DESKTOP(shell->desktop),&dt_level);
-    LingLayer * dt_lay=ling_overlay_get_layer(dt_overlay,dt_level);
+    LingOverlay * dt_overlay =  ling_desktop_get_layer_bodybox(LING_DESKTOP(shell->desktop),&dt_lay);
+    //LingLayer * dt_lay=ling_overlay_get_layer(dt_overlay,dt_level);
     s->desktop = dt_lay;
-    LingOverlay * ls_overlay =  ling_lock_screen_get_layer_cover(LING_LOCK_SCREEN(shell->lockscreen),&ls_level);
-    LingLayer * ls_lay=ling_overlay_get_layer(ls_overlay,ls_level);
+    LingOverlay * ls_overlay =  ling_lock_screen_get_layer_cover(LING_LOCK_SCREEN(shell->lockscreen),&ls_lay);
+    //LingLayer * ls_lay=ling_overlay_get_layer(ls_overlay,ls_level);
     s->lockscreen = ls_lay;
 
     ling_operate_add_action(ling_operate_get(shell->controler,LING_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,
@@ -267,8 +293,8 @@ void ling_shell_setting(LingShell * self){
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
-    uint sbb_level;
-    ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sbb_level);
+    //uint sbb_level;
+    //ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sbb_level);
     ling_operate_add_action(ling_operate_get(shell->controler,LING_STATUSBAR_BAR_OP_NAME),LING_ACTION_DRAG_DOWN,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
@@ -282,3 +308,23 @@ GtkWidget * ling_shell_start(){
     return GTK_WIDGET(shell);
 }
 
+// static void clicked (GtkButton* self,gpointer user_data){
+
+//     GtkLayoutManager * manager = user_data;//gtk_box_layout_new(GTK_ORIENTATION_VERTICAL);
+//     int min,nar,min_b,nar_b;
+//     gtk_layout_manager_measure(manager,GTK_WIDGET(self),GTK_ORIENTATION_VERTICAL,-1,&min,&nar,&min_b,&nar_b);
+//     g_print("%d %d %d %d\n",min,nar,min_b,nar_b);
+// }
+
+static void test(LingShell * shell){
+    GtkWidget * fixed = ling_fixed_new();
+    gtk_box_append(GTK_BOX(shell),fixed);
+
+    GtkWidget * b1 = gtk_button_new();
+    GtkWidget * b2 = gtk_button_new();
+    ling_fixed_put(LING_FIXED(fixed),b1,0,0,LING_FIXED_TOP);
+    ling_fixed_set_child_size(LING_FIXED(fixed),b1,300,300);
+    ling_fixed_put(LING_FIXED(fixed),b2,10,10,LING_FIXED_BOTTOM);
+    ling_fixed_set_child_size(LING_FIXED(fixed),b2,300,300);
+    ling_fixed_move(LING_FIXED(fixed),b1,200,200);
+}

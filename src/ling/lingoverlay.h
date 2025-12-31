@@ -51,6 +51,6 @@ LingLayer * ling_overlay_get_layer(LingOverlay * overlay,uint lay);
 
 gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 gboolean ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user_data);
-void ling_layer_main_finish(GtkWidget * widget,gpointer user_data);
-void ling_layer_sub_finish(GtkWidget * widget,gpointer user_data);
+void ling_layer_main_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+void ling_layer_sub_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 G_END_DECLS

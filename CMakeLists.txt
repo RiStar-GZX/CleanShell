@@ -21,6 +21,8 @@ add_executable(clean-shell main.c
     src/ling/lingviewpager.c
     src/ling/lingdots.c
     src/ling/lingdots.h
+    src/ling/lingfixed.c
+    src/ling/lingfixed.h
     src/statusbar/lingstatusbar.h
     src/statusbar/lingstatusbar.c
     src/statusbar/lingnotifycenter.h
@@ -60,8 +62,13 @@ add_executable(clean-shell main.c
     src/ling/lingsysinfoupdater.c
     src/ling/lingsysinfoupdater.h
 
-    src/taskswitcher/lingtaskswitcher.c
-    src/taskswitcher/lingtaskswitcher.c
+    src/desktop/taskswitcher/lingtaskswitcher.c
+    src/desktop/taskswitcher/lingtaskswitcher.c
+)
+
+# 添加CSS资源文件
+set(CSS_FILES
+    ${CMAKE_SOURCE_DIR}/ui/style.css
 )
 
 find_package(PkgConfig REQUIRED)
@@ -76,19 +83,19 @@ include_directories(${SDL_INCLUDE_DIRS})
 link_directories(${SDL_LIBRARY_DIRS})
 
 # 查找FFmpeg库
-find_package(PkgConfig)
-pkg_search_module(LIBAVCODEC libavcodec)
-pkg_search_module(LIBAVFORMAT libavformat)
-pkg_search_module(LIBAVUTIL libavutil)
-pkg_search_module(LIBSWSCALE libswscale)
-pkg_search_module(LIBAVDEVICE libavdevice)
+# find_package(PkgConfig)
+# pkg_search_module(LIBAVCODEC libavcodec)
+# pkg_search_module(LIBAVFORMAT libavformat)
+# pkg_search_module(LIBAVUTIL libavutil)
+# pkg_search_module(LIBSWSCALE libswscale)
+# pkg_search_module(LIBAVDEVICE libavdevice)
 
 
 # 查找ALSA库
-find_package(ALSA REQUIRED)
+# find_package(ALSA REQUIRED)
 
 # 查找SQLite3库
-find_package(SQLite3 REQUIRED)
+# find_package(SQLite3 REQUIRED)
 
 # 设置输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
@@ -113,10 +120,10 @@ link_directories(${LIBAVCODEC_LIBRARY_DIRS}
 
 
 target_include_directories(clean-shell PUBLIC ${GTK4_INCLUDE_DIRS})
-target_link_libraries(clean-shell PUBLIC ${GTK4_LIBRARIES} ${SDL3_LIBRARIES}
+target_link_libraries(clean-shell PUBLIC ${GTK4_LIBRARIES} #[[${SDL3_LIBRARIES}
 ${LIBAVCODEC_LIBRARIES} ${LIBAVFORMAT_LIBRARIES} ${LIBAVUTIL_LIBRARIES} ${LIBSWSCALE_LIBRARIES} ${LIBAVDEVICE_LIBRARIES}
 ${LIBNOTIFY_LIBRARIES}
-    ${DBUS_LIBRARIES} ${ALSA_LIBRARIES} PRIVATE SQLite::SQLite3)
+    ${DBUS_LIBRARIES} ${ALSA_LIBRARIES} PRIVATE SQLite::SQLite3]])
 
 include_directories(./src/)
 include_directories(./src/statusbar)
@@ -126,7 +133,7 @@ include_directories(./src/ling)
 include_directories(./src/ling/keyboard)
 include_directories(./src/ling/assembly)
 include_directories(./src/ling/notify)
-include_directories(./src/taskswitcher)
+include_directories(./src/desktop/taskswitcher)
 include_directories(./src/lockscreen)
 include_directories(./ui)
 include_directories(./src/shell)

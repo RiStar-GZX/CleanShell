@@ -147,8 +147,8 @@ GtkWidget * ling_lock_screen_new(){
     return GTK_WIDGET(self);
 }
 
-LingOverlay * ling_lock_screen_get_layer_cover(LingLockScreen * self,uint * level){
-    *level = LAYER_COVER;
+LingOverlay * ling_lock_screen_get_layer_cover(LingLockScreen * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_COVER);
     return LING_OVERLAY(self->overlay);
 }
 

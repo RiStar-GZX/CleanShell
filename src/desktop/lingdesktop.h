@@ -68,5 +68,11 @@ void ling_desktop_set_wallpaper_blur(LingDesktop *self,uint px);
 uint ling_desktop_get_wallpaper_blur(LingDesktop *self);
 
 void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
-LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,uint * level);
+
+LingOverlay * ling_desktop_get_layer_bodybox(LingDesktop * self,LingLayer ** layer);
+
+LingOverlay * ling_desktop_get_layer_task_switcher(LingDesktop * self,LingLayer ** layer);
+
+LingOverlay * ling_desktop_get_layer_task_switch_bar(LingDesktop * self,LingLayer ** layer);
+
 G_END_DECLS
