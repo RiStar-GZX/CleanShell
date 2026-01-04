@@ -56,6 +56,17 @@
 
 .light-style{
     color:white;
+    font-size:16px;
+}
+
+.dark-style{
+    color:rgba(0,0,0,0.8);
+    font-size:16px;
+}
+
+.desktop-folder{
+    background-color:rgba(255,100,100,0.8);
+    border-radius: 15px;
 }
 
 label.time{
