@@ -9,7 +9,9 @@
 G_BEGIN_DECLS
 
 #define CL_STATUSBAR_CENTERBOX_OP_NAME "statusbar_centerbox"
+#define CL_STATUSBAR_VIEWPAGER_OP_NAME "statusbar_viewpager"
 #define CL_STATUSBAR_BAR_OP_NAME "statusbar_bar"
+
 
 #define CL_TYPE_STATUS_BAR (cl_status_bar_get_type())
 G_DECLARE_FINAL_TYPE(ClStatusBar,cl_status_bar,CL,STATUS_BAR,GtkBox)
@@ -43,6 +45,8 @@ void drop_up_finish(gpointer data);
 LingOverlay * cl_status_bar_get_layer_center(ClStatusBar * self,LingLayer ** layer);
 
 LingOverlay * cl_status_bar_get_layer_bar(ClStatusBar * self,LingLayer ** layer);
+
+GtkWidget * cl_status_bar_get_folder(ClStatusBar * self);
 
 void cl_status_bar_set_status_bar_opacity(ClStatusBar * self,gdouble opacity);
 

@@ -3,7 +3,7 @@
 #include <gtk/gtk.h>
 #include <ling.h>
 #include <mobileshell.h>
-#include <desktopfolder.h>
+#include <lingfolder.h>
 
 G_BEGIN_DECLS
 
@@ -30,7 +30,7 @@ void clm_desktop_item_folder_set_app_runable(ClmDesktopItem * self,gboolean runa
 
 void clm_desktop_item_folder_set_app_icon_size(ClmDesktopItem * self,int size);
 
-GtkWidget * clm_desktop_item_folder_new(ClmDesktopFolder * folderlayer,
+GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,
                                        uint column,uint row,GList * applist,
                                        const char * folder_name,gboolean label_visible);
 

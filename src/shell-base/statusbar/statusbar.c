@@ -11,6 +11,7 @@
 enum{
     LAYER_TOP = 0,
 
+    LAYER_FOLDER,
     LAYER_STATUSBAR,
     LAYER_CENTER,
 
@@ -51,6 +52,8 @@ static void cl_center_head_init(ClCenterHead * self){
     gtk_box_append(GTK_BOX(self),self->center_head);
 
     guint timer_id = g_timeout_add(500, ling_center_head_status_update, self);
+
+
 }
 
 void cl_center_head_append(ClCenterHead * self,GtkWidget * widget){
@@ -69,6 +72,7 @@ struct _ClStatusBar{
     GtkBox parent;
 
     GtkWidget * overlay;
+    GtkWidget * folder;
     GtkWidget * statusbar;
     //GtkWidget * background;
 
@@ -140,32 +144,32 @@ static gboolean update_status(gpointer user_data){
     return 1;
 }
 
-void drop_up_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
-    ClStatusBar * self = CL_STATUS_BAR(data);
-    gtk_widget_set_opacity(self->viewpager,progress/100);
-}
+// void drop_up_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
+//     ClStatusBar * self = CL_STATUS_BAR(data);
+//     gtk_widget_set_opacity(self->viewpager,progress/100);
+// }
 
-void drop_down_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
-    ClStatusBar * self = CL_STATUS_BAR(data);
-    gtk_widget_set_opacity(self->viewpager,progress/100);
-}
+// void drop_down_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
+//     ClStatusBar * self = CL_STATUS_BAR(data);
+//     gtk_widget_set_opacity(self->viewpager,progress/100);
+// }
 
-void drop_down_finish(gpointer data){
-    ClStatusBar * self = CL_STATUS_BAR(data);
-    gtk_widget_set_visible(self->viewpager,1);
-}
+// void drop_down_finish(gpointer data){
+//     ClStatusBar * self = CL_STATUS_BAR(data);
+//     gtk_widget_set_visible(self->viewpager,1);
+// }
 
-void drop_up_finish(gpointer data){
-    ClStatusBar * self = CL_STATUS_BAR(data);
+// void drop_up_finish(gpointer data){
+//     ClStatusBar * self = CL_STATUS_BAR(data);
 
-    LingLayer * layer;
-    LingOverlay * overlay = clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
-    gtk_widget_set_visible(layer->widget,1);
-    gtk_widget_set_visible(self->viewpager,0);
-    gtk_widget_set_opacity(self->statusbar,1);
+//     LingLayer * layer;
+//     LingOverlay * overlay = clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
+//     gtk_widget_set_visible(layer->widget,1);
+//     gtk_widget_set_visible(self->viewpager,0);
+//     gtk_widget_set_opacity(self->statusbar,1);
 
-    //self->center_mode=CENTER_MODE_NONE;
-}
+//     //self->center_mode=CENTER_MODE_NONE;
+// }
 
 static void cl_status_bar_class_init(ClStatusBarClass * kalss){
 
@@ -180,12 +184,17 @@ static void cl_status_bar_init(ClStatusBar * self){
     gtk_widget_set_hexpand(GTK_WIDGET(self->overlay),TRUE);
     gtk_box_append(GTK_BOX(self),self->overlay);
 
+    //folder
+    self->folder = ling_folder_new();
+    ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->folder,LAYER_FOLDER);
+    gtk_widget_set_vexpand(self->folder,TRUE);
+    gtk_widget_set_hexpand(self->folder,TRUE);
 
+    //状态栏
     self->statusbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,3);
     gtk_widget_set_margin_top(self->statusbar,3);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->statusbar,LAYER_STATUSBAR);
     ling_operate_add(shell->controler,CL_STATUSBAR_BAR_OP_NAME,self->statusbar);
-
 
     //添加控件
     int icon_size =20;
@@ -228,7 +237,7 @@ static void cl_status_bar_init(ClStatusBar * self){
 
 static void cl_status_bar_setting(ClStatusBar * self){
     //页面
-    self->viewpager = ling_view_pager_new_with_op(TRUE);
+    self->viewpager = ling_view_pager_new_with_op(TRUE,CL_STATUSBAR_VIEWPAGER_OP_NAME);
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->viewpager),FALSE);
     ling_view_pager_set_dot_indicator(LING_VIEW_PAGER(self->viewpager),FALSE);
     gtk_widget_set_visible(self->viewpager,0);
@@ -244,7 +253,7 @@ static void cl_status_bar_setting(ClStatusBar * self){
     ling_view_pager_add_page(LING_VIEW_PAGER(self->viewpager),self->page_notify);
 
     //控制页
-    self->page_control = cl_control_center_new(self->overlay);
+    self->page_control = cl_control_center_new(self);
     gtk_widget_set_hexpand(self->page_control,1);
     gtk_widget_set_vexpand(self->page_control,1);
     ling_view_pager_add_page(LING_VIEW_PAGER(self->viewpager),self->page_control);
@@ -275,6 +284,10 @@ LingOverlay * cl_status_bar_get_layer_center(ClStatusBar * self,LingLayer ** lay
 LingOverlay * cl_status_bar_get_layer_bar(ClStatusBar * self,LingLayer ** layer){
     *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_STATUSBAR);
     return LING_OVERLAY(self->overlay);
+}
+
+GtkWidget * cl_status_bar_get_folder(ClStatusBar * self){
+    return self->folder;
 }
 
 void cl_status_bar_set_status_bar_opacity(ClStatusBar * self,gdouble opacity){

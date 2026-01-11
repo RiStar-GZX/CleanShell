@@ -15,3 +15,4 @@
 #include <lingnotifyviewer.h>
 #include <lingkeyborad.h>
 #include <lingtimeviewer.h>
+#include <lingfolder.h>

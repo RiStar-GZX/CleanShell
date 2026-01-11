@@ -9,6 +9,8 @@ static void operate_drag_update(GtkGestureDrag* self,
 static void operate_drag_end(GtkGestureDrag* self,
                              gdouble offset_x,gdouble offset_y,gpointer user_data);
 
+void ling_operate_swipe_cb(GtkGestureSwipe* self,
+                           gdouble velocity_x,gdouble velocity_y,gpointer user_data);
 
 LingOpControler * ling_operate_controler_new(uint frame){
     LingOpControler * controler = malloc(sizeof(LingOpControler));
@@ -35,12 +37,12 @@ char * ling_operate_new_name(LingOpControler * controler,const char * name){
 }
 
 LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,gpointer widget){
-                               //,ANIMATION animation,gpointer animation_data,ISBREAKED isbreaked,gpointer isbreaked_data,FINISH finish,gpointer finish_data){
     if(op_name==NULL||controler==NULL)return NULL;
 
     //创建op
     LingOperate * op = malloc(sizeof(LingOperate));
     memset(op,0,sizeof(LingOperate));
+    op->able = TRUE;
     op->controler = controler;
     op->state = LING_OPERATE_STATE_WAITTING;
 
@@ -304,20 +306,37 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
 
 
 
-
+static gboolean longpress_timeout(gpointer user_data){
+    LingOperate * op = (LingOperate*)user_data;
+    op->longpress_id = 0;
+    op->action_now = LING_ACTION_LONG_PRESS;
+    op->actions[op->action_now].ani_progress = 0;
+    ling_operate_start_operating(op);
+    ling_operate_run_animation(op);
+    return G_SOURCE_REMOVE;
+}
 //new
 
 static void operate_drag_begin(GtkGestureDrag* self,
                              gdouble start_x,gdouble start_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
+    if(!op->able)return;
+    if(op->state==LING_OPERATE_STATE_ANIMATION)return;
     op->action_now=LING_ACTION_CLICK;
     op->start_x = start_x;
     op->start_y = start_y;
+    op->longpress_id = g_timeout_add(500,longpress_timeout,op);
 }
 
 static void operate_drag_update(GtkGestureDrag* self,
                               gdouble offset_x,gdouble offset_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
+    if(!op->able)return;
+    if(op->state==LING_OPERATE_STATE_ANIMATION)return;
+    if(op->longpress_id!=0){
+        g_source_remove(op->longpress_id);
+        op->longpress_id=0;
+    }
     op->offset_x = offset_x;
     op->offset_y = offset_y;
     // if(offset_y<=0&&op->offset_last>=0||offset_y>=0&&op->offset_last<=0){
@@ -361,7 +380,12 @@ static void operate_drag_update(GtkGestureDrag* self,
 static void operate_drag_end(GtkGestureDrag* self,
                              gdouble offset_x,gdouble offset_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
-
+    if(!op->able)return;
+    if(op->state==LING_OPERATE_STATE_ANIMATION)return;
+    if(op->longpress_id!=0){
+        g_source_remove(op->longpress_id);
+        op->longpress_id=0;
+    }
     if(op->action_now == LING_ACTION_CLICK && op->actions[op->action_now].able){
         op->actions[op->action_now].ani_progress = 0;
         ling_operate_start_operating(op);
@@ -371,8 +395,72 @@ static void operate_drag_end(GtkGestureDrag* self,
         op->actions[op->action_now].ani_progress = 0;
         ling_operate_start_operating(op);
     }
+    // if(op->longpress_status){
+
+    // }
     ling_operate_run_animation(op);
 }
+
+void ling_operate_set_able(LingOperate * op,gboolean able){
+    op->able = able;
+}
+
+// static void ignore_click_pressed(GtkGestureClick* self,gint n_press,
+//                                   gdouble x,gdouble y,gpointer user_data){
+//     LingOperate * op = user_data;
+//     op->able = FALSE;
+
+//     g_print("press\n");
+// }
+
+// static void ignore_click_released (GtkGestureClick* self,gint n_press,
+//               gdouble x,gdouble y,gpointer user_data){
+//     LingOperate * op = user_data;
+//     op->able = TRUE;
+//     g_print("release\n");
+// }
+
+// static void ignore_click_unpaired_release (GtkGestureClick* self,
+//     gdouble x,gdouble y,guint button,GdkEventSequence* sequence,gpointer user_data){
+//     LingOperate * op = user_data;
+//     op->able = TRUE;
+//     g_print("release unpair\n");
+// }
+
+// GtkGesture * ling_operate_click_ignore(LingOperate * op,GtkWidget * widget){
+//     GtkGesture * click = gtk_gesture_click_new();
+//     gtk_widget_add_controller(widget,GTK_EVENT_CONTROLLER(click));
+//     gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click), GTK_PHASE_CAPTURE);
+//     g_signal_connect(click,"pressed",G_CALLBACK(ignore_click_pressed),op);
+//     g_signal_connect(click,"released",G_CALLBACK(ignore_click_released),op);
+//     g_signal_connect(click,"unpaired_release",G_CALLBACK(ignore_click_unpaired_release),op);
+
+//     return click;
+// }
+
+static void ignore_drag_begin(GtkGestureDrag* self,
+                              gdouble start_x,gdouble start_y,gpointer user_data){
+    LingOperate * op = user_data;
+    op->able = FALSE;
+}
+
+static void ignore_drag_end(GtkGestureDrag* self,
+                            gdouble offset_x,gdouble offset_y,gpointer user_data){
+    LingOperate * op = user_data;
+    op->able = TRUE;
+}
+
+GtkGesture * ling_operate_drag_ignore(LingOperate * op,GtkWidget * widget){
+    GtkGesture * drag = gtk_gesture_drag_new();
+    gtk_widget_add_controller(widget, GTK_EVENT_CONTROLLER(drag));
+
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(drag), GTK_PHASE_CAPTURE);
+    g_signal_connect(drag, "drag-begin", G_CALLBACK(ignore_drag_begin), op);
+    g_signal_connect(drag, "drag-end", G_CALLBACK(ignore_drag_end), op);
+    return drag;
+}
+
+
 
 void ling_operate_add_action(LingOperate * op,uint type,
                              PROGRESS progress,gpointer progress_data,

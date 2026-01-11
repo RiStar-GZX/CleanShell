@@ -95,12 +95,12 @@ typedef struct LingAction{
     FINISH finish_s;
     FINISH finish_e;
     gpointer finish_data;
-
 }LingAction;
 
 typedef struct LingOperate{
     LingOpControler *controler;
 
+    gboolean able;
     GtkGesture * drag;
     GtkGesture * swipe;
     GtkWidget * widget;
@@ -126,6 +126,10 @@ typedef struct LingOperate{
     //打断(废弃)
     ISBREAKED isbreaked;
     gpointer isbreaked_data;
+
+
+    int longpress_id;
+    //gboolean longpress_status;
 }LingOperate;
 
 LingOpControler * ling_operate_controler_new(uint frame);
@@ -138,12 +142,9 @@ void ling_operate_set_isbreaked_cb(LingOperate * op,ISBREAKED cb,gpointer data);
 
 void ling_operate_set_finish_cb(LingOperate * op,uint action_type,FINISH cb,gpointer data);
 
-LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,gpointer widget/*,
-                              ANIMATION animation,gpointer animation_data,
-                              //UPDATE update,gpointer update_data,
-                              ISBREAKED isbreaked,gpointer isbreaked_data,
-                              FINISH finish,gpointer finish_data*/);
+LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,gpointer widget);
 
+void ling_operate_set_able(LingOperate * op,gboolean able);
 
 void ling_operate_remove(LingOperate * op);
 
@@ -161,9 +162,9 @@ void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progr
 
 gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 
-void ling_operate_swipe_cb(GtkGestureSwipe* self,
-    gdouble velocity_x,gdouble velocity_y,gpointer user_data);
+//GtkGesture * ling_operate_click_ignore(LingOperate * op,GtkWidget * widget);
 
+GtkGesture * ling_operate_drag_ignore(LingOperate * op,GtkWidget * widget);
 
 void ling_operate_add_action(LingOperate * op,uint type,
                              PROGRESS progress,gpointer progress_data,

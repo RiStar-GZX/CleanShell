@@ -31,6 +31,7 @@ static void app_open (GApplication *app, GFile ** files, gint n_files, gchar *hi
 int main (int argc, char **argv) {
     GtkApplication *app;
     int stat;
+    //g_print("%d.%d.%d\n",GTK_MAJOR_VERSION,GTK_MINOR_VERSION,GTK_MICRO_VERSION);
     app = gtk_application_new ("org.ling.lib", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect (app, "activate", G_CALLBACK (app_activate), NULL);
     g_signal_connect (app, "open", G_CALLBACK (app_open), NULL);

@@ -8,7 +8,9 @@
 
 G_BEGIN_DECLS
 
-#define CLM_DESKTOP_BODYBOX_OP_NAME "bodybox_layer"
+#define CLM_DESKTOP_BODYBOX_OP_NAME "desktop_bodybox"
+
+#define CLM_DESKTOP_VIEWPAGER_OP_NAME "desktop_viewpager"
 
 #define CLM_TYPE_DESKTOP (clm_desktop_get_type())
 G_DECLARE_FINAL_TYPE(ClmDesktop,clm_desktop,CLM,DESKTOP,GtkBox)
@@ -39,8 +41,6 @@ typedef struct style_info{
 
 GtkWidget * clm_desktop_new();
 
-void clm_desktop_set_opacity(GtkWidget * body,GtkWidget * up,uint win_height);
-
 void drawerup_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data);
 void drawerup_finish(gpointer data);
 void drawerdown_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer user_data);
@@ -48,6 +48,8 @@ void drawerdown_finish(gpointer data);
 
 void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint px);
 uint clm_desktop_get_wallpaper_blur(ClmDesktop *self);
+
+void clm_desktop_hide_body_and_set_blur(ClmDesktop *self,gdouble progress,uint blur);
 
 void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 

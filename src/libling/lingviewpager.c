@@ -131,11 +131,11 @@ void ling_view_pager_ani(GtkWidget * widget,LingActionArgs args,gpointer user_da
 
 /*-----------------------------------------------------------------------------------------------------------------------------------*/
 
-GtkWidget * ling_view_pager_new_with_op(gboolean size_adapt){
+GtkWidget * ling_view_pager_new_with_op(gboolean size_adapt,const char * op_name){
     LingViewPager * self = LING_VIEW_PAGER(g_object_new(LING_TYPE_VIEW_PAGER,NULL));
     //gtk_widget_set_size_request(GTK_WIDGET(self->fixed), 500, 850);
 
-    self->op = ling_operate_add(shell->controler,"view_pager",GTK_WIDGET(self));
+    self->op = ling_operate_add(shell->controler,op_name,GTK_WIDGET(self));
     ling_operate_add_action(self->op,LING_ACTION_DRAG_LEFT,
                             ling_view_pager_progress,NULL,
                             ling_view_pager_ani,NULL,

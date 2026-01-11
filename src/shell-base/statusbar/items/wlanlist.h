@@ -1,7 +1,6 @@
 #pragma once
 
 #include <gtk/gtk.h>
-#include <folder.h>
 
 G_BEGIN_DECLS
 

@@ -43,3 +43,7 @@ GtkWidget * cl_control_button_new(const char * label,const char * icon_name){
     gtk_image_set_from_icon_name(GTK_IMAGE(self->image),icon_name);
     return GTK_WIDGET(self);
 }
+
+GtkWidget * cl_control_button_get_sub_button(ClControlButton * self){
+    return self->button;
+}

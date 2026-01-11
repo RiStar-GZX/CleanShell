@@ -58,7 +58,6 @@ G_DEFINE_FINAL_TYPE(ClmDesktop,clm_desktop,GTK_TYPE_BOX)
 
 int clm_desktop_set_apps(ClmDesktop * self,const char * apps_dir);
 void clm_desktop_set_wallpaper(ClmDesktop * self,const char * path);
-void clm_desktop_set_opacity(GtkWidget * body,GtkWidget * up,uint win_height);
 GtkWidget * clm_desktop_set_page(ClmDesktop * self,uint pos);
 void clm_desktop_load_page(ClmDesktop * self);
 void clm_desktop_add_page_test(ClmDesktop * self);
@@ -75,11 +74,10 @@ gboolean clm_desktop_page_load_test(ClmDesktop * self,ClmAppViewPage * page){
     GList * app = shell->app_info;
     for(int i=0;i<self->app_num;i++)app=app->next;
 
-    for(int r=6;r<=self->style_info.row_num;r++){
-        int c;
+    for(int r=5;r<=self->style_info.row_num;r++){
         int num = self->style_info.column_num;
         // if(r==self->style_info.row_num)num-=1;
-        for(c=1;c<=num;c++){
+        for(int c=3;c<=num;c++){
             app_info * info = (app_info*)app->data;
             GtkWidget * item = clm_desktop_item_app_new(info,self->style_info.icon_size,TRUE);
             clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(item),TRUE);
@@ -89,15 +87,17 @@ gboolean clm_desktop_page_load_test(ClmDesktop * self,ClmAppViewPage * page){
             self->app_num++;
         }
         GList * list = NULL;
-        for(int i=0;i<10;i++){
+        for(int i=0;i<9;i++){
             app_info * info = (app_info*)app->data;
             app=app->next;
             list = g_list_append(list,info);
         }
         app=app->next;
-        GtkWidget * item = clm_desktop_item_folder_new(CLM_DESKTOP_FOLDER(self->folder_lay),2,2,list,"folder",TRUE);
-
-        clm_app_view_page_add_item(page,item,2,5,1,1);
+        for(int j=5;j<=6;j++)
+        for(int i=1;i<=2;i++){
+            GtkWidget * item = clm_desktop_item_folder_new(LING_FOLDER(self->folder_lay),3,3,list,"folder",TRUE);
+            clm_app_view_page_add_item(page,item,i,j,1,1);
+        }
     }
     return 1;
 }
@@ -177,14 +177,14 @@ void clm_desktop_init(ClmDesktop * self){
 
     //设置页面style(后续改成根据显示器大小自动调整)
     self->style_info.column_num= 4;
-    self->style_info.row_num = 7;
-    self->style_info.column_space = 50;
+    self->style_info.row_num = 6;
+    self->style_info.column_space = 40;
     self->style_info.top_space = 40;
-    self->style_info.row_space = 20;
+    self->style_info.row_space = 0;
     self->style_info.icon_size = 64;
 
     //新建页面
-    self->view_pager = ling_view_pager_new_with_op(TRUE);
+    self->view_pager = ling_view_pager_new_with_op(TRUE,CLM_DESKTOP_VIEWPAGER_OP_NAME);
     ling_view_pager_set_page_cycle(LING_VIEW_PAGER(self->view_pager),FALSE);
 
     //底部dock创建
@@ -255,7 +255,7 @@ void clm_desktop_init(ClmDesktop * self){
     //ling_data_saver_save_pages_to_db(self->data_saver,LING_VIEW_PAGER(self->view_pager));
 
     //文件夹层
-    self->folder_lay = clm_desktop_folder_new();
+    self->folder_lay = ling_folder_new();
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->folder_lay,LAYER_FOLDER);
 
     clm_desktop_load_page(self);
@@ -305,16 +305,6 @@ void clm_desktop_set_wallpaper(ClmDesktop * self,const char * path){
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->wallpaper,LAYER_WALLPAPER);
 }
 
-
-void clm_desktop_set_opacity(GtkWidget * body,GtkWidget * up,uint win_height){
-    //全程渐变
-    gdouble up_h = (gdouble)gtk_widget_get_margin_top(up);
-    gdouble body_op = up_h/win_height;
-    gdouble up_op = 1.0 - body_op;
-    gtk_widget_set_opacity(body,body_op);
-    gtk_widget_set_opacity(up,up_op);
-}
-
 void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint blur){
     GString * str=g_string_new("");
     g_string_printf(str,"picture,box { filter: blur(%dpx); }",blur);
@@ -324,7 +314,7 @@ void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint blur){
     gtk_style_context_add_provider(gtk_widget_get_style_context(self->wallpaper),
                                    GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     gtk_style_context_add_provider(gtk_widget_get_style_context(self->bodybox),
-                                   GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                                    GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     g_free(str);
     g_object_unref(provider);
     self->blur = blur;
@@ -333,6 +323,13 @@ void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint blur){
 uint clm_desktop_get_wallpaper_blur(ClmDesktop *self){
     return self->blur;
 }
+
+void clm_desktop_hide_body_and_set_blur(ClmDesktop *self,gdouble progress,uint blur){
+    clm_desktop_set_wallpaper_blur(self,blur*(100/progress));
+    gtk_widget_set_opacity(self->bodybox,1-(100/progress));
+}
+
+
 
 
 // static void grid_data_save(GKeyFile *keyfile,const char * group,LingGrid * grid){

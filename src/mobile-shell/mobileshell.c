@@ -261,16 +261,12 @@ void clm_shell_setting(ClmShell * self){
 
     //下拉状态栏
     switch3 * s = malloc(sizeof(switch3));
-    //uint sb_level,dt_level,ls_level;
     LingLayer * sb_lay,*dt_lay,*ls_lay;
     LingOverlay * sb_overlay =  cl_status_bar_get_layer_center(CL_STATUS_BAR(shell->statusbar),&sb_lay);
-    //LingLayer * sb_lay=ling_overlay_get_layer(sb_overlay,sb_level);
     s->statusbar = sb_lay;
     LingOverlay * dt_overlay =  clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&dt_lay);
-    //LingLayer * dt_lay=ling_overlay_get_layer(dt_overlay,dt_level);
     s->desktop = dt_lay;
     LingOverlay * ls_overlay =  cl_lock_screen_get_layer_cover(CL_LOCK_SCREEN(shell->lockscreen),&ls_lay);
-    //LingLayer * ls_lay=ling_overlay_get_layer(ls_overlay,ls_level);
     s->lockscreen = ls_lay;
 
     ling_operate_add_action(ling_operate_get(shell->controler,CL_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,

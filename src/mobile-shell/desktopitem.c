@@ -1,6 +1,8 @@
 #include "desktopitem.h"
 #include <desktop.h>
 
+#define ICON_SIZE 20
+
 typedef struct{
     GtkWidget * image;
     GIcon * gicon;
@@ -12,10 +14,22 @@ typedef struct{
 }ClmDesktopItemApp;
 
 typedef struct{
+    GtkWidget * label;
     GtkWidget * box;
     GtkWidget * grid;
     LingOperate * op;
-    ClmDesktopFolder * folderlayer;
+    LingFolder * folderlayer;
+
+    int column;
+    int row;
+    int w;
+    int h;
+    uint grid_w;
+    uint grid_h;
+    gdouble start_x;
+    gdouble start_y;
+
+    LingGrid *parent;
 }ClmDesktopItemFolder;
 
 
@@ -84,7 +98,7 @@ GtkWidget * clm_desktop_item_app_new(app_info * app,guint icon_size,gboolean lab
     a->image = gtk_image_new();
     a->gicon = g_icon_new_for_string(app->icon,NULL);
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
-    a->paintable =  GDK_PAINTABLE(gtk_icon_theme_lookup_by_gicon(icon_theme,a->gicon,128,1,
+    a->paintable =  GDK_PAINTABLE(gtk_icon_theme_lookup_by_gicon(icon_theme,a->gicon,512,1,
                                                                 GTK_TEXT_DIR_NONE,0));
     gtk_image_set_pixel_size(GTK_IMAGE(a->image),icon_size);
     gtk_image_set_from_paintable(GTK_IMAGE(a->image), a->paintable);
@@ -144,32 +158,76 @@ void clm_desktop_item_folder_set_app_icon_size(ClmDesktopItem * self,int size){
     }
 }
 
-static gboolean folder_click_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static gboolean folder_open(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
     GtkWidget * parent = gtk_widget_get_parent(widget);
-    if(!LING_IS_GRID(parent))return LING_OPERATE_ANIMATION_DIR_BACK;
+    if(!LING_IS_GRID(parent))return LING_FOLDER_NOT_OPEN;
+
+    self->folder.grid_w = gtk_widget_get_width(self->content);
+    self->folder.grid_h = gtk_widget_get_height(self->content);
     LingGrid * grid = LING_GRID(parent);
     int c,r,w,h;
     ling_grid_query_child(grid,GTK_WIDGET(self),&c,&r,&w,&h);
-    gtk_widget_set_hexpand(self->folder.grid,TRUE);
-    gtk_widget_set_vexpand(self->folder.grid,TRUE);
 
-    clm_desktop_folder_show(self->folder.folderlayer,LING_GRID(parent),GTK_WIDGET(self),c,r,1,1);
-    return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    gtk_widget_translate_coordinates(GTK_WIDGET(self),GTK_WIDGET(shell),0,0,x,y);
+    self->folder.start_x = *x;
+    self->folder.start_y = *y;
+    self->folder.column = c;
+    self->folder.row = r;
+    self->folder.w = w;
+    self->folder.h = h;
+    self->folder.parent = grid;
+
+    gtk_box_insert_child_after(GTK_BOX(self->content),self->folder.label,NULL);
+    gtk_widget_set_opacity(self->folder.label,0);
+    ling_grid_remove(grid,c,r);
+    return LING_FOLDER_OPEN;
 }
 
-static void folder_click_animate(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static int folder_expand_w=400,folder_expand_h=500;
+static void folder_ani(GtkWidget * folder,gdouble progress,gpointer user_data){
+    ClmDesktopItem * self = CLM_DESKTOP_ITEM(folder);
+    // int  w = self->folder.grid_w+(size/100)*100;
+    // int  h = self->folder.grid_h+(size/100)*100;
+    // gtk_widget_set_opacity(self->label,1-size/100.0000f);
+    // clm_desktop_item_folder_set_app_icon_size(self,ICON_SIZE+(size/100)*40);
+    // clm_desktop_folder_set_size(self->folder.folderlayer,w,h);
+
+
+    int  w = self->folder.grid_w+(progress/100)*(folder_expand_w-self->folder.grid_w);
+    int  h = self->folder.grid_h+(progress/100)*(folder_expand_h-self->folder.grid_h);
+    gtk_widget_set_opacity(self->label,1-progress/100.0000f);
+    gtk_widget_set_opacity(self->folder.label,progress/100.0000f);
+    clm_desktop_item_folder_set_app_icon_size(self,ICON_SIZE+(progress/100)*100);
+    gtk_widget_set_size_request(self->folder.grid,w,h);
+
+    int bodybox_w = gtk_widget_get_width(shell->bodybox);
+    int bodybox_h = gtk_widget_get_height(shell->bodybox);
+    int end_x=(bodybox_w-folder_expand_w)/2;
+    int end_y=(bodybox_h-folder_expand_h)/2;
+    int new_x= self->folder.start_x+(end_x-self->folder.start_x)*(progress/100.00f);
+    int new_y= self->folder.start_y+(end_y-self->folder.start_y)*(progress/100.00f);
+
+    ling_folder_set_pos(self->folder.folderlayer,new_x,new_y);
+
+    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(progress/100)*20);
+}
+
+static void folder_open_finish(GtkWidget * widget,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    int  w = 100+(args.progress/100)*50;
-    int  h = 100+(args.progress/100)*50;
-    clm_desktop_item_folder_set_app_icon_size(self,32+(args.progress/100)*20);
-    clm_desktop_folder_set_size(self->folder.folderlayer,w,h);
+    clm_desktop_item_folder_set_app_runable(self,TRUE);
 }
 
-static void folder_click_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    clm_desktop_item_folder_set_app_runable(CLM_DESKTOP_ITEM(widget),TRUE);
+static void folder_close(GtkWidget * folder,gpointer user_data){
+    ClmDesktopItem * self = CLM_DESKTOP_ITEM(folder);
+    g_object_ref(self->folder.label);
+    gtk_box_remove(GTK_BOX(self->content),self->folder.label);
+    clm_desktop_item_folder_set_app_runable(self,FALSE);
+    gtk_widget_set_size_request(self->folder.grid,-1,-1);
+    ling_grid_attach(self->folder.parent,GTK_WIDGET(self),self->folder.column,self->folder.row,self->folder.w,self->folder.h);
 }
-GtkWidget * clm_desktop_item_folder_new(ClmDesktopFolder * folderlayer,uint column,uint row,
+
+GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,uint column,uint row,
                                        GList * applist,const char * folder_name,gboolean label_visible){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(g_object_new(CLM_TYPE_DESKTOP_ITEM,NULL));
     self->type = CLM_DESKTOP_ITEM_FOLDER;
@@ -177,13 +235,13 @@ GtkWidget * clm_desktop_item_folder_new(ClmDesktopFolder * folderlayer,uint colu
 
     self->folder.box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     gtk_widget_add_css_class(self->folder.box,"desktop-folder");
-    self->folder.grid = ling_grid_new(column,row,4,4);
+    self->folder.grid = ling_grid_new(column,row,0,0);
     GList * now = applist;
     for(int c=1;c<=column;c++){
         for(int r=1;r<=row;r++){
             app_info * info = now->data;
             if(info==NULL)continue;
-            GtkWidget * app = clm_desktop_item_app_new(info,32,FALSE);
+            GtkWidget * app = clm_desktop_item_app_new(info,ICON_SIZE,FALSE);
             now=now->next;
             //clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(app),TRUE);
             //gtk_widget_set_hexpand(button,TRUE);
@@ -198,7 +256,6 @@ GtkWidget * clm_desktop_item_folder_new(ClmDesktopFolder * folderlayer,uint colu
     gtk_widget_set_margin_start(self->folder.grid,10);
     gtk_widget_set_margin_end(self->folder.grid,10);
 
-    // gtk_widget_set_size_request(self->folder.grid,10,10);
     gtk_box_append(GTK_BOX(self->folder.box),self->folder.grid);
     gtk_box_append(GTK_BOX(self->content),self->folder.box);
     //label
@@ -206,16 +263,16 @@ GtkWidget * clm_desktop_item_folder_new(ClmDesktopFolder * folderlayer,uint colu
     self->label = gtk_label_new(folder_name);
     gtk_widget_add_css_class(self->label,"dark-style");
 
+    self->folder.label = gtk_label_new(folder_name);
+    gtk_widget_add_css_class(self->folder.label,"desktop-item-folder-label");
+
     gtk_label_set_ellipsize(GTK_LABEL(self->label),PANGO_ELLIPSIZE_END);
     gtk_box_append(GTK_BOX(self),self->label);
 
     gtk_widget_set_visible(self->label,label_visible);
 
-    self->folder.op = ling_operate_add(shell->controler,"desktop_item_folder",GTK_WIDGET(self));
-    ling_operate_add_action(self->folder.op,LING_ACTION_CLICK,
-                            NULL,NULL,
-                            folder_click_animate,NULL,
-                            folder_click_release,NULL,
-                            NULL,folder_click_finish,NULL);
+    self->folder.op = ling_folder_operate(folderlayer,GTK_WIDGET(self),LING_ACTION_CLICK,
+                            folder_open,NULL,folder_ani,NULL,
+                            folder_open_finish,NULL,folder_close,NULL);
     return GTK_WIDGET(self);
 }

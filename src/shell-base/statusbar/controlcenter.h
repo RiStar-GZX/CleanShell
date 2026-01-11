@@ -7,16 +7,14 @@
 #include <statusbar.h>
 #include <controlbutton.h>
 #include <controlmedia.h>
-#include <wlanlist.h>
-#include <blelist.h>
-
+#include <controlitem.h>
 
 G_BEGIN_DECLS
 
 #define CL_TYPE_CONTROL_CENTER (cl_control_center_get_type())
 G_DECLARE_FINAL_TYPE(ClControlCenter,cl_control_center,CL,CONTROL_CENTER,GtkBox)
 
-GtkWidget * cl_control_center_new(GtkWidget * overlay);   //还是用gtkoverlay,得改成lingoverlay
+GtkWidget * cl_control_center_new(ClStatusBar * statusbar);
 
 void cl_control_center_set_blur(ClControlCenter * self,uint px);
 
