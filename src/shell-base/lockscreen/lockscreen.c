@@ -76,12 +76,16 @@ static void lks_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = user_data;
     gtk_widget_set_visible(s->main->widget,TRUE);
     gtk_widget_set_visible(s->sub->widget,TRUE);
-    gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
+
+    ling_widget_scale(s->main->widget,1-0.1*(args.progress/100));
+
     gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
     gtk_widget_set_margin_bottom(s->sub->widget,(args.progress/100.00f)*30);
 
-    gtk_widget_set_opacity(s->main->widget,1-(args.progress/100));
-    gtk_widget_set_opacity(s->sub->widget,args.progress/100);
+    // gtk_widget_set_opacity(s->main->widget,1-(args.progress/100));
+    // gtk_widget_set_opacity(s->sub->widget,args.progress/100);
+    gtk_widget_set_opacity(s->main->widget,1-(args.progress*2/100));
+    gtk_widget_set_opacity(s->sub->widget,args.progress*2/100-0.5);
     gtk_widget_set_opacity(shell->statusbar,1-(args.progress/100));
     cl_lock_screen_set_wallpaper_blur(CL_LOCK_SCREEN(shell->lockscreen),(args.progress/100)*20);
 }
@@ -103,9 +107,9 @@ GtkWidget * cl_lock_screen_new(){
     GtkWidget * time = ling_time_viewer_new();
     ling_sys_info_updater_add_obj(shell->updater,INFO_UPDATER_TIME,time);
     gtk_box_append(GTK_BOX(self->cover_box),time);
-    gtk_widget_set_halign(time,GTK_ALIGN_START);
-    gtk_widget_set_margin_start(time,50);
-    gtk_widget_set_margin_top(time,50);
+    gtk_widget_set_halign(time,GTK_ALIGN_CENTER);
+    //gtk_widget_set_margin_start(time,50);
+    gtk_widget_set_margin_top(time,100);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),GTK_WIDGET(self->cover_box),LAYER_COVER);
 
     //验证页
@@ -148,6 +152,10 @@ LingOverlay * cl_lock_screen_get_layer_cover(ClLockScreen * self,LingLayer ** la
     return LING_OVERLAY(self->overlay);
 }
 
+LingOverlay * cl_lock_screen_get_layer_verify(ClLockScreen * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_VERIFY);
+    return LING_OVERLAY(self->overlay);
+}
 
 void cl_lock_screen_set_wallpaper_blur(ClLockScreen * self,uint blur){
     GString * str=g_string_new("");

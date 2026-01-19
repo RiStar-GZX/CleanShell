@@ -52,8 +52,6 @@ static void cl_center_head_init(ClCenterHead * self){
     gtk_box_append(GTK_BOX(self),self->center_head);
 
     guint timer_id = g_timeout_add(500, ling_center_head_status_update, self);
-
-
 }
 
 void cl_center_head_append(ClCenterHead * self,GtkWidget * widget){
@@ -144,33 +142,6 @@ static gboolean update_status(gpointer user_data){
     return 1;
 }
 
-// void drop_up_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
-//     ClStatusBar * self = CL_STATUS_BAR(data);
-//     gtk_widget_set_opacity(self->viewpager,progress/100);
-// }
-
-// void drop_down_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data,uint mode){
-//     ClStatusBar * self = CL_STATUS_BAR(data);
-//     gtk_widget_set_opacity(self->viewpager,progress/100);
-// }
-
-// void drop_down_finish(gpointer data){
-//     ClStatusBar * self = CL_STATUS_BAR(data);
-//     gtk_widget_set_visible(self->viewpager,1);
-// }
-
-// void drop_up_finish(gpointer data){
-//     ClStatusBar * self = CL_STATUS_BAR(data);
-
-//     LingLayer * layer;
-//     LingOverlay * overlay = clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
-//     gtk_widget_set_visible(layer->widget,1);
-//     gtk_widget_set_visible(self->viewpager,0);
-//     gtk_widget_set_opacity(self->statusbar,1);
-
-//     //self->center_mode=CENTER_MODE_NONE;
-// }
-
 static void cl_status_bar_class_init(ClStatusBarClass * kalss){
 
 }
@@ -195,6 +166,7 @@ static void cl_status_bar_init(ClStatusBar * self){
     gtk_widget_set_margin_top(self->statusbar,3);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->statusbar,LAYER_STATUSBAR);
     ling_operate_add(shell->controler,CL_STATUSBAR_BAR_OP_NAME,self->statusbar);
+    gtk_widget_add_css_class(self->statusbar,"statusbar");
 
     //添加控件
     int icon_size =20;

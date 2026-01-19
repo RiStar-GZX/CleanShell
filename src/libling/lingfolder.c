@@ -1,5 +1,6 @@
 #include "lingfolder.h"
 
+
 typedef struct{
     GtkWidget * content;
     FOLDER_OPEN_CB open;

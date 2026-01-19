@@ -15,6 +15,8 @@ GtkWidget * cl_lock_screen_new();
 
 LingOverlay * cl_lock_screen_get_layer_cover(ClLockScreen * self,LingLayer ** layer);
 
+LingOverlay * cl_lock_screen_get_layer_verify(ClLockScreen * self,LingLayer ** layer);
+
 void cl_lock_screen_set_wallpaper_blur(ClLockScreen * self,uint blur);
 
 G_END_DECLS

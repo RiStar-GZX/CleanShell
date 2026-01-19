@@ -1,9 +1,19 @@
+:root {
+--main-bg-color: rgba(150,200,150,0.3);
+--main-bg-color-light: rgba(200,255,200,0.7);
+--main-bg-color-dark: rgba(100,200,100,0.7);
+--key-color-shadow: rgba(50,100,50,0.7);
+--time-color: rgba(255,255,255,1);
+--statusbar-center-button-color-click: rgba(100,200,100,0.5);
+--statusbar-bg-color: rgba(255,255,255,0);
+}
+
 /* 页面指示器 */
 .dot {
-    /*width = 9px;
-    height = 9px;*/
-    /*margin:5px 5px 5px 5px;
-    */
+    width = 9px;
+    height = 9px;
+    /*margin:5px 5px 5px 5px;*/
+
     border-radius: 50px;
     background: gray;
     border: none;
@@ -30,12 +40,17 @@
     border-radius: 60px;
     min-width: 60px;
     min-height: 60px;
-    background-color: rgba(255, 255, 255, 0.7);
+    background-color: var(--statusbar-center-button-color-click,white);
     border: none;
 }
 
+.statusbar{
+
+    background-color: var(--statusbar-bg-color,white);
+}
+
 .desktop-dock {
-    background-color: rgba(200, 200, 200, 0.3);
+    background-color: var(--main-bg-color-light, red);
     /*backdrop_filter: blur(10px);*/
     border-radius: 30px;
     margin :10px 10px 10px 10px;
@@ -46,7 +61,7 @@
 }*/
 
 .app-drawer {
-    background-color: rgba(200, 200, 200, 0.3);
+    background-color: var(--main-bg-color,rgba(0,0,0,0));
 }
 
 /*button:hover {
@@ -226,22 +241,22 @@ fixed { min-width: 100%; min-height: 100%; }
 }
 
 .keyboard{
-    background: rgba(255,100,100,0.5);
+    background: var(--main-bg-color-light,white);
     border: 0px;
     border-radius: 100px;
-    transition:border-radius 0.1s,min-width 1s,min-height 1s , transform 1s;
+    transition:border-radius 0.1s,min-width 1s,min-height 1s , transform 0.3s;
     font-size: 50px;
 }
 
 .keyboard:hover{
-    background: rgba(200,50,50,0.7);
-    border-radius: 25px;
+    background: var(--main-bg-color-dark,white);
+    border-radius: 30px;
     min-width: 10px;
     min-height: 10px;
     /*animation: myfirst 5s;*/
-    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-    /*transform: rotate(180deg);*/
-    box-shadow: 3px 3px 3px rgba(160,30,30,1), 3px 3px 3px rgba(160,30,30,1);
+    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 0.1);
+    transform: scale(1.05);/* rotate(180deg);*/
+    box-shadow: 3px 3px 3px var(--key-color-shadow,black);/*, 3px 3px 3px rgba(160,30,30,1);*/
 }
 
 /*@keyframes myfirst
@@ -254,9 +269,11 @@ fixed { min-width: 100%; min-height: 100%; }
 }*/
 
 .time_viewer{
-    font-size:80px;
+    font-size:100px;
+    font-weight: bold;
     font-family: "Times New Roman", Georgia, serif;
-    color:rgba(230,200,100,1);
+    color:var(--time-color,black);
+    text-shadow: 3px 3px 3px var(--key-color-shadow,black);
 }
 /*
 .layer_back {
@@ -295,7 +312,10 @@ fixed { min-width: 100%; min-height: 100%; }
     font-size:50px;
 }
 
-
 .desktop-item-folder-label{
     font-size:30px;
+}
+
+.cl_window{
+    background-color: rgba(255,255,255,1);
 }

@@ -2,12 +2,12 @@
 #include <lingviewpager.h>
 #include <lingwallpaper.h>
 #include <desktop.h>
-
+#include <wm/wm.h>
 
 enum{
     LAYER_TOP = 0,
 
-    LAYER_TASK_SWITCHER,
+    LAYER_WM,
     LAYER_BAR,
 
     LAYER_END = 255
@@ -180,10 +180,16 @@ static void finish_s(GtkWidget * widget,LingActionArgs args,gpointer user_data){
 
 static void finish_e(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * self = user_data;
-    gtk_widget_set_visible(GTK_WIDGET(self),TRUE);
+
+
+    /*gtk_widget_set_visible(shell->wm,TRUE);
+
+    cl_wm_move_window_by_progress(cl_wm_add_window(CL_WM(shell->wm),"firefox","1"),
+                                  100,100,LING_FIXED_TOP,50);
     LingLayer * layer;
     clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
-    gtk_widget_set_visible(layer->widget,FALSE);
+    gtk_widget_set_visible(layer->widget,FALSE);*/
+    cl_wm_close_current_window(CL_WM(shell->wm));
 }
 static void pressed (GtkGestureClick* gesture,gint n_press,
                     gdouble x,gdouble y,gpointer user_data){
@@ -316,10 +322,6 @@ static void task_view_pager_finish_center(GtkWidget * widget,LingActionArgs args
 
 static void clm_task_switcher_init(ClmTaskSwitcher * self){
     gtk_orientable_set_orientation(GTK_ORIENTABLE(self),GTK_ORIENTATION_VERTICAL);
-
-    //gtk_widget_set_valign(GTK_WIDGET(self),GTK_ALIGN_CENTER);
-
-    //self->overlay = ling_overlay_new();
     //条
     self->bar = gtk_label_new("");
     gtk_widget_add_css_class(self->bar,"task_switcher_bar");

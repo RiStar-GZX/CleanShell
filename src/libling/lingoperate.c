@@ -157,6 +157,7 @@ gboolean ling_operate_animation_timeout(gpointer user_data){
     LingAction * act = &op->actions[op->action_now];
     //IPT FIX
     if(act->ani_dir==LING_OPERATE_ANIMATION_DIR_FORWARD){
+        //act->ani_time*op->controler->frames;
         act->ani_progress+=1+0.05*(act->ani_progress_end-act->ani_progress);//00/op->controler->frames;
         if(act->ani_progress>=act->ani_progress_end){
             ling_operate_run_finish(op,LING_ACTION_FINISH_E);
@@ -197,6 +198,7 @@ void ling_operate_run_animation(LingOperate * op){
         }
         return;
     }
+    act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
     op->animation_timer_id = g_timeout_add(1000/op->controler->frames, ling_operate_animation_timeout, op);
 }
 
@@ -492,6 +494,14 @@ void ling_operate_add_action(LingOperate * op,uint type,
     // g_signal_connect(op->swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op);
 }
 
+void ling_operate_emit(LingOperate * op){
+    op->action_now = LING_ACTION_EMIT;
+    op->actions[op->action_now].ani_progress = 0;
+    ling_operate_start_operating(op);
+    ling_operate_run_animation(op);
+}
+
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run){
     op->force_run = force_run;
 }
+

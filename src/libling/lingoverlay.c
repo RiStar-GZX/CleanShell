@@ -126,6 +126,9 @@ void ling_layer_main_finish(GtkWidget * widget,LingActionArgs args,gpointer user
     gtk_widget_set_visible(s->main->widget,TRUE);
     gtk_widget_set_visible(s->sub->widget,FALSE);
     gtk_widget_set_margin_top(s->main->widget,0);
+    gtk_widget_set_margin_bottom(s->main->widget,0);
+    gtk_widget_set_margin_start(s->main->widget,0);
+    gtk_widget_set_margin_end(s->main->widget,0);
     gtk_widget_set_margin_top(s->sub->widget,0);
     gtk_widget_set_opacity(s->main->widget,1);
     gtk_widget_set_opacity(s->sub->widget,1);

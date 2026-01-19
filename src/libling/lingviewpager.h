@@ -12,6 +12,8 @@ G_BEGIN_DECLS
 
 void ling_view_pager_fixed_set_page_pos(LingViewPager * self,uint pos,gdouble x,gdouble y,int level);
 
+void ling_view_pager_resize(LingViewPager * self); //临时方案
+
 GtkWidget * ling_view_pager_new_with_op(gboolean size_adapt,const char * op_name);
 
 GtkWidget * ling_view_pager_new(gboolean size_adapt);

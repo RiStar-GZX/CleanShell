@@ -19,6 +19,7 @@ typedef void (*FOLDER_END_CB)(GtkWidget * widget,gpointer user_data);
 #define LING_TYPE_FOLDER (ling_folder_get_type())
 G_DECLARE_FINAL_TYPE(LingFolder,ling_folder,LING,FOLDER,LingFixed)
 
+
 GtkWidget * ling_folder_new();
 
 void ling_folder_set_pos(LingFolder * self,int x,int y);

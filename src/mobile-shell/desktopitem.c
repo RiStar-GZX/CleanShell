@@ -1,5 +1,6 @@
 #include "desktopitem.h"
 #include <desktop.h>
+#include <wm.h>
 
 #define ICON_SIZE 20
 
@@ -18,18 +19,6 @@ typedef struct{
     GtkWidget * box;
     GtkWidget * grid;
     LingOperate * op;
-    LingFolder * folderlayer;
-
-    int column;
-    int row;
-    int w;
-    int h;
-    uint grid_w;
-    uint grid_h;
-    gdouble start_x;
-    gdouble start_y;
-
-    LingGrid *parent;
 }ClmDesktopItemFolder;
 
 
@@ -41,6 +30,7 @@ struct _ClmDesktopItem{
     GtkWidget * content;
     ClmDesktopItemApp app;
     ClmDesktopItemFolder folder;
+    LingGridOriPos info;
 };
 
 G_DEFINE_FINAL_TYPE(ClmDesktopItem,clm_desktop_item,GTK_TYPE_BOX)
@@ -63,6 +53,7 @@ void clm_desktop_item_set_label_visible(ClmDesktopItem * self,gboolean visible){
 
 /*---------------------------------APP-----------------------------------------------*/
 
+/*保留
 void ling_desktop_item_run_app(ClmDesktopItem * self){
 
     if(self->type!=CLM_DESKTOP_ITEM_APP||!self->app.runable)return;
@@ -80,11 +71,127 @@ void ling_desktop_item_run_app(ClmDesktopItem * self){
     g_print("exec:%s\n",cmd->str);
     system(cmd->str);
 }
+*/
 
-static void app_click_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+void ling_desktop_item_run_app(ClmDesktopItem * self){
+
+}
+
+/*---------------------------------appani-----------------------------------------------------*/
+
+// static gboolean app_click_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+//     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+
+//     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return LING_OPERATE_ANIMATION_DIR_BACK;
+
+//     //LingLayer * layer;
+//     //clm_desktop_get_layer_wm(CLM_DESKTOP(shell->desktop),&layer);
+//     gtk_widget_set_visible(shell->wm,TRUE);
+
+//     ClWmWindow * win = cl_wm_get_window_by_name(CL_WM(shell->wm),self->app.app_info->name);
+//     if(win==NULL)win = cl_wm_add_window(CL_WM(shell->wm),self->app.app_info->icon,self->app.app_info->name);
+//     cl_wm_set_window_showable(win,TRUE);
+//     cl_wm_set_window_size(win,300,300);
+//     cl_wm_move_window(win,100,100);
+//     //cl_wm_move_window_by_progress(CL_WM(shell->wm),win,100,100,1,50);
+//     // gtk_widget_set_visible(shell->wm,TRUE);
+//     return LING_OPERATE_ANIMATION_DIR_FORWARD;
+// }
+
+// static void app_click_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+//     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+//     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+//     ling_desktop_item_run_app(self);
+// }
+
+/*--------------------------------------------------------------------------------------------*/
+
+static void app_open_ani(GtkWidget * widget,ClWmWindow * window,gdouble progress,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    g_print("finish\n");
-    ling_desktop_item_run_app(self);
+    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+
+    int w = gtk_widget_get_width(GTK_WIDGET(shell));
+    int h = gtk_widget_get_height(GTK_WIDGET(shell));
+
+    int  nw = self->info.size_w+(progress/100)*(w-self->info.size_w);
+    int  nh = self->info.size_h+(progress/100)*(h-self->info.size_h);
+    cl_wm_set_window_size(window,nw,nh);
+
+    int new_x= self->info.start_x-(self->info.start_x)*(progress/100.00f);
+    int new_y= self->info.start_y-(self->info.start_y)*(progress/100.00f);
+
+    cl_wm_move_window(window,new_x,new_y);
+
+    LingLayer * layer;
+    cl_wm_window_get_layer_icon(window,&layer);
+    float a=2;
+    gtk_widget_set_opacity(layer->widget,(a-progress*a/100.00f));
+    cl_wm_window_get_layer_window(window,&layer);
+    gtk_widget_set_opacity(layer->widget,(progress*a/100.00f)-a+1);
+}
+
+static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){
+    ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return NULL;
+
+    gtk_widget_set_visible(shell->wm,TRUE);
+
+    ClWmWindow * win = cl_wm_get_window_by_name(CL_WM(shell->wm),self->app.app_info->name);
+    if(win==NULL){
+        win = cl_wm_add_window(CL_WM(shell->wm),self->app.app_info->icon,self->app.app_info->name);
+    }
+
+    //self->info.content= GTK_WIDGET(win);
+    cl_wm_set_window_showable(win,TRUE);
+
+    GtkWidget * parent = gtk_widget_get_parent(widget);
+    LingGrid * grid = LING_GRID(parent);
+    int c,r,w,h;
+    ling_grid_query_child(grid,GTK_WIDGET(self),&c,&r,&w,&h);
+
+    gtk_widget_translate_coordinates(GTK_WIDGET(self),GTK_WIDGET(shell),0,0,x,y);
+    self->info.start_x = *x;
+    self->info.start_y = *y;
+    self->info.column = c;
+    self->info.row = r;
+    self->info.grid_w = w;
+    self->info.grid_h = h;
+    self->info.grid = grid;
+
+    self->info.size_w = gtk_widget_get_width(self->content);
+    self->info.size_h = gtk_widget_get_height(self->content);
+
+    cl_wm_move_window(win,*x,*y);
+
+    gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
+    //cl_wm_move_window_by_progress(CL_WM(shell->wm),win,100,100,1,50);
+    // gtk_widget_set_visible(shell->wm,TRUE);
+
+    return win;
+}
+
+
+static void app_open_finish(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+    ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    gtk_widget_set_visible(GTK_WIDGET(self),TRUE);
+    int w = gtk_widget_get_width(GTK_WIDGET(shell));
+    int h = gtk_widget_get_height(GTK_WIDGET(shell));
+    cl_wm_set_window_size(win,w,h);
+}
+
+static void app_close_start(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+    ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
+}
+
+static void app_close_finish(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+    ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
+    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    gtk_widget_set_visible(GTK_WIDGET(self),TRUE);
+    cl_wm_set_window_showable(win,FALSE);
+    gtk_widget_set_visible(shell->wm,FALSE);
 }
 
 GtkWidget * clm_desktop_item_app_new(app_info * app,guint icon_size,gboolean label_visible){
@@ -114,12 +221,13 @@ GtkWidget * clm_desktop_item_app_new(app_info * app,guint icon_size,gboolean lab
 
     gtk_widget_set_visible(self->label,label_visible);
 
-    LingOperate * op = ling_operate_add(shell->controler,"desktop_item_app",GTK_WIDGET(self));
-    ling_operate_add_action(op,LING_ACTION_CLICK,
-                            NULL,NULL,
-                            NULL,NULL,
-                            NULL,NULL,
-                            NULL,app_click_finish,NULL);
+    LingOperate * op = cl_wm_add_operate(CL_WM(shell->wm),GTK_WIDGET(self),
+                                        self->app.app_info->icon,self->app.app_info->name,
+                                        app_open_ani,NULL,
+                                        app_open_start,NULL,
+                                        app_open_finish,NULL,
+                                        app_close_start,NULL,
+                                        app_close_finish,NULL);
     ling_operate_set_force_run(op,TRUE);
     return GTK_WIDGET(self);
 }
@@ -163,20 +271,20 @@ static gboolean folder_open(GtkWidget * widget,gdouble * x,gdouble * y,gpointer 
     GtkWidget * parent = gtk_widget_get_parent(widget);
     if(!LING_IS_GRID(parent))return LING_FOLDER_NOT_OPEN;
 
-    self->folder.grid_w = gtk_widget_get_width(self->content);
-    self->folder.grid_h = gtk_widget_get_height(self->content);
+    self->info.size_w = gtk_widget_get_width(self->content);
+    self->info.size_h = gtk_widget_get_height(self->content);
     LingGrid * grid = LING_GRID(parent);
     int c,r,w,h;
     ling_grid_query_child(grid,GTK_WIDGET(self),&c,&r,&w,&h);
 
     gtk_widget_translate_coordinates(GTK_WIDGET(self),GTK_WIDGET(shell),0,0,x,y);
-    self->folder.start_x = *x;
-    self->folder.start_y = *y;
-    self->folder.column = c;
-    self->folder.row = r;
-    self->folder.w = w;
-    self->folder.h = h;
-    self->folder.parent = grid;
+    self->info.start_x = *x;
+    self->info.start_y = *y;
+    self->info.column = c;
+    self->info.row = r;
+    self->info.grid_w = w;
+    self->info.grid_h = h;
+    self->info.grid = grid;
 
     gtk_box_insert_child_after(GTK_BOX(self->content),self->folder.label,NULL);
     gtk_widget_set_opacity(self->folder.label,0);
@@ -187,28 +295,30 @@ static gboolean folder_open(GtkWidget * widget,gdouble * x,gdouble * y,gpointer 
 static int folder_expand_w=400,folder_expand_h=500;
 static void folder_ani(GtkWidget * folder,gdouble progress,gpointer user_data){
     ClmDesktopItem * self = CLM_DESKTOP_ITEM(folder);
-    // int  w = self->folder.grid_w+(size/100)*100;
+    // int  w = self->folder.size_w+(size/100)*100;
     // int  h = self->folder.grid_h+(size/100)*100;
     // gtk_widget_set_opacity(self->label,1-size/100.0000f);
     // clm_desktop_item_folder_set_app_icon_size(self,ICON_SIZE+(size/100)*40);
     // clm_desktop_folder_set_size(self->folder.folderlayer,w,h);
 
 
-    int  w = self->folder.grid_w+(progress/100)*(folder_expand_w-self->folder.grid_w);
-    int  h = self->folder.grid_h+(progress/100)*(folder_expand_h-self->folder.grid_h);
+    int  w = self->info.size_w+(progress/100)*(folder_expand_w-self->info.size_w);
+    int  h = self->info.size_h+(progress/100)*(folder_expand_h-self->info.size_h);
     gtk_widget_set_opacity(self->label,1-progress/100.0000f);
     gtk_widget_set_opacity(self->folder.label,progress/100.0000f);
     clm_desktop_item_folder_set_app_icon_size(self,ICON_SIZE+(progress/100)*100);
     gtk_widget_set_size_request(self->folder.grid,w,h);
 
-    int bodybox_w = gtk_widget_get_width(shell->bodybox);
-    int bodybox_h = gtk_widget_get_height(shell->bodybox);
+    LingLayer * layer;
+    clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
+    int bodybox_w = gtk_widget_get_width(layer->widget);
+    int bodybox_h = gtk_widget_get_height(layer->widget);
     int end_x=(bodybox_w-folder_expand_w)/2;
     int end_y=(bodybox_h-folder_expand_h)/2;
-    int new_x= self->folder.start_x+(end_x-self->folder.start_x)*(progress/100.00f);
-    int new_y= self->folder.start_y+(end_y-self->folder.start_y)*(progress/100.00f);
+    int new_x= self->info.start_x+(end_x-self->info.start_x)*(progress/100.00f);
+    int new_y= self->info.start_y+(end_y-self->info.start_y)*(progress/100.00f);
 
-    ling_folder_set_pos(self->folder.folderlayer,new_x,new_y);
+    ling_folder_set_pos(LING_FOLDER(self->info.face),new_x,new_y);
 
     clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(progress/100)*20);
 }
@@ -224,14 +334,14 @@ static void folder_close(GtkWidget * folder,gpointer user_data){
     gtk_box_remove(GTK_BOX(self->content),self->folder.label);
     clm_desktop_item_folder_set_app_runable(self,FALSE);
     gtk_widget_set_size_request(self->folder.grid,-1,-1);
-    ling_grid_attach(self->folder.parent,GTK_WIDGET(self),self->folder.column,self->folder.row,self->folder.w,self->folder.h);
+    ling_grid_attach(self->info.grid,GTK_WIDGET(self),self->info.column,self->info.row,self->info.grid_w,self->info.grid_h);
 }
 
 GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,uint column,uint row,
                                        GList * applist,const char * folder_name,gboolean label_visible){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(g_object_new(CLM_TYPE_DESKTOP_ITEM,NULL));
     self->type = CLM_DESKTOP_ITEM_FOLDER;
-    self->folder.folderlayer=folderlayer;
+    self->info.face=GTK_WIDGET(folderlayer);
 
     self->folder.box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     gtk_widget_add_css_class(self->folder.box,"desktop-folder");

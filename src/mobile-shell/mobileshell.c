@@ -118,16 +118,32 @@ void clm_shell_class_init(ClmShellClass * klass){
 
 }
 
+void clm_shell_screen_locked(ClmShell * self){
+    gtk_widget_set_visible(self->desktop,FALSE);
+    gtk_widget_set_visible(self->lockscreen,TRUE);
+    LingLayer * cover,*verify;
+    cl_lock_screen_get_layer_cover(CL_LOCK_SCREEN(self->lockscreen),&cover);
+    cl_lock_screen_get_layer_verify(CL_LOCK_SCREEN(self->lockscreen),&verify);
+
+    gtk_widget_set_visible(cover->widget,TRUE);
+    gtk_widget_set_visible(verify->widget,FALSE);
+
+    ling_widget_scale(cover->widget,1);
+    ling_widget_scale(verify->widget,1);
+
+    cl_lock_screen_set_wallpaper_blur(CL_LOCK_SCREEN(self->lockscreen),0);
+}
+
 void clm_shell_lock_screen_passed(ClLockScreen * lockscreen,gpointer user_data){
     ClmShell * self = (ClmShell *)user_data;
     gtk_widget_set_visible(self->lockscreen,FALSE);
     gtk_widget_set_opacity(shell->statusbar,1);
     self->mode = SHELL_MODE_DESKTOP;
     gtk_widget_set_visible(self->desktop,TRUE);
+    ling_operate_emit(ling_operate_get(shell->controler,"desktop_load"));
 }
 
 void clm_shell_init(ClmShell * self){
-
 }
 
 typedef struct switch3{
@@ -152,19 +168,23 @@ static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer
         sub=s->desktop->widget;
         clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(1-args.progress/100)*20);
 
-        clm_desktop_get_layer_task_switcher(CLM_DESKTOP(shell->desktop),&switcher);
+        //clm_desktop_get_layer_wm(CLM_DESKTOP(shell->desktop),&switcher);
         clm_desktop_get_layer_task_switch_bar(CLM_DESKTOP(shell->desktop),&bar);
-        gtk_widget_set_opacity(switcher->widget,(args.progress/100));
-        gtk_widget_set_opacity(bar->widget,(args.progress/100));
+        //gtk_widget_set_opacity(switcher->widget,(args.progress/100));
+        gtk_widget_set_opacity(bar->widget,args.progress*2/100-0.5);
+
     }
 
     gtk_widget_set_visible(main,TRUE);
     gtk_widget_set_visible(sub,TRUE);
     gtk_widget_set_margin_top(main,-(args.progress/100.00f)*30);
-    gtk_widget_set_margin_top(sub,30-(args.progress/100.00f)*30);
 
-    gtk_widget_set_opacity(sub,(args.progress/100));
-    gtk_widget_set_opacity(main,1-args.progress/100);
+    ling_widget_scale(sub,1-0.1*(1-args.progress/100));
+    //if(shell->mode==SHELL_MODE_DESKTOP)clm_desktop_view_pager_resize(CLM_DESKTOP(shell->desktop));
+    gtk_widget_set_opacity(main,1-(args.progress*2/100));
+    gtk_widget_set_opacity(sub,args.progress*2/100-0.5);
+    // gtk_widget_set_opacity(sub,(args.progress/100));
+    // gtk_widget_set_opacity(main,1-args.progress/100);
     cl_status_bar_set_status_bar_opacity(CL_STATUS_BAR(shell->statusbar),(args.progress/100));
 }
 
@@ -259,6 +279,7 @@ void clm_shell_setting(ClmShell * self){
 
     clm_shell_lock_screen_passed(CL_LOCK_SCREEN(self->lockscreen),self);
 
+
     //下拉状态栏
     switch3 * s = malloc(sizeof(switch3));
     LingLayer * sb_lay,*dt_lay,*ls_lay;
@@ -294,40 +315,12 @@ void clm_shell_setting(ClmShell * self){
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
+
+
 }
 
 GtkWidget * clm_shell_start(){
     shell = g_object_new(CLM_TYPE_SHELL,NULL);
     clm_shell_setting(shell);
     return GTK_WIDGET(shell);
-}
-
-// static void clicked (GtkButton* self,gpointer user_data){
-
-//     GtkLayoutManager * manager = user_data;//gtk_box_layout_new(GTK_ORIENTATION_VERTICAL);
-//     int min,nar,min_b,nar_b;
-//     gtk_layout_manager_measure(manager,GTK_WIDGET(self),GTK_ORIENTATION_VERTICAL,-1,&min,&nar,&min_b,&nar_b);
-//     g_print("%d %d %d %d\n",min,nar,min_b,nar_b);
-// }
-
-
-static void clicked (GtkButton* self,gpointer user_data){
-    gdouble x,y;
-    //graphene_point_t point,out;
-    //gtk_widget_compute_point(GTK_WIDGET(self),GTK_WIDGET(grid),&point,&out);
-
-    gtk_widget_translate_coordinates(GTK_WIDGET(self),GTK_WIDGET(user_data),0,0,&x,&y);
-    g_print("x:%f y:%f\n",x,y);
-}
-
-static void test(ClmShell * shell){
-    GtkWidget * grid = gtk_grid_new();
-    gtk_box_append(GTK_BOX(shell),grid);
-    for(int j=1;j<4;j++){
-        for(int i=1;i<4;i++){
-            GtkWidget * button = gtk_button_new();
-            gtk_grid_attach(GTK_GRID(grid),button,i,j,1,1);
-            g_signal_connect(button,"clicked",G_CALLBACK(clicked),grid);
-        }
-    }
 }

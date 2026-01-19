@@ -38,7 +38,6 @@ typedef struct style_info{
 }style_info;
 
 
-
 GtkWidget * clm_desktop_new();
 
 void drawerup_animation(gdouble velocity_x,gdouble velocity_y,gdouble progress,gpointer data);
@@ -55,12 +54,16 @@ void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
 LingOverlay * clm_desktop_get_layer_bodybox(ClmDesktop * self,LingLayer ** layer);
 
-LingOverlay * clm_desktop_get_layer_task_switcher(ClmDesktop * self,LingLayer ** layer);
+//LingOverlay * clm_desktop_get_layer_wm(ClmDesktop * self,LingLayer ** layer);
 
 LingOverlay * clm_desktop_get_layer_task_switch_bar(ClmDesktop * self,LingLayer ** layer);
+
+//void clm_desktop_view_pager_resize(ClmDesktop * self);
 
 // void clm_desktop_folder_show(ClmDesktop * desktop,ClmDesktopItem * folder,gdouble x,gdouble y);
 
 // void clm_desktop_folder_set_visible(ClmDesktop * desktop,gboolean visible);
+
+void clm_desktop_bodybox_scale(ClmDesktop * self,gdouble scale,gdouble progress);
 
 G_END_DECLS

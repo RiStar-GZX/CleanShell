@@ -40,6 +40,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK4_LIBRARIES})
 
 include_directories(./src/)
 include_directories(./src/shell-base)
+include_directories(./src/shell-base/wm)
 include_directories(./src/shell-base/statusbar)
 include_directories(./src/shell-base/statusbar/items)
 include_directories(./src/mobile-shell)

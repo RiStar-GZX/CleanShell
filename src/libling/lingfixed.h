@@ -35,6 +35,8 @@ void ling_fixed_put(LingFixed * self,GtkWidget * widget,uint x,uint y,int level)
 
 void ling_fixed_set_child_size(LingFixed * self,GtkWidget * widget,int w,int h);
 
+void ling_fixed_set_child_level(LingFixed * self,GtkWidget * widget,int level);
+
 LingFixedChild * ling_fixed_get_child_info(LingFixed * self,GtkWidget * widget);
 
 void ling_fixed_move(LingFixed * self,GtkWidget * widget,gdouble x,gdouble y);

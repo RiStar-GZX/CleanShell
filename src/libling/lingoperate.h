@@ -40,6 +40,7 @@ enum{
     LING_ACTION_LONG_PRESS_DOWN,
     LING_ACTION_LONG_PRESS_LEFT,
     LING_ACTION_LONG_PRESS_RIGHT,
+    LING_ACTION_EMIT,
     LING_ACTION_ALL,
     LING_ACTION_NUM,
 };
@@ -173,5 +174,7 @@ void ling_operate_add_action(LingOperate * op,uint type,
                              FINISH finish_s,FINISH finish_e,gpointer finish_data);
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
+
+void ling_operate_emit(LingOperate * op);
 
 #endif // LINGOPERATE_H

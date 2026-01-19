@@ -49,8 +49,56 @@ void ling_view_pager_fixed_set_page_pos(LingViewPager * self,uint pos,gdouble x,
     else ling_fixed_move(LING_FIXED(self->fixed),page,x,y);
 }
 
-static void ling_view_pager_class_init(LingViewPagerClass * klass){
+void ling_view_pager_resize(LingViewPager * self){
+    int w=gtk_widget_get_width(GTK_WIDGET(self));
+    int h=gtk_widget_get_height(GTK_WIDGET(self));
+    g_print("w:%d,h:%d\n",w,h);
+    for(GList * l = self->pages;l!=NULL;l=l->next){
+        GtkWidget * page = GTK_WIDGET(l->data);
+        gtk_widget_set_size_request(page,w,h);
+    }
+}
 
+// static void ling_view_pager_size_allocate(GtkWidget *widget,
+//                                           int width,int height,int baseline){
+//     exit(1);
+//     LingViewPager * self = LING_VIEW_PAGER(widget);
+//     int w=gtk_widget_get_width(GTK_WIDGET(self));
+//     int h=gtk_widget_get_height(GTK_WIDGET(self));
+//     for(GList * l = self->pages;l!=NULL;l=l->next){
+//         GtkWidget * page = GTK_WIDGET(l->data);
+//         gtk_widget_set_size_request(page,w,h);
+//     }
+// }
+
+// static void compute_expand(GtkWidget  *widget,
+//                        gboolean   *hexpand_p,
+//                            gboolean   *vexpand_p){
+//     LingViewPager * self = LING_VIEW_PAGER(widget);
+//     g_print("666\n");
+//     // int w=gtk_widget_get_width(GTK_WIDGET(self));
+//     // int h=gtk_widget_get_height(GTK_WIDGET(self));
+//     // for(GList * l = self->pages;l!=NULL;l=l->next){
+//     //     GtkWidget * page = GTK_WIDGET(l->data);
+//     //     gtk_widget_set_size_request(page,w,h);
+//     // }
+// }
+// static void measure(GtkWidget      *widget,
+//                 GtkOrientation  orientation,
+//                 int             for_size,
+//                 int            *minimum,
+//                 int            *natural,
+//                 int            *minimum_baseline,
+//                     int            *natural_baseline){
+//     g_print("666\n");
+//     exit(1);
+// }
+
+static void ling_view_pager_class_init(LingViewPagerClass * klass){
+    //GtkWidgetClass * widget_class = GTK_WIDGET_CLASS(klass);
+    //widget_class->size_allocate = ling_view_pager_size_allocate;
+    //widget_class->compute_expand = compute_expand;
+    //widget_class->measure = measure;
 }
 
 static void ling_view_pager_init(LingViewPager * self){

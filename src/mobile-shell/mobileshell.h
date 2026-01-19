@@ -30,8 +30,7 @@ struct _ClmShell{
     GtkWidget * desktop;
     GtkWidget * lockscreen;
 
-    GtkWidget * bodybox;
-    GtkWidget * drawer;
+    GtkWidget * wm;
 
     GtkWidget * lingoverlay;
 

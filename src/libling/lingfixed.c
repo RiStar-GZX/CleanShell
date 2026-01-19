@@ -74,12 +74,20 @@ void ling_fixed_set_child_size(LingFixed * self,GtkWidget * widget,int w,int h){
     gtk_widget_set_size_request(item->widget,w,h);
 }
 
+void ling_fixed_set_child_level(LingFixed * self,GtkWidget * widget,int level){
+
+}
+
 LingFixedChild * ling_fixed_get_child_info(LingFixed * self,GtkWidget * widget){
     GtkWidget * w=gtk_widget_get_last_child(GTK_WIDGET(self));
-    int i;
+    int i,have=0;
     for(i=0;w!=NULL;w=gtk_widget_get_prev_sibling(w),i++){
-        if(w==widget)break;
+        if(w==widget){
+            have=1;
+            break;
+        }
     }
+    if(have!=1)return NULL;
     LingFixedChild * child=NULL;
     for(GList * l=self->items_list;l!=NULL;l=l->next){
         LingFixedChild * c = l->data;
@@ -92,4 +100,3 @@ LingFixedChild * ling_fixed_get_child_info(LingFixed * self,GtkWidget * widget){
     }
     return child;
 }
-
