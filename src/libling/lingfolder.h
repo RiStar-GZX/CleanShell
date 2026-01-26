@@ -30,4 +30,6 @@ LingOperate * ling_folder_operate(LingFolder * self,GtkWidget * widget,uint acti
                                  FOLDER_END_CB open_finish,gpointer open_finish_data,
                                  FOLDER_END_CB close_finish,gpointer close_finish_data);
 
+void ling_folder_close(LingFolder * folder);
+
 G_END_DECLS

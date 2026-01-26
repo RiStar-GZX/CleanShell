@@ -19,6 +19,8 @@ struct _LingFolder{
     gboolean box_clicked;
 
     GList * content_list;   //LingFolderItem
+
+    LingOperate * close_op;
 };
 
 G_DEFINE_FINAL_TYPE(LingFolder,ling_folder,GTK_TYPE_FIXED)
@@ -97,12 +99,13 @@ void ling_folder_init(LingFolder * self){
     gtk_widget_add_controller(self->folder_box,GTK_EVENT_CONTROLLER(gesture));
     g_signal_connect(gesture,"pressed",G_CALLBACK(folder_pressed_blank),self);
 
-    LingOperate * op = ling_operate_add(shell->controler,"desktop_folder_close",GTK_WIDGET(self));
-    ling_operate_add_action(op,LING_ACTION_ALL,
+    self->close_op = ling_operate_add(shell->controler,"desktop_folder_close",GTK_WIDGET(self));
+    ling_operate_add_action(self->close_op,LING_ACTION_ALL,
                             NULL,NULL,
                             folder_close_animate,self,
                             NULL,NULL,
                             NULL,folder_close_finish,self);
+    ling_operate_set_force_run(self->close_op,TRUE);
 
     gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
 }
@@ -138,4 +141,10 @@ LingOperate * ling_folder_operate(LingFolder * self,GtkWidget * widget,uint acti
                             folder_open_release,self,
                             NULL,folder_open_finish,self);
     return op;
+}
+
+void ling_folder_close(LingFolder * folder){
+    if(folder==NULL)return;
+    ling_operate_emit(folder->close_op,NULL);
+    //ling_operate_emit_close(folder->close_op,NULL,LING_ACTION_FINISH_E);
 }

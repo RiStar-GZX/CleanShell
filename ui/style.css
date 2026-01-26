@@ -50,7 +50,7 @@
 }
 
 .desktop-dock {
-    background-color: var(--main-bg-color-light, red);
+    /*background-color: var(--main-bg-color-light, red);*/
     /*backdrop_filter: blur(10px);*/
     border-radius: 30px;
     margin :10px 10px 10px 10px;

@@ -32,8 +32,8 @@ GtkWidget * clm_app_view_page_new(style_info style_info){
 
     gtk_box_append(GTK_BOX(self),self->grid);
 
-    gtk_widget_set_margin_start(self->grid,10);
-    gtk_widget_set_margin_end(self->grid,10);
+    gtk_widget_set_margin_start(self->grid,self->style_info.frame_space);
+    gtk_widget_set_margin_end(self->grid,self->style_info.frame_space);
 
     gtk_widget_set_overflow(GTK_WIDGET(self),GTK_OVERFLOW_HIDDEN);
     gtk_widget_set_overflow(self->grid,GTK_OVERFLOW_HIDDEN);

@@ -16,6 +16,7 @@
 #include <lingkeyborad.h>
 #include <lingtimeviewer.h>
 #include <lingfolder.h>
+#include <lingdragface.h>
 
 typedef struct{
     int column;
@@ -33,3 +34,5 @@ typedef struct{
 }LingGridOriPos;
 
 void ling_widget_scale(GtkWidget * self,gdouble scale);
+
+void ling_widget_border_radis(GtkWidget * widget,gdouble px);

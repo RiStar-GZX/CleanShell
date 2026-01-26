@@ -1,9 +1,6 @@
 #include "lingfixed.h"
 
 
-
-
-
 G_DEFINE_FINAL_TYPE(LingFixed,ling_fixed,GTK_TYPE_FIXED)
 
 void ling_fixed_class_init(LingFixedClass * self){

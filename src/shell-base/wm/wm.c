@@ -57,7 +57,7 @@ static gboolean wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer
     ClWmWindow * window = CL_WM_WINDOW(widget);
     window_args * wa=window->current_args;
     if(wa->close_start!=NULL){
-        wa->close_start(wa->widget,wa->window,wa->close_start_data);
+        wa->close_start(wa->widget,wa->window,action,wa->close_start_data);
     }
     return LING_OPERATE_ANIMATION_DIR_FORWARD;
 }
@@ -65,8 +65,9 @@ static gboolean wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer
 static void wm_close_animate(GtkWidget * widget,LingActionArgs action,gpointer user_data){
     ClWmWindow * window = CL_WM_WINDOW(widget);
     window_args * wa=window->current_args;
+    action.progress = 100-action.progress;
     if(wa->ani!=NULL){
-        wa->ani(wa->widget,wa->window,100-action.progress,wa->ani_data);
+        wa->ani(wa->widget,wa->window,action,CL_WM_WINDOW_CLOSE,wa->ani_data);
     }
 }
 
@@ -74,7 +75,7 @@ static void wm_close_finish(GtkWidget * widget,LingActionArgs action,gpointer us
     ClWmWindow * window = CL_WM_WINDOW(widget);
     window_args * wa=window->current_args;
     if(wa->close_finish!=NULL){
-        wa->close_finish(wa->widget,wa->window,wa->close_finish_data);
+        wa->close_finish(wa->widget,wa->window,action,wa->close_finish_data);
     }
     window->wm->current_win = NULL;
     //gtk_widget_set_visible(GTK_WIDGET(window->wm),FALSE);
@@ -109,6 +110,7 @@ static void cl_wm_window_init(ClWmWindow * self){
                             wm_close_animate,self,
                             wm_close_start,self,
                             NULL,wm_close_finish,self);
+    ling_operate_set_force_run(self->close_op,TRUE);
 }
 
 static GtkWidget * cl_wm_window_new(const char * name,const char * icon_name){
@@ -236,17 +238,17 @@ static gboolean cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer
 
 static void cl_wm_open_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     window_args * wa = (window_args*)user_data;
-    if(wa->ani!=NULL)wa->ani(widget,wa->window,args.progress,wa->ani_data);
+    if(wa->ani!=NULL)wa->ani(widget,wa->window,args,CL_WM_WINDOW_OPEN,wa->ani_data);
 }
 
 static void cl_wm_open_finish_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     window_args * wa = (window_args*)user_data;
-    if(wa->close_finish!=NULL)wa->close_finish(widget,wa->window,wa->close_finish_data);
+    if(wa->close_finish!=NULL)wa->close_finish(widget,wa->window,args,wa->close_finish_data);
 }
 
 static void cl_wm_open_finish_end(GtkWidget * widget,LingActionArgs action,gpointer user_data){
     window_args * wa = (window_args*)user_data;
-    if(wa->open_finish!=NULL)wa->open_finish(widget,wa->window,wa->open_finish_data);
+    if(wa->open_finish!=NULL)wa->open_finish(widget,wa->window,action,wa->open_finish_data);
     wa->window->wm->current_win = wa->window;
     wa->window->current_args = wa;
 }
@@ -280,14 +282,21 @@ LingOperate * cl_wm_add_operate(ClWm * wm,GtkWidget * widget,const char * window
     return op;
 }
 
-void cl_wm_window_close(ClWmWindow * window){
+void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
+                        gdouble velocity_x,gdouble velocity_y){
     if(window==NULL||window->current_args==NULL)return;
-    ling_operate_emit(window->close_op);
+    ClWmBack * back = g_malloc0(sizeof(ClWmBack));
+    back->offset_x=offset_x;
+    back->offset_y=offset_y;
+    back->velocity_x=velocity_x;
+    back->velocity_y=velocity_y;
+    ling_operate_emit(window->close_op,back);
 }
 
-void cl_wm_close_current_window(ClWm * wm){
+void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
+                                gdouble velocity_x,gdouble velocity_y){
     if(wm->current_win==NULL)return;
-    cl_wm_window_close(wm->current_win);
+    cl_wm_window_close(wm->current_win,offset_x,offset_y,velocity_x,velocity_y);
 }
 
 LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer){

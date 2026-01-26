@@ -24,7 +24,7 @@ struct _ClmDesktop{
     GtkWidget * overlay;
     //状态栏
 
-    GtkWidget * folder_lay;  //ling_fixed
+    GtkWidget * folder_lay;  //lingfolder
 
     //主体
     GtkWidget * bodybox;
@@ -39,6 +39,7 @@ struct _ClmDesktop{
 
     GtkWidget * drawer; //抽屉
 
+    GtkWidget * dragface;
     //
     GtkWidget * wm;
 
@@ -166,16 +167,22 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
     clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(args.progress/100)*20);
 }
 
-void desktop_load_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static void desktop_load_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmDesktop * self = CLM_DESKTOP(widget);
     ling_widget_scale(GTK_WIDGET(self),4-3*(args.progress/100));
 }
 
-void desktop_load_end(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static void desktop_load_end(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmDesktop * self = CLM_DESKTOP(widget);
     ling_widget_scale(GTK_WIDGET(self),1);
 }
 
+static void guide_bar_back(ClmTaskSwitcher * s,gdouble offset_x,gdouble offset_y,
+                           gdouble velocity_x,gdouble velocity_y,gpointer user_data){
+    ClmDesktop * desktop = CLM_DESKTOP(user_data);
+    cl_wm_close_current_window(CL_WM(desktop->wm),offset_x,offset_y,velocity_x,velocity_y);
+    ling_folder_close(LING_FOLDER(desktop->folder_lay));
+}
 
 void clm_desktop_init(ClmDesktop * self){
 
@@ -186,12 +193,14 @@ void clm_desktop_init(ClmDesktop * self){
     //桌面(bodybox)
     self->bodybox = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->bodybox,LAYER_BODYBOX);
-    //shell->bodybox = self->bodybox;
+
 
     //窗口管理器
     self->wm = cl_wm_new();
     shell->wm = self->wm;
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->wm,LAYER_WM);
+
+
     gtk_widget_set_visible(self->wm,FALSE);
 
     //设置页面style(后续改成根据显示器大小自动调整)
@@ -200,6 +209,7 @@ void clm_desktop_init(ClmDesktop * self){
     self->style_info.column_space = 40;
     self->style_info.top_space = 40;
     self->style_info.row_space = 0;
+    self->style_info.frame_space = 20;
     self->style_info.icon_size = 64;
 
     //新建页面
@@ -208,13 +218,16 @@ void clm_desktop_init(ClmDesktop * self){
 
     //底部dock创建
     GtkWidget * dock_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
+    gtk_widget_set_margin_start(dock_box,self->style_info.frame_space);
+    gtk_widget_set_margin_end(dock_box,self->style_info.frame_space);
     gtk_widget_set_vexpand(dock_box,FALSE);
     gtk_widget_set_hexpand(dock_box,TRUE);
     self->dock = ling_grid_new(4,1,self->style_info.column_space,self->style_info.row_space);
     gtk_widget_set_hexpand(self->dock,1);
 
-    gtk_widget_set_margin_top(self->dock,10);
-    gtk_widget_set_margin_bottom(self->dock,10);
+    gtk_widget_set_margin_top(self->dock,40);
+    gtk_widget_set_margin_bottom(self->dock,40);
+
     //gtk_widget_set_valign(self->dock,GTK_ALIGN_END);
     //gtk_widget_set_valign(dock_box,GTK_ALIGN_END);
 
@@ -236,8 +249,8 @@ void clm_desktop_init(ClmDesktop * self){
 
 
     //导航
-    GtkWidget * ts = clm_task_switcher_new();
-    self->guide_bar = clm_task_switcher_get_bar(CLM_TASK_SWITCHER(ts));
+    //GtkWidget * ts = clm_task_switcher_new();
+    self->guide_bar = clm_task_switcher_new();//clm_task_switcher_get_bar(CLM_TASK_SWITCHER(ts));
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),
                            self->guide_bar,LAYER_TASK_SWITCH_BAR);
 
@@ -279,6 +292,7 @@ void clm_desktop_init(ClmDesktop * self){
     self->folder_lay = ling_folder_new();
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->folder_lay,LAYER_FOLDER);
 
+
     clm_desktop_load_page(self);
 
     //刚进入桌面时候的动画
@@ -289,6 +303,9 @@ void clm_desktop_init(ClmDesktop * self){
                             desktop_load_ani,NULL,
                             NULL,NULL,
                             NULL,desktop_load_end,NULL);
+
+    //上划时候退出folder和window
+    g_signal_connect(self->guide_bar,"back",G_CALLBACK(guide_bar_back),self);
 }
 
 
@@ -516,10 +533,10 @@ LingOverlay * clm_desktop_get_layer_bodybox(ClmDesktop * self,LingLayer ** layer
 }
 
 
-// LingOverlay * clm_desktop_get_layer_wm(ClmDesktop * self,LingLayer ** layer){
-//     *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_WM);
-//     return LING_OVERLAY(self->overlay);
-// }
+LingOverlay * clm_desktop_get_layer_folder(ClmDesktop * self,LingLayer ** layer){
+    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_FOLDER);
+    return LING_OVERLAY(self->overlay);
+}
 
 LingOverlay * clm_desktop_get_layer_task_switch_bar(ClmDesktop * self,LingLayer ** layer){
     *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_TASK_SWITCH_BAR);

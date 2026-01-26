@@ -106,28 +106,53 @@ void ling_desktop_item_run_app(ClmDesktopItem * self){
 
 /*--------------------------------------------------------------------------------------------*/
 
-static void app_open_ani(GtkWidget * widget,ClWmWindow * window,gdouble progress,gpointer user_data){
+static void app_open_ani(GtkWidget * widget,ClWmWindow * window,LingActionArgs args,CL_WM_WINDOW_ACT act,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
 
     int w = gtk_widget_get_width(GTK_WIDGET(shell));
     int h = gtk_widget_get_height(GTK_WIDGET(shell));
 
-    int  nw = self->info.size_w+(progress/100)*(w-self->info.size_w);
-    int  nh = self->info.size_h+(progress/100)*(h-self->info.size_h);
+    int  nw = self->info.size_w+(args.progress/100)*(w-self->info.size_w);
+    int  nh = self->info.size_h+(args.progress/100)*(h-self->info.size_h);
     cl_wm_set_window_size(window,nw,nh);
 
-    int new_x= self->info.start_x-(self->info.start_x)*(progress/100.00f);
-    int new_y= self->info.start_y-(self->info.start_y)*(progress/100.00f);
+    int new_x= self->info.start_x-(self->info.start_x)*(args.progress/100.00f);
+    int new_y= self->info.start_y-(self->info.start_y)*(args.progress/100.00f);
+
+    if(args.emit_data!=NULL){
+        ClWmBack * back = (ClWmBack *)args.emit_data;
+        gdouble x=args.progress,k=fabs(back->offset_y)/500;
+        if(k>0){
+            //斜抛
+            gdouble t = (new_y-0)/k/10000;
+            new_y+=-k*t*x*x-1*x;
+        }
+    }
 
     cl_wm_move_window(window,new_x,new_y);
 
     LingLayer * layer;
     cl_wm_window_get_layer_icon(window,&layer);
     float a=2;
-    gtk_widget_set_opacity(layer->widget,(a-progress*a/100.00f));
+    gtk_widget_set_opacity(layer->widget,(a-args.progress*a/100.00f));
     cl_wm_window_get_layer_window(window,&layer);
-    gtk_widget_set_opacity(layer->widget,(progress*a/100.00f)-a+1);
+    gtk_widget_set_opacity(layer->widget,(args.progress*a/100.00f)-a+1);
+    // gtk_widget_set_opacity(layer->widget,0);
+    // cl_wm_window_get_layer_window(window,&layer);
+    // gtk_widget_set_opacity(layer->widget,0);
+    ling_widget_border_radis(layer->widget,500*(1-args.progress/100));
+
+    clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
+    //ling_widget_scale(layer->widget,0.95+0.05*fabs(args.progress-50)/50);
+    ling_widget_scale(layer->widget,0.95+0.05*fabs(100-args.progress)/100);
+
+
+    gdouble blur = (args.progress/100)*20;
+    if(act==CL_WM_WINDOW_OPEN&&blur<clm_desktop_get_wallpaper_blur(CLM_DESKTOP(shell->desktop))){
+        return;
+    }
+    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),blur);
 }
 
 static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){
@@ -163,33 +188,38 @@ static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gp
 
     cl_wm_move_window(win,*x,*y);
 
-    gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
+    gtk_widget_set_opacity(GTK_WIDGET(self),0);
     //cl_wm_move_window_by_progress(CL_WM(shell->wm),win,100,100,1,50);
     // gtk_widget_set_visible(shell->wm,TRUE);
-
+    //LingLayer * layer;
+    //clm_desktop_get_layer_folder(CLM_DESKTOP(shell->desktop),&layer);
+    //ling_folder_close(LING_FOLDER(layer->widget));
     return win;
 }
 
 
-static void app_open_finish(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+static void app_open_finish(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
-    gtk_widget_set_visible(GTK_WIDGET(self),TRUE);
+    gtk_widget_set_opacity(GTK_WIDGET(self),1);
     int w = gtk_widget_get_width(GTK_WIDGET(shell));
     int h = gtk_widget_get_height(GTK_WIDGET(shell));
     cl_wm_set_window_size(win,w,h);
+    // LingLayer * layer;
+    // clm_desktop_get_layer_folder(CLM_DESKTOP(shell->desktop),&layer);
+    // ling_folder_close(LING_FOLDER(layer->widget));
 }
 
-static void app_close_start(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+static void app_close_start(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
-    gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
+    gtk_widget_set_opacity(GTK_WIDGET(self),0);
 }
 
-static void app_close_finish(GtkWidget * widget,ClWmWindow * win,gpointer user_data){
+static void app_close_finish(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
     if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
-    gtk_widget_set_visible(GTK_WIDGET(self),TRUE);
+    gtk_widget_set_opacity(GTK_WIDGET(self),1);
     cl_wm_set_window_showable(win,FALSE);
     gtk_widget_set_visible(shell->wm,FALSE);
 }
@@ -229,6 +259,8 @@ GtkWidget * clm_desktop_item_app_new(app_info * app,guint icon_size,gboolean lab
                                         app_close_start,NULL,
                                         app_close_finish,NULL);
     ling_operate_set_force_run(op,TRUE);
+
+    //op = ling_drag_face
     return GTK_WIDGET(self);
 }
 
@@ -335,6 +367,7 @@ static void folder_close(GtkWidget * folder,gpointer user_data){
     clm_desktop_item_folder_set_app_runable(self,FALSE);
     gtk_widget_set_size_request(self->folder.grid,-1,-1);
     ling_grid_attach(self->info.grid,GTK_WIDGET(self),self->info.column,self->info.row,self->info.grid_w,self->info.grid_h);
+
 }
 
 GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,uint column,uint row,

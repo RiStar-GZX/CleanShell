@@ -29,6 +29,7 @@ struct _LingFixedClass{
 #define LING_TYPE_FIXED (ling_fixed_get_type())
 G_DECLARE_FINAL_TYPE(LingFixed,ling_fixed,LING,FIXED,GtkFixed)
 
+
 GtkWidget * ling_fixed_new();
 
 void ling_fixed_put(LingFixed * self,GtkWidget * widget,uint x,uint y,int level);

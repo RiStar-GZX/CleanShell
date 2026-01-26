@@ -5,7 +5,17 @@
 
 G_BEGIN_DECLS
 
+typedef struct{
+    gdouble offset_x;
+    gdouble offset_y;
+    gdouble velocity_x;
+    gdouble velocity_y;
+}ClWmBack;
 
+typedef enum{
+    CL_WM_WINDOW_OPEN = 0,
+    CL_WM_WINDOW_CLOSE,
+}CL_WM_WINDOW_ACT;
 
 #define CL_TYPE_WM_WINDOW (cl_wm_window_get_type())
 G_DECLARE_FINAL_TYPE(ClWmWindow,cl_wm_window,CL,WM_WINDOW,GtkBox)
@@ -17,11 +27,11 @@ G_DECLARE_FINAL_TYPE(ClWm,cl_wm,CL,WM,LingFixed)
 
 typedef ClWmWindow * (*WM_OPEN_START_CB)(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data);
 
-typedef void (*WM_ANI_CB)(GtkWidget * widget,ClWmWindow * window,gdouble progress,gpointer user_data);
+typedef void (*WM_ANI_CB)(GtkWidget * widget,ClWmWindow * window,LingActionArgs args,CL_WM_WINDOW_ACT act,gpointer user_data);
 
 //typedef void (*WM_ACT_OPEN_CB)(GtkWidget * widget,gpointer user_data);
 
-typedef void (*WM_ACT_CB)(GtkWidget * widget,ClWmWindow * window,gpointer user_data);
+typedef void (*WM_ACT_CB)(GtkWidget * widget,ClWmWindow * window,LingActionArgs args,gpointer user_data);
 
 void cl_wm_window_add_app_icon(ClWmWindow * window,GtkWidget * widget);
 
@@ -50,9 +60,11 @@ LingOperate * cl_wm_add_operate(ClWm * wm,GtkWidget * widget,const char * window
                                WM_ACT_CB close_start,gpointer close_start_data,
                                WM_ACT_CB close_finish,gpointer close_finish_data);
 
-void cl_wm_window_close(ClWmWindow * window);
+void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
+                        gdouble velocity_x,gdouble velocity_y);
 
-void cl_wm_close_current_window(ClWm * wm);
+void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
+                                gdouble velocity_x,gdouble velocity_y);
 
 LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer);
 

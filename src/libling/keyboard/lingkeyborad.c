@@ -2,7 +2,7 @@
 #include <linggrid.h>
 
 enum {
-    CLICKED,
+    BACK,
     SIGNAL_NUM
 };
 
@@ -22,7 +22,7 @@ G_DEFINE_FINAL_TYPE(LingKeyboard,ling_keyboard,GTK_TYPE_BOX);
 
 
 void ling_keyboard_class_init(LingKeyboardClass * klass){
-    signals[CLICKED] = g_signal_new(
+    signals[BACK] = g_signal_new(
         "clicked",                   // 信号名称
         G_TYPE_FROM_CLASS(klass),      // 发射此信号的类类型
         G_SIGNAL_RUN_FIRST,            // 在其他处理程序之前运行（可选）

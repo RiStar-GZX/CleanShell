@@ -34,6 +34,7 @@ typedef struct style_info{
     uint row_num;
     uint column_space;
     uint row_space;
+    uint frame_space;
     uint icon_size;
 }style_info;
 
@@ -53,6 +54,8 @@ void clm_desktop_hide_body_and_set_blur(ClmDesktop *self,gdouble progress,uint b
 void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
 LingOverlay * clm_desktop_get_layer_bodybox(ClmDesktop * self,LingLayer ** layer);
+
+LingOverlay * clm_desktop_get_layer_folder(ClmDesktop * self,LingLayer ** layer);
 
 //LingOverlay * clm_desktop_get_layer_wm(ClmDesktop * self,LingLayer ** layer);
 

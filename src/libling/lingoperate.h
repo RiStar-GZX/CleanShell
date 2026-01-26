@@ -29,21 +29,23 @@ enum ling_operate_state{
 #define    LING_ACTION_FINISH_E                 TRUE
 
 
-enum{
+typedef enum{
     LING_ACTION_CLICK=0,
     LING_ACTION_DRAG_UP,
     LING_ACTION_DRAG_DOWN,
     LING_ACTION_DRAG_LEFT,
     LING_ACTION_DRAG_RIGHT,
+    LING_ACTION_DRAG_SOURCE,
     LING_ACTION_LONG_PRESS,
     LING_ACTION_LONG_PRESS_UP,
     LING_ACTION_LONG_PRESS_DOWN,
     LING_ACTION_LONG_PRESS_LEFT,
     LING_ACTION_LONG_PRESS_RIGHT,
+    LING_ACTION_LONG_PRESS_DRAG_SOURCE,
     LING_ACTION_EMIT,
     LING_ACTION_ALL,
     LING_ACTION_NUM,
-};
+}LING_ACTION;
 
 typedef struct LingOperate LingOperate;
 
@@ -57,6 +59,7 @@ typedef struct LingActionArgs{
     gdouble velocity_y;
     gdouble progress;
     gdouble progress_end;
+    gpointer emit_data;
     uint action;
 }LingActionArgs;
 
@@ -66,12 +69,21 @@ typedef gboolean (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user
 
 typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
-typedef gboolean  (*ISBREAKED)(gpointer user_data);
+typedef gboolean  (*ISBREAKED)(gpointer user_data); //废弃
 
 typedef void  (*FINISH)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
+
+typedef GdkContentProvider * (*PREPARE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+
+typedef void (*CANCEL)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+
+
 typedef struct LingAction{
     gboolean able;
+    //dragsource
+    PREPARE prepare;
+    gpointer prepare_data;
     //进度
     PROGRESS progress;
     gpointer progress_data;
@@ -87,6 +99,7 @@ typedef struct LingAction{
 
     gdouble ani_progress; //进度
     gdouble ani_progress_end;
+    //gdouble time;         //当前时间
     gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
     gboolean ani_dir;     //方向(正反)  //默认正，打断反
 
@@ -104,6 +117,7 @@ typedef struct LingOperate{
     gboolean able;
     GtkGesture * drag;
     GtkGesture * swipe;
+    GtkDragSource * drag_source;
     GtkWidget * widget;
 
     GString * operate_name;
@@ -128,6 +142,7 @@ typedef struct LingOperate{
     ISBREAKED isbreaked;
     gpointer isbreaked_data;
 
+    gpointer emit_data;
 
     int longpress_id;
     //gboolean longpress_status;
@@ -175,6 +190,8 @@ void ling_operate_add_action(LingOperate * op,uint type,
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
 
-void ling_operate_emit(LingOperate * op);
+void ling_operate_emit(LingOperate * op,gpointer emit_data);
+
+void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E);
 
 #endif // LINGOPERATE_H

@@ -1,4 +1,5 @@
 #include "linggrid.h"
+#include <ling.h>
 
 struct _LingGridPh{
     GtkBox parent;
@@ -27,6 +28,8 @@ struct _LingGrid{
     GtkGrid parent;
     uint column_num;
     uint row_num;
+    gboolean drag_able;
+    LingFixed * dragface; //lingfixed
 };
 
 G_DEFINE_FINAL_TYPE(LingGrid,ling_grid,GTK_TYPE_GRID)
