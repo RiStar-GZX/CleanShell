@@ -48,7 +48,7 @@ GtkWidget * clm_app_view_page_get_fixed_view(ClmAppViewPage * self){
     return self->grid;
 }
 
-int i=0;
+static int i=0;
 static void finish_e(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     g_print("end:%d\n",i);
     i++;

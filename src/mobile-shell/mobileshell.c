@@ -315,12 +315,58 @@ void clm_shell_setting(ClmShell * self){
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
+}
+
+static void b1clicked (
+    GtkButton* self,
+    gpointer user_data
+    ){
+    GtkWidget * fixed = GTK_WIDGET(user_data);
+    gtk_widget_set_hexpand(fixed,TRUE);
+    gtk_widget_set_vexpand(fixed,TRUE);
+    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(fixed),GTK_WIDGET(self));
+    if(info!=NULL){
+        //ling_fixed_set_child_size(LING_FIXED(fixed),GTK_WIDGET(self),
+        //                          info->w+4,info->h+4);
+        ling_fixed_move(LING_FIXED(fixed),GTK_WIDGET(self),info->x+4,info->y);
+    }
+    g_print("%d %d\n",gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
+    //ling_fixed_move(LING_FIXED(fixed),GTK_WIDGET(self),100,100);
+}
+
+void clm_shell_test(ClmShell * self){
+    self->controler = ling_operate_controler_new(144);
+    GtkWidget * fixed = ling_fixed_new();
+    gtk_box_append(GTK_BOX(self),fixed);
+    gtk_widget_set_hexpand(fixed,TRUE);
+    gtk_widget_set_vexpand(fixed,TRUE);
+
+    GtkWidget * a1 = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
+    gtk_box_append(GTK_BOX(a1),gtk_button_new_with_label("dad"));
+    GtkWidget * a2 = gtk_button_new_with_label("a2");
+    GtkWidget * b1 = gtk_button_new_with_label("b1");
+    GtkWidget * b2 = gtk_button_new_with_label("b2");
 
 
+    ling_fixed_put_none(LING_FIXED(fixed),a1,0,0,1,1);
+    ling_fixed_put_none(LING_FIXED(fixed),a2,10,10,1,2);
+    ling_fixed_put_none(LING_FIXED(fixed),b1,20,20,2,1);
+    ling_fixed_put_none(LING_FIXED(fixed),b2,30,30,2,2);
+
+    ling_fixed_set_child_level(LING_FIXED(fixed),a1,3,3);
+    ling_fixed_set_child_size(LING_FIXED(fixed),a1,40,40);
+    ling_fixed_set_child_size(LING_FIXED(fixed),a2,40,40);
+    ling_fixed_set_child_size(LING_FIXED(fixed),b1,40,40);
+    ling_fixed_set_child_size(LING_FIXED(fixed),b2,40,40);
+
+    ling_fixed_move(LING_FIXED(fixed),a1,100,100);
+    g_signal_connect(a2,"clicked",G_CALLBACK(b1clicked),fixed);
+    gtk_widget_set_hexpand(fixed, TRUE); // 启用水平扩展
 }
 
 GtkWidget * clm_shell_start(){
     shell = g_object_new(CLM_TYPE_SHELL,NULL);
     clm_shell_setting(shell);
+    //clm_shell_test(shell);
     return GTK_WIDGET(shell);
 }

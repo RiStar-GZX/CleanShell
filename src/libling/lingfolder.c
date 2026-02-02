@@ -93,7 +93,7 @@ static void folder_pressed_blank (GtkGestureClick* gesture,gint n_press,gdouble 
 
 void ling_folder_init(LingFolder * self){
     self->folder_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    ling_fixed_put(LING_FIXED(self),self->folder_box,0,0,LING_FIXED_TOP);
+    ling_fixed_put_none(LING_FIXED(self),self->folder_box,0,0,LING_FIXED_TOP,0);
 
     GtkGesture * gesture = gtk_gesture_click_new();
     gtk_widget_add_controller(self->folder_box,GTK_EVENT_CONTROLLER(gesture));

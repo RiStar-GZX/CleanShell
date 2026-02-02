@@ -173,11 +173,11 @@ void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable){
     if(window->wm==NULL)return;
     GList * list = g_list_find(window->wm->windows,window);
     if(list==NULL)return;
-    LingFixedChild * child = ling_fixed_get_child_info(LING_FIXED(window->wm),GTK_WIDGET(window));
-    if(child==NULL&&showable==TRUE){
-        ling_fixed_put(LING_FIXED(window->wm),GTK_WIDGET(window),0,0,LING_FIXED_TOP);
+    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
+    if(info==NULL&&showable==TRUE){
+        ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),0,0,LING_FIXED_TOP,0);
     }
-    if(child!=NULL&&showable==FALSE){
+    if(info!=NULL&&showable==FALSE){
         ling_fixed_remove(LING_FIXED(window->wm),GTK_WIDGET(window));
     }
     window->showable = showable;
@@ -201,7 +201,7 @@ void cl_wm_set_window_size(ClWmWindow * window,uint w,uint h){
 }
 
 void cl_wm_set_window_level(ClWmWindow * window,int level){
-    ling_fixed_set_child_level(LING_FIXED(window->wm),GTK_WIDGET(window),level);
+    ling_fixed_set_child_level(LING_FIXED(window->wm),GTK_WIDGET(window),level,0);
 }
 
 void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress){
@@ -213,9 +213,9 @@ void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdo
 
     int w = gtk_widget_get_width(GTK_WIDGET(window->wm));
     int h = gtk_widget_get_height(GTK_WIDGET(window->wm));
-    LingFixedChild * child = ling_fixed_get_child_info(LING_FIXED(window->wm),GTK_WIDGET(window));
-    if(child==NULL){
-        ling_fixed_put(LING_FIXED(window->wm),GTK_WIDGET(window),x,y,level);
+    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
+    if(info!=NULL){
+        ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),x,y,level,0);
     }
     else ling_fixed_move(LING_FIXED(window->wm),GTK_WIDGET(window),x,y);
     gdouble n_w = (progress*w/100.0000f);

@@ -37,15 +37,17 @@ gboolean gtk_widget_have_child(GtkWidget * parent,GtkWidget * child){
 void ling_view_pager_fixed_get_page_pos(LingViewPager * self,uint pos,gdouble * x,gdouble * y){
     GtkWidget * page = ling_view_pager_get_page_by_pos(self,pos);
     if(!page)return;
-    LingFixedChild * child = ling_fixed_get_child_info(LING_FIXED(self->fixed),page);
-    *x = child->x;
-    *y = child->y;
+    LingFixedItemInfo * info = ling_fixed_get_item_info(LING_FIXED(self->fixed),page);
+    if(info!= NULL){
+        *x = info->x;
+        *y = info->y;
+    }
 }
 
 void ling_view_pager_fixed_set_page_pos(LingViewPager * self,uint pos,gdouble x,gdouble y,int level){
     GtkWidget * page = ling_view_pager_get_page_by_pos(self,pos);
     if(!page)return;
-    if(!gtk_widget_have_child(self->fixed,page))ling_fixed_put(LING_FIXED(self->fixed),page,x,y,level);
+    if(!gtk_widget_have_child(self->fixed,page))ling_fixed_put_full(LING_FIXED(self->fixed),page,x,y,level,0);
     else ling_fixed_move(LING_FIXED(self->fixed),page,x,y);
 }
 
@@ -122,7 +124,7 @@ static void ling_view_pager_init(LingViewPager * self){
     //点指示器
     self->dots = ling_dots_new(0,DOTS_MODE_SINGAL);
     ling_view_pager_set_dot_indicator(self,TRUE); //@@
-    gtk_box_append(GTK_BOX(self),self->dots);
+    //gtk_box_append(GTK_BOX(self),self->dots);
 
     gtk_widget_set_halign(self->dots,GTK_ALIGN_CENTER);
     gtk_widget_set_valign(self->dots,GTK_ALIGN_END);
@@ -206,20 +208,13 @@ GtkWidget * ling_view_pager_new(gboolean size_adapt){
     return GTK_WIDGET(self);
 }
 
-
-static void realize (GtkWidget* page,LingViewPager * self){
-    gtk_widget_set_size_request(page,gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
-    //g_print("width:%d height:%d\n",gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
-}
-
 void ling_view_pager_add_page(LingViewPager * self,GtkWidget * page){
     self->pages = g_list_append(self->pages,page);
     self->page_num++;
     ling_dots_set_num(LING_DOTS(self->dots),self->page_num);
-    // if(self->page_now_pos==0){
-    //     ling_view_pager_show_page(self,1);
-    // }
-    if(self->size_adapt)g_signal_connect(page, "realize", G_CALLBACK(realize), self);
+    if(self->page_now_pos==0){
+        ling_view_pager_show_page(self,1);
+    }
 }
 
 // void ling_view_pager_add_page_before(LingViewPager * self,GtkWidget * page,GtkWidget * before){
