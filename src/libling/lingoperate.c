@@ -263,6 +263,16 @@ void ling_operate_run_animation(LingOperate * op){
     LingAction * act = &op->actions[op->action_now];
     if(act->release!=NULL)act->ani_dir = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
     else act->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
+    //连带触发
+    if(act->emit[LING_OPERATE_EMIT_AT_RELEASE]!=NULL){
+        ling_operate_emit_close(act->emit[LING_OPERATE_EMIT_AT_RELEASE],
+                                act->emit_data[LING_OPERATE_EMIT_AT_RELEASE],
+                                act->emit_dir[LING_OPERATE_EMIT_AT_RELEASE]);
+    }
+
+    //去除长按标识
+    op->longpress_status = FALSE;
+
     if(act->animation==NULL){
         if(act->ani_dir==LING_OPERATE_ANIMATION_DIR_FORWARD){
             ling_operate_run_finish(op,LING_ACTION_FINISH_E);
@@ -347,26 +357,7 @@ gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action){
     return op->actions[action].ani_progress_end;
 }
 
-// void ling_operate_set_change(LingOperate * op,const char * opname){
-//     //1.5.操作改变,如抽屉上下
-//     if(op==NULL||opname==NULL)return;
-//     g_string_printf(op->operate_name,"%s",opname);
-// }
-
-// 1.6 改变打断者 ling_operate_change_breaker
-
-//2.(非必需)动画 ANIMATION(cb)
-
-//2.5 被打断    ISBREAKED(cb) (cb内执行3.6 3.7 3.8）
-
-//2.6.设置反动画    ling_operate_set_animation_cb()
-
-//2.7.设置反完成 ling_operate_set_finish_cb()
-
-//2.8 重新设置打断 ling_operate_change_breaker()
-
-//3->0.操作完成 FINISH(cb)
-
+/***************************拖拽点击*****************************************************************************/
 void ling_operate_swipe_cb(GtkGestureSwipe* self,
     gdouble velocity_x,gdouble velocity_y,gpointer user_data){
     LingOperate * op = user_data;
@@ -374,25 +365,18 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
     op->velocity_y=velocity_y;
 }
 
-/*
- *
- */
-// void ling_operate_add_dur(uint type,gboolean dir,){
-
-// }
-
-
-
 static gboolean longpress_timeout(gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
-    op->longpress_id = 0;
-    op->action_now = LING_ACTION_LONG_PRESS;
-    op->actions[op->action_now].ani_progress = 0;
-    ling_operate_start_operating(op);
-    ling_operate_run_animation(op);
+    op->longpress_status = TRUE;
+    if(op->actions[LING_ACTION_LONG_PRESS].able){
+        op->longpress_id = 0;
+        op->action_now = LING_ACTION_LONG_PRESS;
+        op->actions[op->action_now].ani_progress = 0;
+        ling_operate_start_operating(op);
+        ling_operate_run_animation(op);
+    }
     return G_SOURCE_REMOVE;
 }
-//new
 
 static void operate_drag_begin(GtkGestureDrag* self,
                              gdouble start_x,gdouble start_y,gpointer user_data){
@@ -403,7 +387,11 @@ static void operate_drag_begin(GtkGestureDrag* self,
     op->action_now=LING_ACTION_CLICK;
     op->start_x = start_x;
     op->start_y = start_y;
-    op->longpress_id = g_timeout_add(500,longpress_timeout,op);
+
+    LingAction * action = &op->actions[op->action_now];
+    if(action->emit[LING_OPERATE_EMIT_AT_START]!=NULL){
+        ling_operate_emit(action->emit[LING_OPERATE_EMIT_AT_START],action->emit_data[LING_OPERATE_EMIT_AT_START]);
+    }
 }
 
 static void operate_drag_update(GtkGestureDrag* self,
@@ -484,6 +472,8 @@ void ling_operate_set_able(LingOperate * op,gboolean able){
     op->able = able;
 }
 
+
+/***************************忽略控件*****************************************************************************/
 static void ignore_drag_begin(GtkGestureDrag* self,
                               gdouble start_x,gdouble start_y,gpointer user_data){
     LingOperate * op = user_data;
@@ -506,8 +496,24 @@ GtkGesture * ling_operate_drag_ignore(LingOperate * op,GtkWidget * widget){
     return drag;
 }
 
+/***************************瞬时触发*****************************************************************************/
+static void ling_operate_instant_pressed(GtkGestureClick* self,gint n_press,
+                                         gdouble x,gdouble y,gpointer user_data){
+    LingOperate * op = (LingOperate*)user_data;
+    op->start_x = x;
+    op->start_y = y;
+    if(op->actions[LING_ACTION_INSTANT].able){
+        op->action_now = LING_ACTION_INSTANT;
+        op->actions[op->action_now].ani_progress = 0;
+        ling_operate_start_operating(op);
+        ling_operate_run_animation(op);
+        return;
+    }
+    op->longpress_id = g_timeout_add(500,longpress_timeout,op);
+    op->longpress_status =FALSE;
+}
 
-
+/***************************添加动作********************************************************************************/
 void ling_operate_add_action(LingOperate * op,uint type,
                              PROGRESS progress,gpointer progress_data,
                              ANIMATION animate,gpointer animate_data,
@@ -540,65 +546,154 @@ void ling_operate_add_action(LingOperate * op,uint type,
         gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->swipe));
         g_signal_connect(op->swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op);
     }
+    if(op->instant==NULL){
+        op->instant = gtk_gesture_click_new();
+        gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->instant));
+        g_signal_connect(op->instant,"pressed",G_CALLBACK(ling_operate_instant_pressed),op);
+    }
 }
 
+/***************************拖拽*****************************************************************************/
 static GdkContentProvider * operate_drag_source_prepare (
     GtkDragSource* self,gdouble x,gdouble y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
-    if(!op->actions[LING_ACTION_DRAG_SOURCE].able)return NULL;
-
-    if(op->actions[LING_ACTION_DRAG_SOURCE].prepare!=NULL){
-        return op->actions[LING_ACTION_DRAG_SOURCE].prepare(op->widget,
-            operate_action_args(op,op->action_now),op->actions[LING_ACTION_DRAG_SOURCE].prepare_data);
+    LingAction * act;
+    if(op->actions[LING_ACTION_DRAG_SOURCE].able){
+        act=&op->actions[LING_ACTION_DRAG_SOURCE];
     }
+    else if(op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE].able&&op->longpress_status){
+        act=&op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE];
+    }
+    else return NULL;
+
+    if(act->prepare!=NULL)return act->prepare(self,x,y,act->prepare_data);
     return NULL;
 }
 
 static void operate_drag_source_begin(GtkDragSource* self,GdkDrag* drag,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
-    if(!op->actions[LING_ACTION_DRAG_SOURCE].able)return;
-    //Ling
+    LingAction * act;
+    if(op->actions[LING_ACTION_DRAG_SOURCE].able){
+        act=&op->actions[LING_ACTION_DRAG_SOURCE];
+    }
+    else if(op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE].able&&op->longpress_status){
+        act=&op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE];
+    }
+    else return;
+
+    if(act->begin!=NULL)act->begin(self,drag,act->prepare_data);
 }
 
 static gboolean operate_drag_source_cancel (
     GtkDragSource* self,GdkDrag* drag,GdkDragCancelReason* reason,gpointer user_data){
+    LingOperate * op = (LingOperate*)user_data;
+    LingAction * act;
+    if(op->actions[LING_ACTION_DRAG_SOURCE].able){
+        act=&op->actions[LING_ACTION_DRAG_SOURCE];
+    }
+    else if(op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE].able&&op->longpress_status){
+        act=&op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE];
+    }
+    else return 0;
 
+    if(act->cancel!=NULL)return act->cancel(self,drag,reason,act->cancel_data);
+    return 0;
 }
 
 static void operate_drag_source_end(GtkDragSource* self,
-    GdkDrag* drag,gboolean delete_data,gpointer user_data){
+                                    GdkDrag* drag,gboolean delete_data,gpointer user_data){
+    LingOperate * op = (LingOperate*)user_data;
+    LingAction * act;
+    if(op->actions[LING_ACTION_DRAG_SOURCE].able){
+        act=&op->actions[LING_ACTION_DRAG_SOURCE];
+    }
+    else if(op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE].able&&op->longpress_status){
+        act=&op->actions[LING_ACTION_LONG_PRESS_DRAG_SOURCE];
+    }
+    else return;
 
+    if(act->end!=NULL)act->end(self,drag,delete_data,act->end_data);
 }
 
-void ling_operate_add_drag_source(LingOperate * op,uint type,
-                             PREPARE prepare,gpointer prepare_data,
-                             ANIMATION animate,gpointer animate_data,
-                             RELEASE release,gpointer release_data,
-                             FINISH finish,gpointer finish_data){
+void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
+                                      DRAGSOURCE_PREPARE prepare,gpointer prepare_data,
+                                      DRAGSOURCE_BEGIN begin,gpointer begin_data,
+                                      DRAGSOURCE_CANCEL cancel,gpointer cancel_data,
+                                      DRAGSOURCE_END end,gpointer end_data){
     LingAction * act = &op->actions[type];
+    act->able = TRUE;
     act->prepare = prepare;
     act->prepare_data = prepare_data;
-    act->animation = animate;
-    act->animate_data = animate_data;
-    act->release = release;
-    act->release_data = release_data;
-    act->able = TRUE;
-    act->finish_e = finish;
-    act->finish_data = finish_data;
-    act->ani_progress_end = 100;
-    act->ani_time = 0.2;
+    act->begin = begin;
+    act->begin_data = begin_data;
+    act->cancel = cancel;
+    act->cancel_data = cancel_data;
+    act->end = end;
+    act->end_data = end_data;
 
-    op->drag_source = gtk_drag_source_new();
-    gtk_widget_add_controller(op->widget,GTK_EVENT_CONTROLLER(op->drag_source));
-    g_signal_connect(op->drag_source,"prepare",G_CALLBACK(operate_drag_source_prepare),op);
-    g_signal_connect(op->drag_source,"drag_begin",G_CALLBACK(operate_drag_source_begin),op);
-    g_signal_connect(op->drag_source,"drag-cancel",G_CALLBACK(operate_drag_source_cancel),op);
-    g_signal_connect(op->drag_source,"drag-end",G_CALLBACK(operate_drag_source_end),op);
+    if(op->drag==NULL){
+        op->drag =gtk_gesture_drag_new();
+        gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->drag));
+        g_signal_connect(op->drag, "drag-begin", G_CALLBACK(operate_drag_begin), op);
+        g_signal_connect(op->drag, "drag-update", G_CALLBACK(operate_drag_update), op);
+        g_signal_connect(op->drag, "drag-end", G_CALLBACK(operate_drag_end), op);
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(op->drag), GTK_PHASE_CAPTURE);
+    }
+    if(op->swipe==NULL){
+        op->swipe = gtk_gesture_swipe_new();
+        gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->swipe));
+        g_signal_connect(op->swipe,"swipe",G_CALLBACK(ling_operate_swipe_cb),op);
+    }
+    if(op->instant==NULL){
+        op->instant = gtk_gesture_click_new();
+        gtk_widget_add_controller(GTK_WIDGET(op->widget), GTK_EVENT_CONTROLLER(op->instant));
+        g_signal_connect(op->instant,"pressed",G_CALLBACK(ling_operate_instant_pressed),op);
+    }
+    if(op->drag_source==NULL){
+        op->drag_source = gtk_drag_source_new();
+        gtk_widget_add_controller(op->widget,GTK_EVENT_CONTROLLER(op->drag_source));
+        g_signal_connect(op->drag_source,"prepare",G_CALLBACK(operate_drag_source_prepare),op);
+        g_signal_connect(op->drag_source,"drag_begin",G_CALLBACK(operate_drag_source_begin),op);
+        g_signal_connect(op->drag_source,"drag-cancel",G_CALLBACK(operate_drag_source_cancel),op);
+        g_signal_connect(op->drag_source,"drag-end",G_CALLBACK(operate_drag_source_end),op);
+    }
 }
 
+// void ling_operate_add_drop(LingOperate * op,uint type,
+//                                   PREPARE prepare,gpointer prepare_data,
+//                                   ANIMATION animate,gpointer animate_data,
+//                                   RELEASE release,gpointer release_data,
+//                                   FINISH finish,gpointer finish_data){
+//     LingAction * act = &op->actions[type];
+//     act->prepare = prepare;
+//     act->prepare_data = prepare_data;
+//     act->animation = animate;
+//     act->animate_data = animate_data;
+//     act->release = release;
+//     act->release_data = release_data;
+//     act->able = TRUE;
+//     act->finish_e = finish;
+//     act->finish_data = finish_data;
+//     act->ani_progress_end = 100;
+//     act->ani_time = 0.2;
+
+//     if(op->drag_source==NULL){
+//         op->drag_source = gtk_drag_source_new();
+//         gtk_widget_add_controller(op->widget,GTK_EVENT_CONTROLLER(op->drag_source));
+//         g_signal_connect(op->drag_source,"prepare",G_CALLBACK(operate_drag_source_prepare),op);
+//         g_signal_connect(op->drag_source,"drag_begin",G_CALLBACK(operate_drag_source_begin),op);
+//         g_signal_connect(op->drag_source,"drag-cancel",G_CALLBACK(operate_drag_source_cancel),op);
+//         g_signal_connect(op->drag_source,"drag-end",G_CALLBACK(operate_drag_source_end),op);
+//     }
+// }
+
+/*******************************************************************************************************************/
 void ling_operate_emit(LingOperate * op,gpointer emit_data){
     if(op->actions[LING_ACTION_ALL].able){
         op->action_now = LING_ACTION_ALL;
+    }
+    else if(op->actions[LING_ACTION_INSTANT].able){
+        op->action_now = LING_ACTION_INSTANT;
     }
     else{
         op->action_now = LING_ACTION_EMIT;
@@ -613,11 +708,15 @@ void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E){
     if(op->actions[LING_ACTION_ALL].able){
         op->action_now = LING_ACTION_ALL;
     }
+    else if(op->actions[LING_ACTION_INSTANT].able){
+        op->action_now = LING_ACTION_INSTANT;
+    }
     else{
         op->action_now = LING_ACTION_EMIT;
     }
     op->emit_data = emit_data;
-    op->actions[op->action_now].ani_progress = 0;
+    if(S_E==LING_ACTION_FINISH_E)op->actions[op->action_now].ani_progress = 0;
+    else op->actions[op->action_now].ani_progress = 100;
     ling_operate_start_operating(op);
     ling_operate_run_finish(op,S_E);
 }
@@ -625,5 +724,13 @@ void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E){
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run){
     op->force_run = force_run;
+}
+
+
+//在一个op执行到某种状态时候触发另一个op
+void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,gboolean S_E,gpointer emit_data){
+    source->actions[action].emit[emit]=target;
+    source->actions[action].emit_data[emit]=emit_data;
+    source->actions[action].emit_dir[emit]=S_E;
 }
 

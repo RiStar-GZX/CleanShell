@@ -53,12 +53,12 @@ void cl_wm_set_window_level(ClWmWindow * window,int level);
 
 void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress);
 
-LingOperate * cl_wm_add_operate(ClWm * wm,GtkWidget * widget,const char * window_name,const char * icon_name,
-                               WM_ANI_CB ani,gpointer ani_data,
-                               WM_OPEN_START_CB open_start,gpointer open_start_data,
-                               WM_ACT_CB open_finish,gpointer open_finish_data,
-                               WM_ACT_CB close_start,gpointer close_start_data,
-                               WM_ACT_CB close_finish,gpointer close_finish_data);
+void cl_wm_add_operate(LingOperate * op,ClWm * wm,const char * window_name,const char * icon_name,
+                       WM_ANI_CB ani,gpointer ani_data,
+                       WM_OPEN_START_CB open_start,gpointer open_start_data,
+                       WM_ACT_CB open_finish,gpointer open_finish_data,
+                       WM_ACT_CB close_start,gpointer close_start_data,
+                       WM_ACT_CB close_finish,gpointer close_finish_data);
 
 void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
                         gdouble velocity_x,gdouble velocity_y);

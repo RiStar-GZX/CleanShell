@@ -20,6 +20,8 @@ void clm_desktop_item_set_label_visible(ClmDesktopItem * self,gboolean visible);
 
 GtkWidget * clm_desktop_item_app_new(app_info * app,guint icon_size,gboolean label_visible);
 
+LingOperate  * clm_desktop_item_get_operate(ClmDesktopItem * self);
+
 app_info * clm_desktop_item_get_app_info(ClmDesktopItem * self);
 
 void clm_desktop_item_app_set_runable(ClmDesktopItem * self,gboolean runable);
@@ -33,5 +35,7 @@ void clm_desktop_item_folder_set_app_icon_size(ClmDesktopItem * self,int size);
 GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,
                                        uint column,uint row,GList * applist,
                                        const char * folder_name,gboolean label_visible);
+
+LingOperate  * clm_desktop_item_get_folder_operate(ClmDesktopItem * self);
 
 G_END_DECLS

@@ -42,10 +42,10 @@ GtkWidget * ling_overlay_new();
 
 int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level);
 
-void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
-                           LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
-                           uint op_type,
-                           ANIMATION ani,PROGRESS progress,RELEASE release,FINISH main_f,FINISH sub_f);
+// void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
+//                            LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
+//                            uint op_type,
+//                            ANIMATION ani,PROGRESS progress,RELEASE release,FINISH main_f,FINISH sub_f);
 
 LingLayer * ling_overlay_get_layer(LingOverlay * overlay,uint lay);
 

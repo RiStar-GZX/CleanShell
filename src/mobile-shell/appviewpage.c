@@ -30,6 +30,8 @@ GtkWidget * clm_app_view_page_new(style_info style_info){
 
     self->grid = ling_grid_new(style_info.column_num,style_info.row_num,style_info.column_space,style_info.row_space);
 
+    ling_grid_set_drop_target(LING_GRID(self->grid),CLM_TYPE_DESKTOP_ITEM,GDK_ACTION_MOVE);
+
     gtk_box_append(GTK_BOX(self),self->grid);
 
     gtk_widget_set_margin_start(self->grid,self->style_info.frame_space);

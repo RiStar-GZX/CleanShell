@@ -139,10 +139,27 @@ GtkWidget * cl_lock_screen_new(){
     LingLayer * verify=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_VERIFY);
     LingOperate * cover_op = ling_operate_add(shell->controler,CL_LOCK_SCREEN_COVER_OP_NAME,cover->widget);
     LingOperate * verify_op = ling_operate_add(shell->controler,"lockscreen_verify",verify->widget);
-    ling_layer_add_switch(cover_op,LING_OVERLAY(self->overlay),LAYER_COVER,
-                          verify_op,LING_OVERLAY(self->overlay),LAYER_VERIFY,
-                          LING_ACTION_DRAG_UP,lks_ani,ling_layer_progress,ling_layer_release,
-                          ling_layer_main_finish,ling_layer_sub_finish);
+
+
+    switcher * s = malloc(sizeof(switcher));
+    s->main = cover;
+    s->sub = verify;
+
+    ling_operate_add_action(cover_op,LING_ACTION_DRAG_UP,
+                            ling_layer_progress,NULL,       //0->100
+                            lks_ani,s,
+                            ling_layer_release,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+
+    ling_operate_add_action(verify_op,LING_ACTION_DRAG_DOWN,
+                            ling_layer_progress,NULL,       //100->0
+                            lks_ani,s,
+                            ling_layer_release,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+    // ling_layer_add_switch(cover_op,LING_OVERLAY(self->overlay),LAYER_COVER,
+    //                       verify_op,LING_OVERLAY(self->overlay),LAYER_VERIFY,
+    //                       LING_ACTION_DRAG_UP,lks_ani,ling_layer_progress,ling_layer_release,
+    //                       ling_layer_main_finish,ling_layer_sub_finish);
 
     return GTK_WIDGET(self);
 }

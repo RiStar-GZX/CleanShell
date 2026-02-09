@@ -123,7 +123,7 @@ static GtkWidget * cl_wm_window_new(const char * name,const char * icon_name){
 
 
 
-G_DEFINE_FINAL_TYPE(ClWm,cl_wm,GTK_TYPE_FIXED);
+G_DEFINE_FINAL_TYPE(ClWm,cl_wm,LING_TYPE_FIXED);
 
 static void cl_wm_class_init(ClWmClass * klass){
 
@@ -173,7 +173,7 @@ void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable){
     if(window->wm==NULL)return;
     GList * list = g_list_find(window->wm->windows,window);
     if(list==NULL)return;
-    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
+    LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
     if(info==NULL&&showable==TRUE){
         ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),0,0,LING_FIXED_TOP,0);
     }
@@ -213,7 +213,7 @@ void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdo
 
     int w = gtk_widget_get_width(GTK_WIDGET(window->wm));
     int h = gtk_widget_get_height(GTK_WIDGET(window->wm));
-    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
+    LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
     if(info!=NULL){
         ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),x,y,level,0);
     }
@@ -253,7 +253,7 @@ static void cl_wm_open_finish_end(GtkWidget * widget,LingActionArgs action,gpoin
     wa->window->current_args = wa;
 }
 
-LingOperate * cl_wm_add_operate(ClWm * wm,GtkWidget * widget,const char * window_name,const char * icon_name,
+void cl_wm_add_operate(LingOperate * op,ClWm * wm,const char * window_name,const char * icon_name,
                        WM_ANI_CB ani,gpointer ani_data,
                        WM_OPEN_START_CB open_start,gpointer open_start_data,
                        WM_ACT_CB open_finish,gpointer open_finish_data,
@@ -271,15 +271,13 @@ LingOperate * cl_wm_add_operate(ClWm * wm,GtkWidget * widget,const char * window
     args->close_start_data = close_start_data;
     args->close_finish = close_finish;
     args->close_finish_data = close_finish_data;
-    args->widget = widget;
+    args->widget = op->widget;
 
-    LingOperate * op = ling_operate_add(shell->controler,"app_open",widget);
     ling_operate_add_action(op,LING_ACTION_CLICK,
                             NULL,NULL,
                             cl_wm_open_ani,args,
                             cl_wm_open_start,args,
                             cl_wm_open_finish_start,cl_wm_open_finish_end,args);
-    return op;
 }
 
 void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,

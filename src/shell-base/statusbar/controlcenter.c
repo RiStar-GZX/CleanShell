@@ -65,6 +65,7 @@ GtkWidget * cl_control_center_new(ClStatusBar * statusbar){
     self->statusbar = statusbar;
 
     self->grid = ling_grid_new(4,7,10,10);
+    ling_grid_set_aspect(LING_GRID(self->grid),1);
     //gtk_widget_set_margin_top(self->grid,20);
     gtk_widget_set_margin_bottom(self->grid,64);
     gtk_widget_set_margin_start(self->grid,20);
@@ -83,16 +84,16 @@ GtkWidget * cl_control_center_new(ClStatusBar * statusbar){
 /*------------------------------------------------------------------------------------------------------*/
 
 
-static gboolean folder_open(GtkWidget * content,gdouble * x,gdouble * y,gpointer user_data){
-    ClControlItem * self = CL_CONTROL_ITEM(content);
+static GtkWidget * folder_open(LingFolder * folder,GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){
+    ClControlItem * self = CL_CONTROL_ITEM(widget);
     LingGridOriPos * info = (LingGridOriPos *)user_data;
 
-    info->size_w = gtk_widget_get_width(content);
-    info->size_h = gtk_widget_get_height(content);
+    info->size_w = gtk_widget_get_width(widget);
+    info->size_h = gtk_widget_get_height(widget);
     int c,r,w,h;
-    ling_grid_query_child(info->grid,content,&c,&r,&w,&h);
+    ling_grid_query_child(LING_GRID(info->grid),widget,&c,&r,&w,&h);
 
-    gtk_widget_translate_coordinates(content,info->coordinates,0,0,x,y);
+    gtk_widget_translate_coordinates(widget,info->coordinates,0,0,x,y);
     info->start_x = *x;
     info->start_y = *y;
     info->column = c;
@@ -100,17 +101,18 @@ static gboolean folder_open(GtkWidget * content,gdouble * x,gdouble * y,gpointer
     info->grid_w = w;
     info->grid_h = h;
 
-    ling_grid_remove(info->grid,c,r);
-    return LING_FOLDER_OPEN;
+    //ling_grid_remove(LING_GRID(info->grid),c,r);
+    ling_grid_remove(LING_GRID(info->grid),widget);
+    return NULL;
 }
 
 static int folder_expand_w=400,folder_expand_h=800;
-static void folder_ani(GtkWidget * content,gdouble progress,gpointer user_data){
+static void folder_ani(LingFolder * folder,GtkWidget * widget,GtkWidget * content,gdouble progress,gpointer user_data){
     //
-    ClControlItem * self =  CL_CONTROL_ITEM(content);
-    GtkWidget * folder = cl_control_item_get_folder(self);
-    gtk_widget_set_visible(folder,TRUE);
-    gtk_widget_set_opacity(folder,(progress/100.00f));
+    ClControlItem * self =  CL_CONTROL_ITEM(widget);
+    //GtkWidget * folder = cl_control_item_get_folder(self);
+    gtk_widget_set_visible(GTK_WIDGET(folder),TRUE);
+    gtk_widget_set_opacity(GTK_WIDGET(folder),(progress/100.00f));
     GtkWidget * button = cl_control_item_get_button(self);
     gtk_widget_set_visible(button,TRUE);
     gtk_widget_set_opacity(button,1-(progress/100.00f));
@@ -119,7 +121,7 @@ static void folder_ani(GtkWidget * content,gdouble progress,gpointer user_data){
     LingGridOriPos * info = (LingGridOriPos *)user_data;
     int  w = info->size_w+(progress/100)*(folder_expand_w-info->size_w);
     int  h = info->size_h+(progress/100)*(folder_expand_h-info->size_h);
-    gtk_widget_set_size_request(content,w,h);
+    //gtk_widget_set_size_request(content,w,h);
     // g_print("progress:%f\n",progress);
 
     int bodybox_w = gtk_widget_get_width(info->coordinates);
@@ -130,29 +132,30 @@ static void folder_ani(GtkWidget * content,gdouble progress,gpointer user_data){
     int new_y= info->start_y+(end_y-info->start_y)*(progress/100.00f);
 
     ling_folder_set_pos(LING_FOLDER(info->face),new_x,new_y);
+    ling_folder_set_size(LING_FOLDER(info->face),w,h);
 }
 
-static void folder_open_finish(GtkWidget * content,gpointer user_data){
-    ClControlItem * self =  CL_CONTROL_ITEM(content);
-    GtkWidget * folder = cl_control_item_get_folder(self);
-    gtk_widget_set_visible(folder,TRUE);
-    gtk_widget_set_opacity(folder,1);
+static void folder_open_finish(LingFolder * folder,GtkWidget * widget,GtkWidget * content,gpointer user_data){
+    ClControlItem * self =  CL_CONTROL_ITEM(widget);
+    //GtkWidget * folder = cl_control_item_get_folder(self);
+    gtk_widget_set_visible(GTK_WIDGET(folder),TRUE);
+    gtk_widget_set_opacity(GTK_WIDGET(folder),1);
     GtkWidget * button = cl_control_item_get_button(self);
     gtk_widget_set_visible(button,FALSE);
     gtk_widget_set_opacity(button,0);
 }
 
-static void folder_close(GtkWidget * content,gpointer user_data){
-    ClControlItem * self =  CL_CONTROL_ITEM(content);
-    GtkWidget * folder = cl_control_item_get_folder(self);
-    gtk_widget_set_visible(folder,FALSE);
+static void folder_close(LingFolder * folder,GtkWidget * widget,GtkWidget * content,gpointer user_data){
+    ClControlItem * self =  CL_CONTROL_ITEM(widget);
+    //GtkWidget * folder = cl_control_item_get_folder(self);
+    //gtk_widget_set_visible(folder,FALSE);
     GtkWidget * button = cl_control_item_get_button(self);
     gtk_widget_set_visible(button,TRUE);
     gtk_widget_set_opacity(button,1);
 
     LingGridOriPos * info = (LingGridOriPos *)user_data;
-    gtk_widget_set_size_request(content,-1,-1);
-    ling_grid_attach(info->grid,content,info->column,info->row,info->grid_w,info->grid_h);
+    gtk_widget_set_size_request(widget,-1,-1);
+    ling_grid_attach(LING_GRID(info->grid),widget,info->column,info->row,info->grid_w,info->grid_h);
 }
 
 /*------------------------------------------------------------------------------------------------------*/
@@ -174,7 +177,7 @@ void cl_control_center_load(ClControlCenter * self){
     GtkWidget * folder = cl_status_bar_get_folder(CL_STATUS_BAR(self->statusbar));
     LingGridOriPos * w_info = (LingGridOriPos*)g_malloc0(sizeof(LingGridOriPos));
     w_info->face = folder;
-    w_info->grid = LING_GRID(self->grid);
+    w_info->grid = self->grid;
     w_info->coordinates = GTK_WIDGET(self);
 
     LingOperate * ctb_op = ling_operate_get(shell->controler,CL_STATUSBAR_CENTERBOX_OP_NAME);
@@ -185,7 +188,8 @@ void cl_control_center_load(ClControlCenter * self){
     GtkWidget * item_folder = cl_wlan_list_new();
     self->wlan_button = cl_control_item_new(button,item_folder);
     ling_grid_attach(LING_GRID(self->grid),self->wlan_button,1,1,2,1);
-    LingOperate * op =ling_folder_operate(LING_FOLDER(folder),self->wlan_button,LING_ACTION_CLICK,
+    LingOperate * op = ling_operate_add(shell->controler,"wifi-button",self->wlan_button);
+    ling_folder_operate(op,LING_FOLDER(folder),LING_ACTION_CLICK,
                         folder_open,w_info,folder_ani,w_info,
                         folder_open_finish,w_info,folder_close,w_info);
     GtkWidget * be = cl_control_button_get_sub_button(CL_CONTROL_BUTTON(button));
@@ -195,7 +199,8 @@ void cl_control_center_load(ClControlCenter * self){
     button = cl_control_button_new("蓝牙","bluetooth-symbolic");
     self->ble_button = cl_control_item_new(button,gtk_button_new());
     ling_grid_attach(LING_GRID(self->grid),self->ble_button,3,1,2,1);
-    op = ling_folder_operate(LING_FOLDER(folder),self->ble_button,LING_ACTION_CLICK,
+    op = ling_operate_add(shell->controler,"ble-button",self->ble_button);
+    ling_folder_operate(op,LING_FOLDER(folder),LING_ACTION_CLICK,
                         folder_open,w_info,folder_ani,w_info,
                         folder_open_finish,w_info,folder_close,w_info);
     be = cl_control_button_get_sub_button(CL_CONTROL_BUTTON(button));

@@ -27,7 +27,7 @@ typedef struct{
     uint size_h;
     gdouble start_x;
     gdouble start_y;
-    LingGrid * grid;
+    GtkWidget * grid;
     GtkWidget * face;   //层:例如clwm,lingfolder
     //GtkWidget * content; //显示的控件
     GtkWidget * coordinates;

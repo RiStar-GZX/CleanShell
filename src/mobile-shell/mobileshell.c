@@ -152,6 +152,29 @@ typedef struct switch3{
     LingLayer * lockscreen;
 }switch3;
 
+gdouble statusbar_center_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    //y正方向起点为100，终点为0
+    switch3 * s = user_data;
+    int w = gtk_widget_get_width(s->statusbar->widget);
+    if(args.start_x<=w/2){
+        cl_status_bar_set_page(CL_STATUS_BAR(shell->statusbar),SB_PAGE_NOTICE);
+    }else{
+        cl_status_bar_set_page(CL_STATUS_BAR(shell->statusbar),SB_PAGE_CONTROL);
+    }
+    gdouble p;
+    gdouble y = args.offset_y;
+    if(y<0){
+        if(y<-300)y=-300;
+        p=-(y/300)*100;
+    }
+    else{
+        if(y>300)y=300;
+        p=100-(y/300)*100;
+    }
+    //g_print("p:%f\n",p);
+    return p;
+}
+
 static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switch3 * s = user_data;
     GtkWidget * main=s->statusbar->widget,*sub;
@@ -235,11 +258,7 @@ void statusbar_center_e_finish(GtkWidget * widget,LingActionArgs args,gpointer u
     gtk_widget_set_opacity(sub,1);
 }
 
-static void test(ClmShell * shell);
-
 void clm_shell_setting(ClmShell * self){
-    // test(self);
-    // return;
 
     //加载所有应用
     clm_shell_load_apps(self,"/usr/share/applications/");
@@ -297,7 +316,7 @@ void clm_shell_setting(ClmShell * self){
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
     ling_operate_add_action(ling_operate_get(shell->controler,CLM_DESKTOP_BODYBOX_OP_NAME),LING_ACTION_DRAG_DOWN,
-                            ling_layer_progress,NULL,
+                            statusbar_center_progress,s,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
@@ -308,65 +327,16 @@ void clm_shell_setting(ClmShell * self){
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
-    //uint sbb_level;
-    //ling_status_bar_get_layer_center(LING_STATUS_BAR(shell->statusbar),&sbb_level);
+
     ling_operate_add_action(ling_operate_get(shell->controler,CL_STATUSBAR_BAR_OP_NAME),LING_ACTION_DRAG_DOWN,
-                            ling_layer_progress,NULL,
+                            statusbar_center_progress,s,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 }
 
-static void b1clicked (
-    GtkButton* self,
-    gpointer user_data
-    ){
-    GtkWidget * fixed = GTK_WIDGET(user_data);
-    gtk_widget_set_hexpand(fixed,TRUE);
-    gtk_widget_set_vexpand(fixed,TRUE);
-    LingFixedItemInfo * info=ling_fixed_get_item_info(LING_FIXED(fixed),GTK_WIDGET(self));
-    if(info!=NULL){
-        //ling_fixed_set_child_size(LING_FIXED(fixed),GTK_WIDGET(self),
-        //                          info->w+4,info->h+4);
-        ling_fixed_move(LING_FIXED(fixed),GTK_WIDGET(self),info->x+4,info->y);
-    }
-    g_print("%d %d\n",gtk_widget_get_width(GTK_WIDGET(self)),gtk_widget_get_height(GTK_WIDGET(self)));
-    //ling_fixed_move(LING_FIXED(fixed),GTK_WIDGET(self),100,100);
-}
-
-void clm_shell_test(ClmShell * self){
-    self->controler = ling_operate_controler_new(144);
-    GtkWidget * fixed = ling_fixed_new();
-    gtk_box_append(GTK_BOX(self),fixed);
-    gtk_widget_set_hexpand(fixed,TRUE);
-    gtk_widget_set_vexpand(fixed,TRUE);
-
-    GtkWidget * a1 = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    gtk_box_append(GTK_BOX(a1),gtk_button_new_with_label("dad"));
-    GtkWidget * a2 = gtk_button_new_with_label("a2");
-    GtkWidget * b1 = gtk_button_new_with_label("b1");
-    GtkWidget * b2 = gtk_button_new_with_label("b2");
-
-
-    ling_fixed_put_none(LING_FIXED(fixed),a1,0,0,1,1);
-    ling_fixed_put_none(LING_FIXED(fixed),a2,10,10,1,2);
-    ling_fixed_put_none(LING_FIXED(fixed),b1,20,20,2,1);
-    ling_fixed_put_none(LING_FIXED(fixed),b2,30,30,2,2);
-
-    ling_fixed_set_child_level(LING_FIXED(fixed),a1,3,3);
-    ling_fixed_set_child_size(LING_FIXED(fixed),a1,40,40);
-    ling_fixed_set_child_size(LING_FIXED(fixed),a2,40,40);
-    ling_fixed_set_child_size(LING_FIXED(fixed),b1,40,40);
-    ling_fixed_set_child_size(LING_FIXED(fixed),b2,40,40);
-
-    ling_fixed_move(LING_FIXED(fixed),a1,100,100);
-    g_signal_connect(a2,"clicked",G_CALLBACK(b1clicked),fixed);
-    gtk_widget_set_hexpand(fixed, TRUE); // 启用水平扩展
-}
-
 GtkWidget * clm_shell_start(){
     shell = g_object_new(CLM_TYPE_SHELL,NULL);
     clm_shell_setting(shell);
-    //clm_shell_test(shell);
     return GTK_WIDGET(shell);
 }

@@ -95,31 +95,31 @@ gboolean ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user
 }
 
 
-void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
-                           LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
-                           uint m_op_type,
-                           ANIMATION ani,PROGRESS progress,RELEASE release,FINISH main_f,FINISH sub_f){
-    switcher * s = malloc(sizeof(switcher));
-    LingLayer * main=ling_overlay_get_layer(overlay_m,lay_main);
-    LingLayer * sub=ling_overlay_get_layer(overlay_s,lay_sub);
-    s->main = main;
-    s->sub = sub;
+// void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
+//                            LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
+//                            uint m_op_type,
+//                            ANIMATION ani,PROGRESS progress,RELEASE release,FINISH main_f,FINISH sub_f){
+//     switcher * s = malloc(sizeof(switcher));
+//     LingLayer * main=ling_overlay_get_layer(overlay_m,lay_main);
+//     LingLayer * sub=ling_overlay_get_layer(overlay_s,lay_sub);
+//     s->main = main;
+//     s->sub = sub;
 
-    ling_operate_add_action(op_m,m_op_type,
-                            progress,NULL,       //0->100
-                            ani,s,
-                            release,NULL,
-                            main_f,sub_f,s);
+//     ling_operate_add_action(op_m,m_op_type,
+//                             progress,NULL,       //0->100
+//                             ani,s,
+//                             release,NULL,
+//                             main_f,sub_f,s);
 
-    uint s_op_type=LING_ACTION_CLICK;
-    if(m_op_type==LING_ACTION_DRAG_UP)s_op_type = LING_ACTION_DRAG_DOWN;
-    if(m_op_type==LING_ACTION_DRAG_DOWN)s_op_type = LING_ACTION_DRAG_UP;
-    ling_operate_add_action(op_s,s_op_type,
-                            progress,NULL,       //100->0
-                            ani,s,
-                            release,NULL,
-                            main_f,sub_f,s);
-}
+//     uint s_op_type=LING_ACTION_CLICK;
+//     if(m_op_type==LING_ACTION_DRAG_UP)s_op_type = LING_ACTION_DRAG_DOWN;
+//     if(m_op_type==LING_ACTION_DRAG_DOWN)s_op_type = LING_ACTION_DRAG_UP;
+//     ling_operate_add_action(op_s,s_op_type,
+//                             progress,NULL,       //100->0
+//                             ani,s,
+//                             release,NULL,
+//                             main_f,sub_f,s);
+// }
 
 void ling_layer_main_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     switcher * s = user_data;

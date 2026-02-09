@@ -7,6 +7,8 @@
 
 G_BEGIN_DECLS
 
+#define CLM_DESKTOP_DRAWER_OP_NAME "drawer_switch"
+
 #define CLM_TYPE_APP_DRAWER (clm_app_drawer_get_type())
 G_DECLARE_FINAL_TYPE(ClmAppDrawer,clm_app_drawer,LING,APP_DRAWER,GtkBox)
 

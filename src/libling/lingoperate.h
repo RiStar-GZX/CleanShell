@@ -8,12 +8,21 @@ typedef struct LingOpControler{
     GList * operates;
 }LingOpControler;
 
-enum ling_operate_state{
+typedef enum {
     LING_OPERATE_STATE_WAITTING,
     LING_OPERATE_STATE_OPERATING,
     LING_OPERATE_STATE_ANIMATION,
-};
+}LING_OPERATE_STATE;
 
+
+typedef enum{
+    LING_OPERATE_EMIT_AT_START=0,
+    LING_OPERATE_EMIT_AT_RELEASE,
+    LING_OPERATE_EMIT_AT_FINISH,
+    LING_OPERATE_EMIT_AT_FINISH_S,
+    LING_OPERATE_EMIT_AT_FINISH_E,
+    LING_OPERATE_EMIT_NUM,
+}LING_OPERATE_EMIT;
 
 #define    LING_OPERATE_ANIMATION_REMOVE       FALSE
 #define    LING_OPERATE_ANIMATION_CONTINUE     TRUE
@@ -44,8 +53,14 @@ typedef enum{
     LING_ACTION_LONG_PRESS_DRAG_SOURCE,
     LING_ACTION_EMIT,
     LING_ACTION_ALL,
+    LING_ACTION_INSTANT,
     LING_ACTION_NUM,
 }LING_ACTION;
+
+typedef enum{
+    LING_DRAG_SOURCE_INSTANT = LING_ACTION_DRAG_SOURCE,
+    LING_DRAG_SOURCE_LONG_PRESS = LING_ACTION_LONG_PRESS_DRAG_SOURCE,
+}LING_DRAG_SOURCE_TYPE;
 
 typedef struct LingOperate LingOperate;
 
@@ -74,16 +89,21 @@ typedef gboolean  (*ISBREAKED)(gpointer user_data); //废弃
 typedef void  (*FINISH)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
 
-typedef GdkContentProvider * (*PREPARE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+typedef GdkContentProvider * (*DRAGSOURCE_PREPARE)(
+    GtkDragSource* self,gdouble x,gdouble y,gpointer user_data);
 
-typedef void (*CANCEL)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+typedef void (*DRAGSOURCE_BEGIN)(GtkDragSource* self,GdkDrag* drag,gpointer user_data);
+
+typedef gboolean (*DRAGSOURCE_CANCEL)(
+    GtkDragSource* self,GdkDrag* drag,GdkDragCancelReason* reason,gpointer user_data);
+
+typedef void (*DRAGSOURCE_END)(GtkDragSource* self,
+                                    GdkDrag* drag,gboolean delete_data,gpointer user_data);
 
 
 typedef struct LingAction{
     gboolean able;
-    //dragsource
-    PREPARE prepare;
-    gpointer prepare_data;
+
     //进度
     PROGRESS progress;
     gpointer progress_data;
@@ -109,15 +129,34 @@ typedef struct LingAction{
     FINISH finish_s;
     FINISH finish_e;
     gpointer finish_data;
+
+    //拖拽DND
+    DRAGSOURCE_PREPARE prepare;
+    gpointer prepare_data;
+    DRAGSOURCE_BEGIN begin;
+    gpointer begin_data;
+    DRAGSOURCE_CANCEL cancel;
+    gpointer cancel_data;
+    DRAGSOURCE_END end;
+    gpointer end_data;
+
+
+
+    //连带触发
+    LingOperate * emit[LING_OPERATE_EMIT_NUM];
+    gpointer emit_data[LING_OPERATE_EMIT_NUM];
+    gboolean emit_dir[LING_OPERATE_EMIT_NUM];
 }LingAction;
 
 typedef struct LingOperate{
     LingOpControler *controler;
 
     gboolean able;
+    GtkDragSource * drag_source;
+    GtkDropTarget * drop_target;
     GtkGesture * drag;
     GtkGesture * swipe;
-    GtkDragSource * drag_source;
+    GtkGesture * instant;   //点击的瞬间触发的手势
     GtkWidget * widget;
 
     GString * operate_name;
@@ -145,7 +184,7 @@ typedef struct LingOperate{
     gpointer emit_data;
 
     int longpress_id;
-    //gboolean longpress_status;
+    gboolean longpress_status;
 }LingOperate;
 
 LingOpControler * ling_operate_controler_new(uint frame);
@@ -188,10 +227,18 @@ void ling_operate_add_action(LingOperate * op,uint type,
                              RELEASE release,gpointer release_data,
                              FINISH finish_s,FINISH finish_e,gpointer finish_data);
 
+void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
+                                 DRAGSOURCE_PREPARE prepare,gpointer prepare_data,
+                                 DRAGSOURCE_BEGIN begin,gpointer begin_data,
+                                 DRAGSOURCE_CANCEL cancel,gpointer cancel_data,
+                                 DRAGSOURCE_END end,gpointer end_data);
+
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
 
 void ling_operate_emit(LingOperate * op,gpointer emit_data);
 
 void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E);
+
+void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,gboolean S_E,gpointer emit_data);
 
 #endif // LINGOPERATE_H

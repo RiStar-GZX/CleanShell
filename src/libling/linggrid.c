@@ -1,126 +1,111 @@
 #include "linggrid.h"
-#include <ling.h>
 
-struct _LingGridPh{
-    GtkBox parent;
+enum{
+    GRID_FACE_DRAG,
+    GRID_FACE_GRID,
 };
 
-G_DEFINE_FINAL_TYPE(LingGridPh,ling_grid_ph,GTK_TYPE_BOX)
-
-static void ling_grid_ph_class_init(LingGridPhClass * klass){
-
-}
-
-static void ling_grid_ph_init(LingGridPh * self){
-    GtkWidget * label = gtk_button_new();
-    gtk_widget_set_opacity(label,0);
-    gtk_widget_set_hexpand(label,TRUE);
-    gtk_widget_set_vexpand(label,TRUE);
-    gtk_box_append(GTK_BOX(self),label);
-}
-
-GtkWidget * ling_grid_ph_new(){
-    return GTK_WIDGET(g_object_new(LING_TYPE_GRID_PH,NULL));
-}
-
+typedef struct{
+    LingOperate * drag_op;
+    uint column,row;
+    uint w,h;
+    //GtkDragSource * drag_source;
+}LingGridItem;
 
 struct _LingGrid{
-    GtkGrid parent;
-    uint column_num;
-    uint row_num;
-    gboolean drag_able;
-    LingFixed * dragface; //lingfixed
+    LingFixed parent;
+    uint column,row;
+    uint column_space;
+    uint row_space;
+    uint top_space; //上下空间
+    uint start_space; //左右空间
+    gdouble aspect_ratio;
+    //gdouble dragable;
+    GType dnd_type;
+    GtkDropTarget * drop_target;
 };
 
-G_DEFINE_FINAL_TYPE(LingGrid,ling_grid,GTK_TYPE_GRID)
+G_DEFINE_FINAL_TYPE(LingGrid,ling_grid,LING_TYPE_FIXED)
 
 static void ling_grid_class_init(LingGridClass * klass){
 
 }
 
 static void ling_grid_init(LingGrid * self){
-    gtk_grid_set_column_homogeneous(GTK_GRID(self), TRUE); // 列均匀
-    gtk_grid_set_row_homogeneous(GTK_GRID(self), TRUE); // 行均匀
 }
 
 
-GtkWidget * ling_grid_new(uint column,uint row,uint column_space,uint row_space){
+GtkWidget * ling_grid_new(uint column,uint row,uint column_space,uint row_space){//,uint start_space,uint top_space){
     LingGrid * self = LING_GRID(g_object_new(LING_TYPE_GRID,NULL));
-    //添加占位符
-    for(int r=1;r<=row;r++){
-        for(int c=1;c<=column;c++){
-            GtkWidget * ph = ling_grid_ph_new();
-            gtk_grid_attach(GTK_GRID(self),ph,c,r,1,1);
-        }
-    }
-    self->column_num = column;
-    self->row_num = row;
-    gtk_grid_set_column_spacing(GTK_GRID(self),column_space);
-    gtk_grid_set_row_spacing(GTK_GRID(self),row_space);
+    self->column = column;
+    self->row = row;
+    self->column_space = column_space;
+    self->row_space = row_space;
+    self->start_space = 0;//start_space;
+    self->top_space = 0;//top_space;
     return GTK_WIDGET(self);
 }
 
-int ling_grid_attach(LingGrid * self,GtkWidget * content,uint column,uint row,uint width,uint height){
-
-    if(column<=0||row<=0)return 0;
-    if(column+width-1>self->column_num)return 0;
-    if(row+height-1>self->row_num)return 0;
-
-    //检查是否有空间
-    int not_ph_num=0;
-    for(int r=row;r<row+height;r++){
-        for(int c=column;c<column+width;c++){
-            GtkWidget * co = gtk_grid_get_child_at(GTK_GRID(self),c,r);
-            if(!LING_IS_GRID_PH(co)){
-                not_ph_num++;
-            }
-        }
-    }
-
-    if(not_ph_num!=0)return 0;
-
-    //移除占位符
-    for(int r=row;r<row+height;r++){
-       for(int c=column;c<column+width;c++){
-            GtkWidget * co = gtk_grid_get_child_at(GTK_GRID(self),c,r);
-            if(LING_IS_GRID_PH(co)){
-                gtk_grid_remove(GTK_GRID(self),co);
-                g_object_unref(co);
-            }
-        }
-    }
-
-    gtk_grid_attach(GTK_GRID(self),content,column,row,width,height);
-    gtk_widget_set_hexpand(content,TRUE);
-    gtk_widget_set_vexpand(content,TRUE);
-    return 1;
+void ling_grid_set_aspect(LingGrid * grid,gdouble ratio){
+    grid->aspect_ratio = ratio;
 }
 
-GtkWidget * ling_grid_get_child_at(LingGrid * self,int column,int row){
-    GtkWidget * child = gtk_grid_get_child_at(GTK_GRID(self),column,row);
-    if(LING_IS_GRID_PH(child))return NULL;
-    return child;
+GtkAllocation ling_fixed_grid_adjust(GtkWidget * widget,LingFixedItem *info,
+                                     int width,int height,int baseline,graphene_rect_t rect){
+    LingGrid * grid = LING_GRID(widget);
+    LingGridItem * item = info->ex;
+
+    int w=(rect.size.width+grid->column_space-grid->start_space*2)/grid->column;
+    int h=(rect.size.height+grid->row_space-grid->top_space*2)/grid->row;
+    GtkAllocation alloc;
+    alloc.x = w*(item->column-1)+grid->start_space;
+    if(grid->aspect_ratio>0){
+        alloc.y = (w-grid->column_space+grid->row_space)*grid->aspect_ratio*(item->row-1)+grid->top_space;
+    }
+    else alloc.y = h*(item->row-1)+grid->top_space;
+
+    alloc.width = w*item->w - grid->column_space;
+    if(grid->aspect_ratio>0){
+        alloc.height = (w-grid->column_space)*item->h*grid->aspect_ratio;
+    }
+    else alloc.height = h*item->h - grid->row_space;
+    return alloc;
 }
 
-void ling_grid_remove(LingGrid * self,int column,int row){
-    GtkWidget * child = ling_grid_get_child_at(self,column,row);
-    if(child==NULL)return;
-    int c,r,w,h;
-    gtk_grid_query_child(GTK_GRID(self),child,&c,&r,&w,&h);
 
-    g_object_ref(child);
-    gtk_grid_remove(GTK_GRID(self),child);
-    for(int j=r;j<r+h;j++){
-        for(int i=c;i<c+w;i++){
-            GtkWidget * ph = ling_grid_ph_new();
-            gtk_grid_attach(GTK_GRID(self),ph,i,j,1,1);
+
+static LingFixedItem * ling_grid_get(GList * list,int column,int row){
+    for(GList * l = list;l!=NULL;l=l->next){
+        LingFixedItem * item =(LingFixedItem *)l->data;
+        if(item==NULL)continue;
+        LingGridItem * grid_item =(LingGridItem *)item->ex;
+        if(grid_item==NULL)continue;
+        if(column<grid_item->column+grid_item->w&&
+            column>=grid_item->column&&
+            row<grid_item->row+grid_item->h&&
+            row>=grid_item->row){
+            return item;
         }
     }
+    return NULL;
 }
 
-void ling_grid_query_child(LingGrid *self,GtkWidget *child,
+GtkWidget * ling_grid_get_child_at(LingGrid * grid,int column,int row){
+    GList * list = ling_fixed_get_items_list(LING_FIXED(grid));
+    LingFixedItem * item=ling_grid_get(list,column,row);
+    if(item==NULL)return NULL;
+    return item->widget;
+}
+
+void ling_grid_query_child(LingGrid *grid,GtkWidget *child,
                            int *column,int *row,int *width,int *height){
-    gtk_grid_query_child(GTK_GRID(self),child,column,row,width,height);
+    LingFixedItem * item=ling_fixed_get_item_info(LING_FIXED(grid),child);
+    if(item==NULL||item->ex==NULL)return;
+    LingGridItem * grid_item = (LingGridItem*)item->ex;
+    *column = grid_item->column;
+    *row = grid_item->row;
+    *width = grid_item->w;
+    *height = grid_item->h;
 }
 
 // static void grid_data_save(GKeyFile *keyfile,const char * group,LingGrid * grid){
@@ -152,4 +137,115 @@ void ling_grid_query_child(LingGrid *self,GtkWidget *child,
 //         ling_data_saver_save(DESKTOP_ICON_INI_PATH,keyfile,group,key_name->str,c,r,w,h,app_info->desktop_path->str,NULL);
 //         g_free(key_name);
 //     }
+// }
+
+//static gdouble sx,sy;
+
+// static GdkContentProvider * grid_drag_source_prepare (
+//     GtkDragSource* self,gdouble x,gdouble y,gpointer user_data){
+//     LingFixedItem * fi = (LingFixedItem *)user_data;
+//     LingGridItem * gi = (LingGridItem *)fi->ex;
+//     LingGrid * grid = LING_GRID(gtk_widget_get_parent(fi->widget));
+//     if(grid==NULL)return NULL;
+//     grid->dnd_type = LING_TYPE_GRID;
+
+//     if(grid->dnd_type==0)return NULL;
+//     sx=x;
+//     sy=y;
+//     return gdk_content_provider_new_union((GdkContentProvider *[1]) {
+//                                             gdk_content_provider_new_typed (grid->dnd_type, fi),
+//                                             }, 1);
+// }
+
+// static void grid_drag_source_begin(GtkDragSource* self,GdkDrag* drag,gpointer user_data){
+//     g_print("begin\n");
+//     LingFixedItem * fi = (LingFixedItem *)user_data;
+//     LingGridItem * gi = (LingGridItem *)fi->ex;
+//     GdkPaintable *paintable = gtk_widget_paintable_new (fi->widget);
+//     gtk_drag_source_set_icon (self, paintable, sx, sy);
+
+// }
+
+// static gboolean grid_drag_source_cancel (
+//     GtkDragSource* self,GdkDrag* drag,GdkDragCancelReason* reason,gpointer user_data){
+
+//     return 0;
+// }
+
+// static void grid_drag_source_end(GtkDragSource* self,
+//                                     GdkDrag* drag,gboolean delete_data,gpointer user_data){
+
+// }
+
+int ling_grid_attach(LingGrid * grid,GtkWidget * widget,uint column,uint row,uint width,uint height){
+    LingFixedItem * fi = ling_fixed_put(LING_FIXED(grid),widget,ling_fixed_grid_adjust,0,0,0,GRID_FACE_GRID);
+    fi->ex = g_malloc0(sizeof(LingGridItem));
+    LingGridItem * gi = fi->ex;
+    gi->column = column;
+    gi->row = row;
+    gi->w = width;
+    gi->h = height;
+    return 1;
+}
+
+void ling_grid_remove_by_pos(LingGrid * grid,int column,int row){
+    GList * list = ling_fixed_get_items_list(LING_FIXED(grid));
+    LingFixedItem * item=ling_grid_get(list,column,row);
+    if(item==NULL)return;
+    ling_fixed_remove(LING_FIXED(grid),item->widget);
+    g_free(item->ex);
+}
+
+void ling_grid_remove(LingGrid * grid,GtkWidget * widget){
+    LingFixedItem * item=ling_fixed_get_item_info(LING_FIXED(grid),widget);
+    if(item==NULL)return;
+    g_free(item->ex);
+    ling_fixed_remove(LING_FIXED(grid),item->widget);
+}
+
+
+static gboolean ling_grid_drop_accept(GtkDropTarget* self,GdkDrop* drop,gpointer user_data){
+    return TRUE;
+}
+
+static gboolean ling_grid_drop_drop(GtkDropTarget* self,const GValue* value,gdouble x,gdouble y,gpointer user_data){
+    g_print("drop:%f %f\n",x,y);
+    exit(1);
+    return TRUE;
+}
+
+static GdkDragAction ling_grid_drop_enter(GtkDropTarget* self,gdouble x,gdouble y,gpointer user_data){
+    g_print("enter\n");
+}
+
+static void ling_grid_drop_leave(GtkDropTarget* self,gpointer user_data){
+    g_print("leave\n");
+}
+
+static GdkDragAction ling_grid_drop_motion(GtkDropTarget* self,gdouble x,gdouble y,gpointer user_data){
+    g_print("motion:%f %f\n",x,y);
+}
+
+void ling_grid_set_drop_target(LingGrid * grid,GType type,GdkDragAction action){
+    grid->drop_target = gtk_drop_target_new(type,GDK_ACTION_NONE|GDK_ACTION_MOVE);
+    gtk_widget_add_controller(GTK_WIDGET(grid),GTK_EVENT_CONTROLLER(grid->drop_target));
+    g_signal_connect(grid->drop_target,"accept",G_CALLBACK(ling_grid_drop_accept),grid);
+    g_signal_connect(grid->drop_target,"drop",G_CALLBACK(ling_grid_drop_drop),grid);
+    g_signal_connect(grid->drop_target,"enter",G_CALLBACK(ling_grid_drop_enter),grid);
+    g_signal_connect(grid->drop_target,"leave",G_CALLBACK(ling_grid_drop_leave),grid);
+    g_signal_connect(grid->drop_target,"motion",G_CALLBACK(ling_grid_drop_motion),grid);
+}
+
+
+// void ling_grid_set_dragable(LingGrid * grid,gboolean dragable){
+//     grid->dragable = dragable;
+// }
+
+// gboolean ling_grid_get_dragable(LingGrid * grid){
+//     return grid->dragable;
+// }
+
+//位置提示框
+// void ling_grid_set_(){
+
 // }

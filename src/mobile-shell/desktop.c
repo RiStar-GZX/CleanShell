@@ -78,10 +78,11 @@ gboolean clm_desktop_page_load_test(ClmDesktop * self,ClmAppViewPage * page){
     GList * app = shell->app_info;
     for(int i=0;i<self->app_num;i++)app=app->next;
 
-    for(int r=5;r<=self->style_info.row_num;r++){
+    GList * list = NULL;
+    for(int r=6;r<=self->style_info.row_num;r++){
         int num = self->style_info.column_num;
         // if(r==self->style_info.row_num)num-=1;
-        for(int c=3;c<=num;c++){
+        for(int c=1;c<=num;c++){
             app_info * info = (app_info*)app->data;
             GtkWidget * item = clm_desktop_item_app_new(info,self->style_info.icon_size,TRUE);
             clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(item),TRUE);
@@ -90,15 +91,16 @@ gboolean clm_desktop_page_load_test(ClmDesktop * self,ClmAppViewPage * page){
             if(app==NULL)return 0;
             self->app_num++;
         }
-        GList * list = NULL;
         for(int i=0;i<9;i++){
             app_info * info = (app_info*)app->data;
             app=app->next;
             list = g_list_append(list,info);
         }
         app=app->next;
-        for(int j=5;j<=6;j++)
-        for(int i=1;i<=2;i++){
+
+    }
+    for(int j=5;j<=5;j++){
+        for(int i=1;i<=4;i++){
             GtkWidget * item = clm_desktop_item_folder_new(LING_FOLDER(self->folder_lay),3,3,list,"folder",TRUE);
             clm_app_view_page_add_item(page,item,i,j,1,1);
         }
@@ -210,7 +212,7 @@ void clm_desktop_init(ClmDesktop * self){
     self->style_info.top_space = 40;
     self->style_info.row_space = 0;
     self->style_info.frame_space = 20;
-    self->style_info.icon_size = 64;
+    self->style_info.icon_size = 100;
 
     //新建页面
     self->view_pager = ling_view_pager_new_with_op(TRUE,CLM_DESKTOP_VIEWPAGER_OP_NAME);
@@ -218,15 +220,19 @@ void clm_desktop_init(ClmDesktop * self){
 
     //底部dock创建
     GtkWidget * dock_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
+    //gtk_widget_set_valign(dock_box,GTK_ALIGN_END);
     gtk_widget_set_margin_start(dock_box,self->style_info.frame_space);
     gtk_widget_set_margin_end(dock_box,self->style_info.frame_space);
-    gtk_widget_set_vexpand(dock_box,FALSE);
-    gtk_widget_set_hexpand(dock_box,TRUE);
+    gtk_box_set_homogeneous(GTK_BOX(dock_box),1);
+    //gtk_widget_set_vexpand(dock_box,TRUE);
+    //gtk_widget_set_hexpand(dock_box,TRUE);
     self->dock = ling_grid_new(4,1,self->style_info.column_space,self->style_info.row_space);
-    gtk_widget_set_hexpand(self->dock,1);
+    gtk_widget_set_hexpand(self->dock,FALSE);
+    //gtk_widget_set_vexpand(self->dock,1);
 
     gtk_widget_set_margin_top(self->dock,40);
     gtk_widget_set_margin_bottom(self->dock,40);
+    gtk_widget_set_size_request(dock_box,-1,180);
 
     //gtk_widget_set_valign(self->dock,GTK_ALIGN_END);
     //gtk_widget_set_valign(dock_box,GTK_ALIGN_END);
@@ -239,6 +245,7 @@ void clm_desktop_init(ClmDesktop * self){
     //添加控件进box
     gtk_box_append(GTK_BOX(self->bodybox),self->view_pager);
     gtk_box_append(GTK_BOX(self->bodybox),dock_box);
+
 
     //抽屉
     self->drawer = clm_app_drawer_new();
@@ -277,12 +284,36 @@ void clm_desktop_init(ClmDesktop * self){
 
     //抽屉拖拽手势
     LingOperate * bodybox_op = ling_operate_add(shell->controler,CLM_DESKTOP_BODYBOX_OP_NAME,self->bodybox);
-    LingOperate * drawer_op  = ling_operate_add(shell->controler,"drawer_switch",self->drawer);
+    LingOperate * drawer_op  = ling_operate_get(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME);
 
-    ling_layer_add_switch(bodybox_op,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
-                          drawer_op,LING_OVERLAY(self->overlay),LAYER_DRAWER,
-                          LING_ACTION_DRAG_UP,drawer_ani,ling_layer_progress,ling_layer_release,
-                          ling_layer_main_finish,ling_layer_sub_finish);
+    switcher * s = malloc(sizeof(switcher));
+    LingLayer * main=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_BODYBOX);
+    LingLayer * sub=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_DRAWER);
+    s->main = main;
+    s->sub = sub;
+
+    ling_operate_add_action(bodybox_op,LING_ACTION_DRAG_UP,
+                            ling_layer_progress,NULL,       //0->100
+                            drawer_ani,s,
+                            ling_layer_release,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+
+    ling_operate_add_action(drawer_op,LING_ACTION_DRAG_DOWN,
+                            ling_layer_progress,NULL,       //100->0
+                            drawer_ani,s,
+                            ling_layer_release,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+
+    ling_operate_add_action(drawer_op,LING_ACTION_EMIT,
+                            NULL,NULL,
+                            drawer_ani,s,
+                            NULL,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+
+    // ling_layer_add_switch(bodybox_op,LING_OVERLAY(self->overlay),LAYER_BODYBOX,
+    //                       drawer_op,LING_OVERLAY(self->overlay),LAYER_DRAWER,
+    //                       LING_ACTION_DRAG_UP,drawer_ani,ling_layer_progress,ling_layer_release,
+    //                       ling_layer_main_finish,ling_layer_sub_finish);
 
 
     //self->data_saver = ling_data_saver_new();

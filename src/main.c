@@ -11,6 +11,10 @@ static void app_activate (GApplication *app) {
     gtk_style_context_add_provider_for_display(gdk_display_get_default(),
                                                GTK_STYLE_PROVIDER(provider),
                                                GTK_STYLE_PROVIDER_PRIORITY_USER);
+    //gtksetting
+    GtkSettings *settings = gtk_settings_get_default();
+    // 设置拖放阈值为0像素（为了桌面图标流畅的拖拽）
+    g_object_set(settings, "gtk-dnd-drag-threshold", 1, NULL);
 
     GtkWidget * window=gtk_window_new();
     //GtkWidget * appview = ling_desktop_new();
