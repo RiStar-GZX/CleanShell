@@ -46,8 +46,7 @@ static GdkContentProvider * ds_prepare (GtkDragSource* source,gdouble x,gdouble 
 
     GdkPaintable *paintable = gtk_widget_paintable_new (GTK_WIDGET(item));
     gtk_drag_source_set_icon(source, paintable, x, y);
-    return gdk_content_provider_new_union((GdkContentProvider *[1]) {
-            gdk_content_provider_new_typed (CLM_TYPE_DESKTOP_ITEM,item),}, 1);
+    return gdk_content_provider_new_typed(G_TYPE_STRING,"item");
 }
 
 static void ds_begin(GtkDragSource* source,GdkDrag* drag,gpointer user_data){
@@ -145,7 +144,8 @@ void ling_desktop_item_run_app(ClmDesktopItem * self){
 
 static void app_open_ani(GtkWidget * widget,ClWmWindow * window,LingActionArgs args,CL_WM_WINDOW_ACT act,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    if(self->type!=CLM_DESKTOP_ITEM_APP)return;
+    if(cl_wm_get_current_window(CL_WM(shell->wm))==NULL&&self->app.runable==FALSE)return;
 
     int w = gtk_widget_get_width(GTK_WIDGET(shell));
     int h = gtk_widget_get_height(GTK_WIDGET(shell));
@@ -194,7 +194,8 @@ static void app_open_ani(GtkWidget * widget,ClWmWindow * window,LingActionArgs a
 
 static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return NULL;
+    if(self->type!=CLM_DESKTOP_ITEM_APP)return NULL;
+    if(cl_wm_get_current_window(CL_WM(shell->wm))==NULL&&self->app.runable==FALSE)return NULL;
 
     gtk_widget_set_visible(shell->wm,TRUE);
 
@@ -238,25 +239,25 @@ static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gp
 
 static void app_open_finish(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
-    gtk_widget_set_opacity(GTK_WIDGET(self),1);
-    int w = gtk_widget_get_width(GTK_WIDGET(shell));
-    int h = gtk_widget_get_height(GTK_WIDGET(shell));
-    cl_wm_set_window_size(win,w,h);
-    // LingLayer * layer;
-    // clm_desktop_get_layer_folder(CLM_DESKTOP(shell->desktop),&layer);
-    // ling_folder_close(LING_FOLDER(layer->widget));
+    if(self->type!=CLM_DESKTOP_ITEM_APP)return;
+    if(cl_wm_get_current_window(CL_WM(shell->wm))==NULL&&self->app.runable==FALSE)return;
+
+    LingLayer * layer;
+    clm_desktop_get_layer_folder(CLM_DESKTOP(shell->desktop),&layer);
+    ling_folder_close(LING_FOLDER(layer->widget));
 }
 
 static void app_close_start(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    if(self->type!=CLM_DESKTOP_ITEM_APP)return;
+    if(cl_wm_get_current_window(CL_WM(shell->wm))==NULL&&self->app.runable==FALSE)return;
     gtk_widget_set_opacity(GTK_WIDGET(self),0);
 }
 
 static void app_close_finish(GtkWidget * widget,ClWmWindow * win,LingActionArgs args,gpointer user_data){
     ClmDesktopItem * self =  CLM_DESKTOP_ITEM(widget);
-    if(self->type!=CLM_DESKTOP_ITEM_APP||self->app.runable==FALSE)return;
+    if(self->type!=CLM_DESKTOP_ITEM_APP)return;
+    if(cl_wm_get_current_window(CL_WM(shell->wm))==NULL&&self->app.runable==FALSE)return;
     gtk_widget_set_opacity(GTK_WIDGET(self),1);
     cl_wm_set_window_showable(win,FALSE);
     gtk_widget_set_visible(shell->wm,FALSE);

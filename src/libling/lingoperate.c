@@ -265,7 +265,7 @@ void ling_operate_run_animation(LingOperate * op){
     else act->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
     //连带触发
     if(act->emit[LING_OPERATE_EMIT_AT_RELEASE]!=NULL){
-        ling_operate_emit_close(act->emit[LING_OPERATE_EMIT_AT_RELEASE],
+        ling_operate_emit_close(act->emit[LING_OPERATE_EMIT_AT_RELEASE],LING_ACTION_EMIT,
                                 act->emit_data[LING_OPERATE_EMIT_AT_RELEASE],
                                 act->emit_dir[LING_OPERATE_EMIT_AT_RELEASE]);
     }
@@ -390,7 +390,7 @@ static void operate_drag_begin(GtkGestureDrag* self,
 
     LingAction * action = &op->actions[op->action_now];
     if(action->emit[LING_OPERATE_EMIT_AT_START]!=NULL){
-        ling_operate_emit(action->emit[LING_OPERATE_EMIT_AT_START],action->emit_data[LING_OPERATE_EMIT_AT_START]);
+        ling_operate_emit(action->emit[LING_OPERATE_EMIT_AT_START],LING_ACTION_EMIT,action->emit_data[LING_OPERATE_EMIT_AT_START]);
     }
 }
 
@@ -688,35 +688,38 @@ void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
 // }
 
 /*******************************************************************************************************************/
-void ling_operate_emit(LingOperate * op,gpointer emit_data){
-    if(op->actions[LING_ACTION_ALL].able){
-        op->action_now = LING_ACTION_ALL;
-    }
-    else if(op->actions[LING_ACTION_INSTANT].able){
-        op->action_now = LING_ACTION_INSTANT;
-    }
-    else{
-        op->action_now = LING_ACTION_EMIT;
-    }
+void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data){
+    // if(op->actions[LING_ACTION_ALL].able){
+    //     op->action_now = LING_ACTION_ALL;
+    // }
+    // else if(op->actions[LING_ACTION_INSTANT].able){
+    //     op->action_now = LING_ACTION_INSTANT;
+    // }
+    // else{
+    //     op->action_now = LING_ACTION_EMIT;
+    // }
+    op->action_now = action;
     op->emit_data = emit_data;
     op->actions[op->action_now].ani_progress = 0;
+    op->force_run=TRUE;
     ling_operate_start_operating(op);
     ling_operate_run_animation(op);
 }
 
-void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E){
-    if(op->actions[LING_ACTION_ALL].able){
-        op->action_now = LING_ACTION_ALL;
-    }
-    else if(op->actions[LING_ACTION_INSTANT].able){
-        op->action_now = LING_ACTION_INSTANT;
-    }
-    else{
-        op->action_now = LING_ACTION_EMIT;
-    }
+void ling_operate_emit_close(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean S_E){
+    // if(op->actions[LING_ACTION_ALL].able){
+    //     op->action_now = LING_ACTION_ALL;
+    // }
+    // else if(op->actions[LING_ACTION_INSTANT].able){
+    //     op->action_now = LING_ACTION_INSTANT;
+    // }
+    // else{
+    //     op->action_now = LING_ACTION_EMIT;
+    // }
+    op->action_now = action;
     op->emit_data = emit_data;
-    if(S_E==LING_ACTION_FINISH_E)op->actions[op->action_now].ani_progress = 0;
-    else op->actions[op->action_now].ani_progress = 100;
+    // if(S_E==LING_ACTION_FINISH_E)op->actions[op->action_now].ani_progress = 0;
+    // else op->actions[op->action_now].ani_progress = 100;
     ling_operate_start_operating(op);
     ling_operate_run_finish(op,S_E);
 }
@@ -734,3 +737,18 @@ void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPER
     source->actions[action].emit_dir[emit]=S_E;
 }
 
+/*纯动画*/
+
+LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,ANIMATION ani,gpointer ani_data,
+        FINISH finish_s,FINISH finish_e,gpointer finish_data){
+    LingOperate * op = ling_operate_add(controler,ani_name,NULL);
+    op->force_run = TRUE;
+    LingAction * act =&op->actions[LING_ACTION_ANIMATE];
+    act->animation = ani;
+    act->animate_data = ani_data;
+    act->finish_s = finish_s;
+    act->finish_data = finish_data;
+    act->ani_progress_end = 100;
+    act->ani_time = 0.2;
+    return op;
+}

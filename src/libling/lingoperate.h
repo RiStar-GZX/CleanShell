@@ -54,6 +54,7 @@ typedef enum{
     LING_ACTION_EMIT,
     LING_ACTION_ALL,
     LING_ACTION_INSTANT,
+    LING_ACTION_ANIMATE,
     LING_ACTION_NUM,
 }LING_ACTION;
 
@@ -235,10 +236,13 @@ void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
 
-void ling_operate_emit(LingOperate * op,gpointer emit_data);
+void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data);
 
-void ling_operate_emit_close(LingOperate * op,gpointer emit_data,gboolean S_E);
+void ling_operate_emit_close(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean S_E);
 
 void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,gboolean S_E,gpointer emit_data);
+
+LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,ANIMATION ani,gpointer ani_data,
+                                      FINISH finish_s,FINISH finish_e,gpointer finish_data);
 
 #endif // LINGOPERATE_H

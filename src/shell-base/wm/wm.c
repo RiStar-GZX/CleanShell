@@ -47,7 +47,7 @@ struct _ClWmWindow{
 
 struct _ClWm{
     LingFixed parent;
-    GList * windows;
+    //GList * windows;
     ClWmWindow * current_win;
 };
 
@@ -136,8 +136,13 @@ GtkWidget * cl_wm_new(){
     return g_object_new(CL_TYPE_WM,NULL);
 }
 
+// GtkAllocation adjust(GtkWidget * fixed,LingFixedItem *item,
+//                      int width,int height,int baseline,graphene_rect_t rect){
+
+// }
+
 ClWmWindow * cl_wm_get_window_by_name(ClWm * self,const char * window_name){
-    GList * list = self->windows;
+    GList * list = ling_fixed_get_items_list(LING_FIXED(self));
     for(;list!=NULL;list=list->next){
         ClWmWindow * win = CL_WM_WINDOW(list->data);
         if(strcmp(win->window_name->str,window_name)==0){
@@ -149,11 +154,13 @@ ClWmWindow * cl_wm_get_window_by_name(ClWm * self,const char * window_name){
 
 ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * name){
     char * new_name=malloc(sizeof(char)*100);
+    GList * list = ling_fixed_get_items_list(LING_FIXED(self));
     strcpy(new_name,name);
     for(int i=1;;i++){
         gboolean have_same=0;
-        for(GList * l=self->windows;l!=NULL;l=l->next){
-            ClWmWindow * win = CL_WM_WINDOW(l->data);
+        for(GList * l=list;l!=NULL;l=l->next){
+            LingFixedItem * item = (LingFixedItem*)l->data;
+            ClWmWindow * win = CL_WM_WINDOW(item->widget);
             if(strcmp(win->window_name->str,new_name)==0){
                 return NULL;    //不允许重名(去掉允许重名)
                 sprintf(new_name,"%s_%d",name,i);
@@ -164,15 +171,16 @@ ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * na
     }
 
     ClWmWindow * win = CL_WM_WINDOW(cl_wm_window_new(new_name,icon_name));
-    self->windows = g_list_append(self->windows,win);
+    //self->windows = g_list_append(self->windows,win);
+    ling_fixed_put_none(LING_FIXED(self),GTK_WIDGET(win),0,0,LING_FIXED_TOP,0);
     win->wm = self;
     return win;
 }
 
 void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable){
     if(window->wm==NULL)return;
-    GList * list = g_list_find(window->wm->windows,window);
-    if(list==NULL)return;
+    // GList * list = g_list_find(window->wm->windows,window);
+    // if(list==NULL)return;
     LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
     if(info==NULL&&showable==TRUE){
         ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),0,0,LING_FIXED_TOP,0);
@@ -204,24 +212,25 @@ void cl_wm_set_window_level(ClWmWindow * window,int level){
     ling_fixed_set_child_level(LING_FIXED(window->wm),GTK_WIDGET(window),level,0);
 }
 
-void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress){
-    if(!CL_IS_WM_WINDOW(window))return;
-    GList * list = g_list_find(window->wm->windows,window);
-    if(list==NULL){
-        window->wm->windows = g_list_append(window->wm->windows,window);
-    }
+// void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress){
+//     if(!CL_IS_WM_WINDOW(window))return;
+//     // GList * list = g_list_find(window->wm->windows,window);
+//     // if(list==NULL){
+//     //     window->wm->windows = g_list_append(window->wm->windows,window);
+//     // }
 
-    int w = gtk_widget_get_width(GTK_WIDGET(window->wm));
-    int h = gtk_widget_get_height(GTK_WIDGET(window->wm));
-    LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
-    if(info!=NULL){
-        ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),x,y,level,0);
-    }
-    else ling_fixed_move(LING_FIXED(window->wm),GTK_WIDGET(window),x,y);
-    gdouble n_w = (progress*w/100.0000f);
-    gdouble n_h = (progress*h/100.0000f);
-    gtk_widget_set_size_request(GTK_WIDGET(window),n_w,n_h);
-}
+//     int w = gtk_widget_get_width(GTK_WIDGET(window->wm));
+//     int h = gtk_widget_get_height(GTK_WIDGET(window->wm));
+//     LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
+//     if(info!=NULL){
+//         //ling_fixed_put(LING_FIXED(window->wm),,GTK_WIDGET(window),x,y,level,0);
+//         ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),x,y,level,0);
+//     }
+//     else ling_fixed_move(LING_FIXED(window->wm),GTK_WIDGET(window),x,y);
+//     gdouble n_w = (progress*w/100.0000f);
+//     gdouble n_h = (progress*h/100.0000f);
+//     gtk_widget_set_size_request(GTK_WIDGET(window),n_w,n_h);
+// }
 
 static gboolean cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     window_args * arg = (window_args*)user_data;
@@ -288,7 +297,7 @@ void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
     back->offset_y=offset_y;
     back->velocity_x=velocity_x;
     back->velocity_y=velocity_y;
-    ling_operate_emit(window->close_op,back);
+    ling_operate_emit(window->close_op,LING_ACTION_EMIT,back);
 }
 
 void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
@@ -305,4 +314,16 @@ LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer){
 LingOverlay * cl_wm_window_get_layer_window(ClWmWindow * self,LingLayer ** layer){
     *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_WINDOW);
     return LING_OVERLAY(self->overlay);
+}
+
+ClWmWindow * cl_wm_get_current_window(ClWm * wm){
+    return wm->current_win;
+}
+
+void cl_wm_move_current_window(ClWm * wm,gdouble x,gdouble y){
+    cl_wm_move_window(wm->current_win,x,y);
+}
+
+void cl_wm_set_current_window_size(ClWm * wm,int w,int h){
+    cl_wm_set_window_size(wm->current_win,w,h);
 }

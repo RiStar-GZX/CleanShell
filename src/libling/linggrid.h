@@ -31,4 +31,6 @@ void ling_grid_set_aspect(LingGrid * grid,gdouble ratio);
 
 void ling_grid_set_drop_target(LingGrid * grid,GType type,GdkDragAction action);
 
+void ling_grid_add_frame(LingGrid * grid,uint column,uint row,uint w,uint h);
+
 G_END_DECLS

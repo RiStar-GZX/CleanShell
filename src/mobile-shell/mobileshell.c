@@ -140,7 +140,7 @@ void clm_shell_lock_screen_passed(ClLockScreen * lockscreen,gpointer user_data){
     gtk_widget_set_opacity(shell->statusbar,1);
     self->mode = SHELL_MODE_DESKTOP;
     gtk_widget_set_visible(self->desktop,TRUE);
-    ling_operate_emit(ling_operate_get(shell->controler,"desktop_load"),NULL);
+    ling_operate_emit(ling_operate_get(shell->controler,"desktop_load"),LING_ACTION_EMIT,NULL);
 }
 
 void clm_shell_init(ClmShell * self){

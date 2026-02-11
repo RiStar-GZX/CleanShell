@@ -51,7 +51,7 @@ void cl_wm_set_window_size(ClWmWindow * window,uint w,uint h);
 
 void cl_wm_set_window_level(ClWmWindow * window,int level);
 
-void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress);
+//void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress);
 
 void cl_wm_add_operate(LingOperate * op,ClWm * wm,const char * window_name,const char * icon_name,
                        WM_ANI_CB ani,gpointer ani_data,
@@ -69,5 +69,11 @@ void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
 LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer);
 
 LingOverlay * cl_wm_window_get_layer_window(ClWmWindow * self,LingLayer ** layer);
+
+ClWmWindow * cl_wm_get_current_window(ClWm * wm);
+
+void cl_wm_move_current_window(ClWm * wm,gdouble x,gdouble y);
+
+void cl_wm_set_current_window_size(ClWm * wm,int w,int h);
 
 G_END_DECLS

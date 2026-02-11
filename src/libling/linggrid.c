@@ -3,6 +3,7 @@
 enum{
     GRID_FACE_DRAG,
     GRID_FACE_GRID,
+    GRID_FACE_FRAME,
 };
 
 typedef struct{
@@ -224,18 +225,82 @@ static void ling_grid_drop_leave(GtkDropTarget* self,gpointer user_data){
 
 static GdkDragAction ling_grid_drop_motion(GtkDropTarget* self,gdouble x,gdouble y,gpointer user_data){
     g_print("motion:%f %f\n",x,y);
+    LingGrid * grid = LING_GRID(user_data);
+    int c=0,r=0;
+
+    int w = gtk_widget_get_width(GTK_WIDGET(grid));//-ms-me;
+    int h = gtk_widget_get_height(GTK_WIDGET(grid));//-mt-mb;
+    int iw=(w+grid->column_space)/grid->column-grid->column_space;  //item_width
+    int ih=(h+grid->row_space)/grid->row-grid->row_space;
+
+    int s=0,e;
+    for(int cc=1;cc<=grid->column;cc++){
+        e=iw*cc+grid->column_space;
+        if(cc==1)e-=grid->column_space/2;
+        if(x>=s&&x<=e){
+            c=cc;
+            break;
+        }
+        s=e;
+    }
+
+    s=0;
+    for(int rr=1;rr<=grid->row;rr++){
+        e=ih*rr+grid->row_space;
+        if(rr==1)e-=grid->row_space/2;
+        if(y>=s&&y<=e){
+            r=rr;
+            break;
+        }
+        s=e;
+    }
+    if(c==0||r==0)return 0;
+    ling_grid_add_frame(grid,c,r,1,1);
+    return 0;
 }
 
 void ling_grid_set_drop_target(LingGrid * grid,GType type,GdkDragAction action){
-    grid->drop_target = gtk_drop_target_new(type,GDK_ACTION_NONE|GDK_ACTION_MOVE);
-    gtk_widget_add_controller(GTK_WIDGET(grid),GTK_EVENT_CONTROLLER(grid->drop_target));
-    g_signal_connect(grid->drop_target,"accept",G_CALLBACK(ling_grid_drop_accept),grid);
+    grid->drop_target = gtk_drop_target_new(G_TYPE_STRING,action);
+
+    gtk_widget_add_controller(GTK_WIDGET(shell->desktop),GTK_EVENT_CONTROLLER(grid->drop_target));
+    //g_signal_connect(grid->drop_target,"accept",G_CALLBACK(ling_grid_drop_accept),grid);
     g_signal_connect(grid->drop_target,"drop",G_CALLBACK(ling_grid_drop_drop),grid);
-    g_signal_connect(grid->drop_target,"enter",G_CALLBACK(ling_grid_drop_enter),grid);
-    g_signal_connect(grid->drop_target,"leave",G_CALLBACK(ling_grid_drop_leave),grid);
-    g_signal_connect(grid->drop_target,"motion",G_CALLBACK(ling_grid_drop_motion),grid);
+    //g_signal_connect(grid->drop_target,"enter",G_CALLBACK(ling_grid_drop_enter),grid);
+    //g_signal_connect(grid->drop_target,"leave",G_CALLBACK(ling_grid_drop_leave),grid);
+    //g_signal_connect(grid->drop_target,"motion",G_CALLBACK(ling_grid_drop_motion),grid);
 }
 
+void ling_grid_add_frame(LingGrid * grid,uint column,uint row,uint w,uint h){
+    //改变旧的提示框的css样式为渐渐消失
+    GList * list = ling_fixed_get_items_list(LING_FIXED(grid));
+    for(GList * l = list;l!=NULL;l=l->next){
+        LingFixedItem * fi =(LingFixedItem *)list->data;
+        if(fi==NULL||fi->level1!=GRID_FACE_FRAME)continue;
+        ling_grid_remove(grid,fi->widget);
+        //gtk_widget_remove_css_class(fi->widget,"desktop_item_frame_show");
+        //gtk_widget_add_css_class(fi->widget,"desktop_item_frame_hide");
+    }
+    //添加提示框并且加入css渐渐浮现样式
+    GtkWidget * frame = gtk_button_new();
+    gtk_widget_add_css_class(frame,"desktop_item_frame_show");
+    LingFixedItem * fi = ling_fixed_put(LING_FIXED(grid),frame,ling_fixed_grid_adjust,0,0,GRID_FACE_FRAME,0);
+    fi->ex = g_malloc0(sizeof(LingGridItem));
+    LingGridItem * gi = fi->ex;
+    gi->column = column;
+    gi->row = row;
+    gi->w = w;
+    gi->h = h;
+}
+
+void ling_grid_remove_all_frame(LingGrid * grid){
+    //完全放入后去除所有框
+    GList * list = ling_fixed_get_items_list(LING_FIXED(grid));
+    for(GList * l = list;l!=NULL;l=l->next){
+        LingFixedItem * fi =(LingFixedItem *)list->data;
+        if(fi==NULL||fi->level1!=GRID_FACE_FRAME)continue;
+        ling_grid_remove(grid,fi->widget);
+    }
+}
 
 // void ling_grid_set_dragable(LingGrid * grid,gboolean dragable){
 //     grid->dragable = dragable;

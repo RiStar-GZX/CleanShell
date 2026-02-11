@@ -182,11 +182,10 @@ static void desktop_load_end(GtkWidget * widget,LingActionArgs args,gpointer use
 static void guide_bar_back(ClmTaskSwitcher * s,gdouble offset_x,gdouble offset_y,
                            gdouble velocity_x,gdouble velocity_y,gpointer user_data){
     ClmDesktop * desktop = CLM_DESKTOP(user_data);
-    cl_wm_close_current_window(CL_WM(desktop->wm),offset_x,offset_y,velocity_x,velocity_y);
     ling_folder_close(LING_FOLDER(desktop->folder_lay));
 }
 
-void clm_desktop_init(ClmDesktop * self){
+static void clm_desktop_init(ClmDesktop * self){
 
     gtk_orientable_set_orientation(GTK_ORIENTABLE(self),GTK_ORIENTATION_VERTICAL);
     self->overlay = ling_overlay_new();

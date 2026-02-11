@@ -12,8 +12,6 @@ G_BEGIN_DECLS
 
 #define CLM_DESKTOP_VIEWPAGER_OP_NAME "desktop_viewpager"
 
-#define CLM_TYPE_DESKTOP (clm_desktop_get_type())
-G_DECLARE_FINAL_TYPE(ClmDesktop,clm_desktop,CLM,DESKTOP,GtkBox)
 
 enum drag_mode{
     DRAG_MODE_NONE,
@@ -38,6 +36,8 @@ typedef struct style_info{
     uint icon_size;
 }style_info;
 
+#define CLM_TYPE_DESKTOP (clm_desktop_get_type())
+G_DECLARE_FINAL_TYPE(ClmDesktop,clm_desktop,CLM,DESKTOP,GtkBox)
 
 GtkWidget * clm_desktop_new();
 
