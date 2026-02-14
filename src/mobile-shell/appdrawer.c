@@ -16,8 +16,6 @@ void clm_app_drawer_class_init(ClmAppDrawerClass * klass){
 
 }
 
-
-
 void clm_app_drawer_init(ClmAppDrawer * self){
     gtk_orientable_set_orientation(GTK_ORIENTABLE(self),GTK_ORIENTATION_VERTICAL);
     self->sw = gtk_scrolled_window_new();

@@ -3,6 +3,7 @@
 void ling_widget_scale(GtkWidget * widget,gdouble scale){
     GtkWidget * parent = gtk_widget_get_parent(GTK_WIDGET(widget));
 
+    if(scale<0)scale=0;
     GString * str=g_string_new("");
     g_string_printf(str,"box{transform:scale(%f);}",scale);
     GtkCssProvider *provider = gtk_css_provider_new();
@@ -17,6 +18,7 @@ void ling_widget_scale(GtkWidget * widget,gdouble scale){
 void ling_widget_border_radis(GtkWidget * widget,gdouble px){
     GtkWidget * parent = gtk_widget_get_parent(GTK_WIDGET(widget));
 
+    if(px<0)px=0;
     GString * str=g_string_new("");
     g_string_printf(str,"box{border-radius:%fpx;}",px);
     GtkCssProvider *provider = gtk_css_provider_new();

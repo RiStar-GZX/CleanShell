@@ -17,16 +17,27 @@
 #include <lingtimeviewer.h>
 #include <lingfolder.h>
 #include <lingdragface.h>
+#include <linggradient.h>
 
 typedef struct{
+    //网格信息
     int column;
     int row;
     int grid_w;     //占格数
     int grid_h;
+
+    //宽高
     uint size_w;    //大小(像素)
     uint size_h;
+    uint target_w;
+    uint target_h;
+
+    //位置
     gdouble start_x;
     gdouble start_y;
+    gdouble target_x;
+    gdouble target_y;
+
     GtkWidget * grid;
     GtkWidget * face;   //层:例如clwm,lingfolder
     //GtkWidget * content; //显示的控件

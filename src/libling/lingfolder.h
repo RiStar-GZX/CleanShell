@@ -33,6 +33,6 @@ void ling_folder_operate(LingOperate * op,LingFolder * self,uint action_type,
                          FOLDER_END_CB open_finish,gpointer open_finish_data,
                          FOLDER_END_CB close_finish,gpointer close_finish_data);
 
-void ling_folder_close(LingFolder * folder);
+void ling_folder_close(LingFolder * folder,gboolean ani);
 
 G_END_DECLS

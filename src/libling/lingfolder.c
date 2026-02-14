@@ -34,17 +34,17 @@ static LingFolderItem * ling_folder_get_item(LingFolder * folder,GtkWidget * wid
     return NULL;
 }
 
-static gboolean folder_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static ANI_DIR folder_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     LingFolder * folder = LING_FOLDER(user_data);
     LingFolderItem *item = ling_folder_get_item(folder,widget);
-    if(item==NULL)return LING_OPERATE_ANIMATION_DIR_BACK;
+    if(item==NULL)return ANI_DIR_BACK;
     double x,y;
-    if((folder->content = item->open(folder,widget,&x,&y,item->open_data))==NULL)return LING_OPERATE_ANIMATION_DIR_BACK;
+    if((folder->content = item->open(folder,widget,&x,&y,item->open_data))==NULL)return ANI_DIR_BACK;
     folder->item_now = item;
     ling_fixed_move(LING_FIXED(folder),folder->folder_box,x,y);
     gtk_box_append(GTK_BOX(folder->folder_box),folder->content);
     gtk_widget_set_visible(GTK_WIDGET(folder),TRUE);
-    return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    return ANI_DIR_FORWARD;
 }
 
 static void folder_open_animate(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -146,8 +146,8 @@ void ling_folder_operate(LingOperate * op,LingFolder * self,uint action_type,
                             NULL,folder_open_finish,self);
 }
 
-void ling_folder_close(LingFolder * folder){
+void ling_folder_close(LingFolder * folder,gboolean ani){
     if(folder==NULL)return;
     //ling_operate_emit(folder->close_op,LING_ACTION_INSTANT,NULL);
-    ling_operate_emit_close(folder->close_op,LING_ACTION_INSTANT,NULL,LING_ACTION_FINISH_E);
+    ling_operate_emit(folder->close_op,LING_ACTION_INSTANT,NULL,ani,LING_ACTION_FINISH_E);
 }

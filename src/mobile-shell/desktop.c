@@ -145,7 +145,7 @@ void center_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
 
     if(shell->mode==SHELL_MODE_DESKTOP){
 
-       // clm_desktop_set_wallpaper_blur(clm_desktop(shell->desktop),(1-args.progress/100)*20); //IPT FIX:switch添加user_data
+       // clm_desktop_set_wallpaper_blur(clm_desktop(shell->desktop),(1-args.progress/100)*CLM_DESKTOP_BLUR); //IPT FIX:switch添加user_data
     }
 }
 
@@ -166,7 +166,7 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
 
     //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-args.progress/100));
     //clm_desktop_view_pager_resize(CLM_DESKTOP(shell->desktop));
-    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(args.progress/100)*20);
+    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(args.progress/100)*CLM_DESKTOP_BLUR);
 }
 
 static void desktop_load_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -182,7 +182,7 @@ static void desktop_load_end(GtkWidget * widget,LingActionArgs args,gpointer use
 static void guide_bar_back(ClmTaskSwitcher * s,gdouble offset_x,gdouble offset_y,
                            gdouble velocity_x,gdouble velocity_y,gpointer user_data){
     ClmDesktop * desktop = CLM_DESKTOP(user_data);
-    ling_folder_close(LING_FOLDER(desktop->folder_lay));
+    ling_folder_close(LING_FOLDER(desktop->folder_lay),TRUE);
 }
 
 static void clm_desktop_init(ClmDesktop * self){

@@ -2,12 +2,12 @@
 
 #define CL_WM_WINDOW_IMAGE_SIZE 168
 
-enum{
-    LAYER_TOP = 0,
-    LAYER_WINDOW,
-    LAYER_APP_ICON,
-    LAYER_END = 255
-};
+// enum{
+//     LAYER_TOP = 0,
+//     LAYER_WINDOW,
+//     LAYER_APP_ICON,
+//     LAYER_END = 255
+// };
 
 typedef struct{
     ClWmWindow * window;
@@ -29,7 +29,8 @@ struct _ClWmWindow{
 
     ClWm * wm;
 
-    GtkWidget * overlay;
+    GtkWidget * gradient;
+    //GtkWidget * overlay;
 
     GString * window_name;
     gboolean showable;
@@ -47,19 +48,19 @@ struct _ClWmWindow{
 
 struct _ClWm{
     LingFixed parent;
-    //GList * windows;
+    GList * windows;
     ClWmWindow * current_win;
 };
 
 G_DEFINE_FINAL_TYPE(ClWmWindow,cl_wm_window,GTK_TYPE_BOX);
 
-static gboolean wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer user_data){
+static ANI_DIR wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer user_data){
     ClWmWindow * window = CL_WM_WINDOW(widget);
     window_args * wa=window->current_args;
     if(wa->close_start!=NULL){
         wa->close_start(wa->widget,wa->window,action,wa->close_start_data);
     }
-    return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    return ANI_DIR_FORWARD;
 }
 
 static void wm_close_animate(GtkWidget * widget,LingActionArgs action,gpointer user_data){
@@ -86,12 +87,11 @@ static void cl_wm_window_class_init(ClWmWindowClass * klass){
 }
 
 static void cl_wm_window_init(ClWmWindow * self){
-    self->overlay = ling_overlay_new();
-    gtk_box_append(GTK_BOX(self),self->overlay);
+
 
     self->window_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     gtk_widget_add_css_class(GTK_WIDGET(self->window_box),"cl_window");
-    ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->window_box,LAYER_WINDOW);
+    //ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->window_box,LAYER_WINDOW);
 
     self->image = gtk_image_new();
     gtk_image_set_pixel_size(GTK_IMAGE(self->image),128);
@@ -102,7 +102,11 @@ static void cl_wm_window_init(ClWmWindow * self){
     //self->app_icon_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     self->app_icon = gtk_image_new();
     gtk_image_set_pixel_size(GTK_IMAGE(self->image),128);
-    ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->app_icon,LAYER_APP_ICON);
+    //ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->app_icon,LAYER_APP_ICON);
+
+    self->gradient = ling_gradient_new(self->window_box,self->app_icon);
+    gtk_box_append(GTK_BOX(self),self->gradient);
+
 
     self->close_op = ling_operate_add(shell->controler,"wm_app_close",GTK_WIDGET(self));
     ling_operate_add_action(self->close_op,LING_ACTION_EMIT,
@@ -171,7 +175,7 @@ ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * na
     }
 
     ClWmWindow * win = CL_WM_WINDOW(cl_wm_window_new(new_name,icon_name));
-    //self->windows = g_list_append(self->windows,win);
+    self->windows = g_list_append(self->windows,win);
     ling_fixed_put_none(LING_FIXED(self),GTK_WIDGET(win),0,0,LING_FIXED_TOP,0);
     win->wm = self;
     return win;
@@ -179,8 +183,8 @@ ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * na
 
 void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable){
     if(window->wm==NULL)return;
-    // GList * list = g_list_find(window->wm->windows,window);
-    // if(list==NULL)return;
+    GList * list = g_list_find(window->wm->windows,window);
+    if(list==NULL)return;
     LingFixedItem * info=ling_fixed_get_item_info(LING_FIXED(window->wm),GTK_WIDGET(window));
     if(info==NULL&&showable==TRUE){
         ling_fixed_put_none(LING_FIXED(window->wm),GTK_WIDGET(window),0,0,LING_FIXED_TOP,0);
@@ -212,6 +216,10 @@ void cl_wm_set_window_level(ClWmWindow * window,int level){
     ling_fixed_set_child_level(LING_FIXED(window->wm),GTK_WIDGET(window),level,0);
 }
 
+void cl_wm_set_window_radis(ClWmWindow * window,uint px){
+    ling_widget_border_radis(window->window_box,px);
+}
+
 // void cl_wm_move_window_by_progress(ClWmWindow * window,int x,int y,int level,gdouble progress){
 //     if(!CL_IS_WM_WINDOW(window))return;
 //     // GList * list = g_list_find(window->wm->windows,window);
@@ -232,17 +240,22 @@ void cl_wm_set_window_level(ClWmWindow * window,int level){
 //     gtk_widget_set_size_request(GTK_WIDGET(window),n_w,n_h);
 // }
 
-static gboolean cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static ANI_DIR cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     window_args * arg = (window_args*)user_data;
     gdouble x,y;
     ClWmWindow * window=NULL;
     if(arg->open_start!=NULL)window = arg->open_start(widget,&x,&y,arg->open_start_data);
-
-    if(window==NULL)return LING_OPERATE_ANIMATION_DIR_BACK;
+    if(window==NULL)return ANI_DIR_BACK;
 
     arg->window = window;
+    arg->window->wm->current_win = arg->window;
+
+    //移动到表尾
+    arg->window->wm->windows = g_list_remove(arg->window->wm->windows,arg->window);
+    arg->window->wm->windows = g_list_append(arg->window->wm->windows,arg->window);
+
     cl_wm_set_window_showable(arg->window,TRUE);
-    return LING_OPERATE_ANIMATION_DIR_FORWARD;
+    return ANI_DIR_FORWARD;
 }
 
 static void cl_wm_open_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -258,7 +271,7 @@ static void cl_wm_open_finish_start(GtkWidget * widget,LingActionArgs args,gpoin
 static void cl_wm_open_finish_end(GtkWidget * widget,LingActionArgs action,gpointer user_data){
     window_args * wa = (window_args*)user_data;
     if(wa->open_finish!=NULL)wa->open_finish(widget,wa->window,action,wa->open_finish_data);
-    wa->window->wm->current_win = wa->window;
+    //wa->window->wm->current_win = wa->window;
     wa->window->current_args = wa;
 }
 
@@ -297,7 +310,7 @@ void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
     back->offset_y=offset_y;
     back->velocity_x=velocity_x;
     back->velocity_y=velocity_y;
-    ling_operate_emit(window->close_op,LING_ACTION_EMIT,back);
+    ling_operate_emit_end(window->close_op,LING_ACTION_EMIT,back,TRUE);
 }
 
 void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
@@ -306,18 +319,31 @@ void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
     cl_wm_window_close(wm->current_win,offset_x,offset_y,velocity_x,velocity_y);
 }
 
-LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer){
-    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_APP_ICON);
-    return LING_OVERLAY(self->overlay);
+GtkWidget * cl_wm_window_get_layer_icon(ClWmWindow * self){
+    return self->app_icon;
 }
 
-LingOverlay * cl_wm_window_get_layer_window(ClWmWindow * self,LingLayer ** layer){
-    *layer = ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_WINDOW);
-    return LING_OVERLAY(self->overlay);
+GtkWidget * cl_wm_window_get_layer_window(ClWmWindow * self){
+    return self->window_box;
+}
+
+void cl_wm_window_set_gradient_progress(ClWmWindow * self,gdouble progress){
+    ling_gradient_progress(LING_GRADIENT(self->gradient),progress);
+    ling_widget_border_radis(self->window_box,500*(1-progress));
 }
 
 ClWmWindow * cl_wm_get_current_window(ClWm * wm){
     return wm->current_win;
+}
+
+void cl_wm_window_get_info(ClWmWindow * win,gdouble * x,gdouble * y,int * w,int *h){
+    if(win==NULL)return;
+    LingFixedItem * item = ling_fixed_get_item_info(LING_FIXED(win->wm),GTK_WIDGET(win));
+    if(item==NULL)return;
+    if(x!=NULL)*x = item->x;
+    if(y!=NULL)*y = item->y;
+    if(w!=NULL)*w = item->w;
+    if(h!=NULL)*h = item->h;
 }
 
 void cl_wm_move_current_window(ClWm * wm,gdouble x,gdouble y){
@@ -326,4 +352,12 @@ void cl_wm_move_current_window(ClWm * wm,gdouble x,gdouble y){
 
 void cl_wm_set_current_window_size(ClWm * wm,int w,int h){
     cl_wm_set_window_size(wm->current_win,w,h);
+}
+
+GList * cl_wm_get_window_list(ClWm * wm){
+    return wm->windows;
+}
+
+void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win){
+    wm->current_win = win;
 }

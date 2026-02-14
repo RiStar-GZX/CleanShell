@@ -66,14 +66,24 @@ void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
 void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
                                 gdouble velocity_x,gdouble velocity_y);
 
-LingOverlay * cl_wm_window_get_layer_icon(ClWmWindow * self,LingLayer ** layer);
+GtkWidget * cl_wm_window_get_layer_icon(ClWmWindow * self);
 
-LingOverlay * cl_wm_window_get_layer_window(ClWmWindow * self,LingLayer ** layer);
+GtkWidget * cl_wm_window_get_layer_window(ClWmWindow * self);
+
+void cl_wm_window_set_gradient_progress(ClWmWindow * self,gdouble progress);
 
 ClWmWindow * cl_wm_get_current_window(ClWm * wm);
+
+void cl_wm_window_get_info(ClWmWindow * win, gdouble * x, gdouble * y, int *w, int *h);
 
 void cl_wm_move_current_window(ClWm * wm,gdouble x,gdouble y);
 
 void cl_wm_set_current_window_size(ClWm * wm,int w,int h);
+
+GList * cl_wm_get_window_list(ClWm * wm);
+
+void cl_wm_set_window_radis(ClWmWindow * window,uint px);
+
+void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win);
 
 G_END_DECLS

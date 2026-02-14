@@ -12,6 +12,7 @@ G_BEGIN_DECLS
 
 #define CLM_DESKTOP_VIEWPAGER_OP_NAME "desktop_viewpager"
 
+#define CLM_DESKTOP_BLUR 20
 
 enum drag_mode{
     DRAG_MODE_NONE,

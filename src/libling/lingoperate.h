@@ -30,13 +30,16 @@ typedef enum{
 #define    LING_OPERATE_BREAK_TO_ANIMATION     FALSE
 #define    LING_OPERATE_BREAK_TO_FINISH        TRUE
 
-
-#define    LING_OPERATE_ANIMATION_DIR_FORWARD  TRUE
-#define    LING_OPERATE_ANIMATION_DIR_BACK     FALSE
+typedef enum{
+    ANI_DIR_BACK = 0,
+    ANI_DIR_FORWARD,
+    ANI_DIR_NEAR,
+}ANI_DIR;
 
 #define    LING_ACTION_FINISH_S                 FALSE
 #define    LING_ACTION_FINISH_E                 TRUE
 
+#define    LING_ANI_TIME
 
 typedef enum{
     LING_ACTION_CLICK=0,
@@ -52,7 +55,7 @@ typedef enum{
     LING_ACTION_LONG_PRESS_RIGHT,
     LING_ACTION_LONG_PRESS_DRAG_SOURCE,
     LING_ACTION_EMIT,
-    LING_ACTION_ALL,
+    LING_ACTION_DRAG_ALL,
     LING_ACTION_INSTANT,
     LING_ACTION_ANIMATE,
     LING_ACTION_NUM,
@@ -81,7 +84,7 @@ typedef struct LingActionArgs{
 
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
-typedef gboolean (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
+typedef ANI_DIR (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
 
 typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
@@ -119,10 +122,14 @@ typedef struct LingAction{
     gpointer animate_data;
 
     gdouble ani_progress; //进度
+    gdouble ani_progress_start;
     gdouble ani_progress_end;
+    //gdouble ani_progress_target;
     //gdouble time;         //当前时间
     gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
-    gboolean ani_dir;     //方向(正反)  //默认正，打断反
+    ANI_DIR ani_dir;     //方向(正反)  //默认正，打断反
+
+    ANI_DIR nature_dir; //
 
     //曲线
 
@@ -218,6 +225,10 @@ void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progr
 
 gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 
+void ling_operate_set_ani_dir(LingOperate * op,int action,ANI_DIR ani_dir);
+
+ANI_DIR ling_operate_get_ani_dir(LingOperate * op,int action);
+
 //GtkGesture * ling_operate_click_ignore(LingOperate * op,GtkWidget * widget);
 
 GtkGesture * ling_operate_drag_ignore(LingOperate * op,GtkWidget * widget);
@@ -236,13 +247,13 @@ void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
 
-void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data);
+void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
 
-void ling_operate_emit_close(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean S_E);
+void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani,gboolean S_E);
 
 void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,gboolean S_E,gpointer emit_data);
 
-LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,ANIMATION ani,gpointer ani_data,
+LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,
+                                      RELEASE release,gpointer release_data,ANIMATION ani,gpointer ani_data,
                                       FINISH finish_s,FINISH finish_e,gpointer finish_data);
-
 #endif // LINGOPERATE_H
