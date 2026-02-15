@@ -14,6 +14,7 @@ enum{
     LAYER_TOP = 0,
     LAYER_STATUSBAR,
 
+    LAYER_FPS,
     LAYER_LOCKSCREEN,
     LAYER_DESKTOP,
 
@@ -189,7 +190,7 @@ static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer
     }
     if(shell->mode==SHELL_MODE_DESKTOP){
         sub=s->desktop->widget;
-        clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(1-args.progress/100)*20);
+        clm_desktop_set_blur(CLM_DESKTOP(shell->desktop),(1-args.progress/100)*20);
 
         //clm_desktop_get_layer_wm(CLM_DESKTOP(shell->desktop),&switcher);
         clm_desktop_get_layer_task_switch_bar(CLM_DESKTOP(shell->desktop),&bar);
@@ -202,12 +203,9 @@ static void statusbar_center_ani(GtkWidget * widget,LingActionArgs args,gpointer
     gtk_widget_set_visible(sub,TRUE);
     gtk_widget_set_margin_top(main,-(args.progress/100.00f)*30);
 
-    ling_widget_scale(sub,1-0.1*(1-args.progress/100));
-    //if(shell->mode==SHELL_MODE_DESKTOP)clm_desktop_view_pager_resize(CLM_DESKTOP(shell->desktop));
-    gtk_widget_set_opacity(main,1-(args.progress*2/100));
+    gtk_widget_set_opacity(main,1-(args.progress*2/100));   //这里再对bodybox设置一次透明保证过渡流畅
     gtk_widget_set_opacity(sub,args.progress*2/100-0.5);
-    // gtk_widget_set_opacity(sub,(args.progress/100));
-    // gtk_widget_set_opacity(main,1-args.progress/100);
+
     cl_status_bar_set_status_bar_opacity(CL_STATUS_BAR(shell->statusbar),(args.progress/100));
 }
 
@@ -333,6 +331,13 @@ void clm_shell_setting(ClmShell * self){
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
+
+    //fps
+    self->fps_label = gtk_label_new("");
+    gtk_widget_add_css_class(self->fps_label,"fps_label");
+    gtk_widget_set_halign(self->fps_label,GTK_ALIGN_START);
+    gtk_widget_set_valign(self->fps_label,GTK_ALIGN_START);
+    ling_overlay_add_layer(LING_OVERLAY(self->lingoverlay),self->fps_label,LAYER_FPS);
 }
 
 GtkWidget * clm_shell_start(){

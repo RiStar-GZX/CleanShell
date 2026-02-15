@@ -6,6 +6,9 @@
 typedef struct LingOpControler{
     uint frames;
     GList * operates;
+    uint timeout;
+
+    GList * actions_list; //LingAction
 }LingOpControler;
 
 typedef enum {
@@ -48,6 +51,9 @@ typedef enum{
     LING_ACTION_DRAG_LEFT,
     LING_ACTION_DRAG_RIGHT,
     LING_ACTION_DRAG_SOURCE,
+    LING_ACTION_DRAG_HORIZONTAL,
+    LING_ACTION_DRAG_VERTICAL,
+    LING_ACTION_DRAG_ALL,
     LING_ACTION_LONG_PRESS,
     LING_ACTION_LONG_PRESS_UP,
     LING_ACTION_LONG_PRESS_DOWN,
@@ -55,7 +61,6 @@ typedef enum{
     LING_ACTION_LONG_PRESS_RIGHT,
     LING_ACTION_LONG_PRESS_DRAG_SOURCE,
     LING_ACTION_EMIT,
-    LING_ACTION_DRAG_ALL,
     LING_ACTION_INSTANT,
     LING_ACTION_ANIMATE,
     LING_ACTION_NUM,
@@ -67,6 +72,22 @@ typedef enum{
 }LING_DRAG_SOURCE_TYPE;
 
 typedef struct LingOperate LingOperate;
+
+typedef struct {
+    LingOperate * op;
+    gdouble start_x;
+    gdouble start_y;
+}LingBeginArgs;
+
+typedef struct {
+    LingOperate * op;
+    gdouble start_x;
+    gdouble start_y;
+    gdouble offset_x;
+    gdouble offset_y;
+    gdouble velocity_x;
+    gdouble velocity_y;
+}LingEndArgs;
 
 typedef struct LingActionArgs{
     LingOperate * op;
@@ -82,6 +103,10 @@ typedef struct LingActionArgs{
     uint action;
 }LingActionArgs;
 
+typedef void (*BEGIN)(GtkWidget * widget,LingBeginArgs args,gpointer user_data);  //瞬发
+
+typedef void (*END)(GtkWidget * widget,LingEndArgs args,gpointer user_data);  //瞬发
+
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
 typedef ANI_DIR (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
@@ -91,6 +116,7 @@ typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_d
 typedef gboolean  (*ISBREAKED)(gpointer user_data); //废弃
 
 typedef void  (*FINISH)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
+
 
 
 typedef GdkContentProvider * (*DRAGSOURCE_PREPARE)(
@@ -104,8 +130,8 @@ typedef gboolean (*DRAGSOURCE_CANCEL)(
 typedef void (*DRAGSOURCE_END)(GtkDragSource* self,
                                     GdkDrag* drag,gboolean delete_data,gpointer user_data);
 
-
 typedef struct LingAction{
+    LingOperate * op;
     gboolean able;
 
     //进度
@@ -141,14 +167,12 @@ typedef struct LingAction{
     //拖拽DND
     DRAGSOURCE_PREPARE prepare;
     gpointer prepare_data;
-    DRAGSOURCE_BEGIN begin;
-    gpointer begin_data;
+    DRAGSOURCE_BEGIN ds_begin;
+    gpointer ds_begin_data;
     DRAGSOURCE_CANCEL cancel;
     gpointer cancel_data;
     DRAGSOURCE_END end;
     gpointer end_data;
-
-
 
     //连带触发
     LingOperate * emit[LING_OPERATE_EMIT_NUM];
@@ -164,7 +188,7 @@ typedef struct LingOperate{
     GtkDropTarget * drop_target;
     GtkGesture * drag;
     GtkGesture * swipe;
-    GtkGesture * instant;   //点击的瞬间触发的手势
+    //GtkGesture * instant;   //点击的瞬间触发的手势
     GtkWidget * widget;
 
     GString * operate_name;
@@ -184,6 +208,14 @@ typedef struct LingOperate{
     uint action_now;
 
     uint animation_timer_id;    //每个周期执行动画(以后用一个timer，串起所有的动画)
+
+    //瞬发
+    BEGIN begin;
+    gpointer begin_data;
+
+    //结束
+    END end;
+    gpointer end_data;
 
     //打断(废弃)
     ISBREAKED isbreaked;
@@ -256,4 +288,9 @@ void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPER
 LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,
                                       RELEASE release,gpointer release_data,ANIMATION ani,gpointer ani_data,
                                       FINISH finish_s,FINISH finish_e,gpointer finish_data);
+
+void ling_operate_add_begin(LingOperate * op,BEGIN begin,gpointer begin_data);
+
+void ling_operate_add_end(LingOperate * op,END end,gpointer end_data);
+
 #endif // LINGOPERATE_H

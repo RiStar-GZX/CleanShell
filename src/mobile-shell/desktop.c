@@ -154,7 +154,7 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
     gtk_widget_set_visible(s->main->widget,TRUE);
     gtk_widget_set_visible(s->sub->widget,TRUE);
     //gtk_widget_set_margin_top(s->main->widget,-(args.progress/100.00f)*30);
-    ling_widget_scale(s->main->widget,1-0.1*(args.progress/100));
+    //ling_widget_scale(s->main->widget,1-0.1*(args.progress/100));
     gtk_widget_set_margin_top(s->sub->widget,30-(args.progress/100.00f)*30);
 
     LingLayer * switcher,*bar;
@@ -166,17 +166,12 @@ static void drawer_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data
 
     //ling_status_bar_set_status_bar_opacity(LING_STATUS_BAR(shell->statusbar),(1-args.progress/100));
     //clm_desktop_view_pager_resize(CLM_DESKTOP(shell->desktop));
-    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),(args.progress/100)*CLM_DESKTOP_BLUR);
+    clm_desktop_set_blur(CLM_DESKTOP(shell->desktop),(args.progress/100)*CLM_DESKTOP_BLUR);
 }
 
 static void desktop_load_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmDesktop * self = CLM_DESKTOP(widget);
     ling_widget_scale(GTK_WIDGET(self),4-3*(args.progress/100));
-}
-
-static void desktop_load_end(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    ClmDesktop * self = CLM_DESKTOP(widget);
-    ling_widget_scale(GTK_WIDGET(self),1);
 }
 
 static void guide_bar_back(ClmTaskSwitcher * s,gdouble offset_x,gdouble offset_y,
@@ -332,7 +327,7 @@ static void clm_desktop_init(ClmDesktop * self){
                             NULL,NULL,
                             desktop_load_ani,NULL,
                             NULL,NULL,
-                            NULL,desktop_load_end,NULL);
+                            NULL,NULL,NULL);
 
     //上划时候退出folder和window
     g_signal_connect(self->guide_bar,"back",G_CALLBACK(guide_bar_back),self);
@@ -382,9 +377,10 @@ void clm_desktop_set_wallpaper(ClmDesktop * self,const char * path){
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->wallpaper,LAYER_WALLPAPER);
 }
 
-void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint blur){
+void clm_desktop_set_blur(ClmDesktop *self,gdouble blur){
     GString * str=g_string_new("");
-    g_string_printf(str,"picture,box { filter: blur(%dpx); }",blur);
+
+    g_string_printf(str,"picture,box { filter: blur(%dpx); }",(uint)blur);
     GtkCssProvider *provider = gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider,
                                     str->str, -1);
@@ -392,6 +388,10 @@ void clm_desktop_set_wallpaper_blur(ClmDesktop *self,uint blur){
                                    GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     gtk_style_context_add_provider(gtk_widget_get_style_context(self->bodybox),
                                     GTK_STYLE_PROVIDER(provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    gtk_widget_set_opacity(self->bodybox,1-blur/CLM_DESKTOP_BLUR);
+    ling_widget_scale(self->bodybox,1-0.05*blur/CLM_DESKTOP_BLUR);
+
     g_free(str);
     g_object_unref(provider);
     self->blur = blur;
@@ -401,10 +401,10 @@ uint clm_desktop_get_wallpaper_blur(ClmDesktop *self){
     return self->blur;
 }
 
-void clm_desktop_hide_body_and_set_blur(ClmDesktop *self,gdouble progress,uint blur){
-    clm_desktop_set_wallpaper_blur(self,blur*(100/progress));
-    gtk_widget_set_opacity(self->bodybox,1-(100/progress));
-}
+// void clm_desktop_hide_body_and_set_blur(ClmDesktop *self,gdouble progress,uint blur){
+//     clm_desktop_set_blur(self,blur*(100/progress));
+//     gtk_widget_set_opacity(self->bodybox,1-(100/progress));
+// }
 
 
 

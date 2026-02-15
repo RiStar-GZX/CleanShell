@@ -175,15 +175,15 @@ static void app_open_ani(GtkWidget * widget,ClWmWindow * window,LingActionArgs a
     cl_wm_window_set_gradient_progress(window,(args.progress*a/100.00f)-a+1);
 
     //设置桌面效果
-    LingLayer * layer;
-    clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
-    ling_widget_scale(layer->widget,0.95+0.05*fabs(100-args.progress)/100);
+    // LingLayer * layer;
+    // clm_desktop_get_layer_bodybox(CLM_DESKTOP(shell->desktop),&layer);
+    // ling_widget_scale(layer->widget,0.95+0.05*fabs(100-args.progress)/100);
 
     gdouble blur = (args.progress/100)*CLM_DESKTOP_BLUR;
     if(act==CL_WM_WINDOW_OPEN&&blur<clm_desktop_get_wallpaper_blur(CLM_DESKTOP(shell->desktop))){
         return;
     }
-    clm_desktop_set_wallpaper_blur(CLM_DESKTOP(shell->desktop),blur);
+    clm_desktop_set_blur(CLM_DESKTOP(shell->desktop),blur);
 }
 
 static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gpointer user_data){

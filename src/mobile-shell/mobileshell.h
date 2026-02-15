@@ -39,6 +39,10 @@ struct _ClmShell{
     GList * app_info;
 
     LingSysInfoUpdater * updater;
+
+    //fps
+    GtkWidget * fps_label;
+    GdkFrameClock * clock;
 };
 
 extern ClmShell * shell;

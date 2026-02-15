@@ -7,6 +7,15 @@
 --statusbar-center-button-color-click: rgba(100,200,100,0.5);
 --statusbar-bg-color: rgba(255,255,255,0);
 }
+.wallpaper{
+    transform: scale(1.1);  /*缩放防止模糊时候的白边*/
+}
+
+.fps_label{
+    font-size:30px;
+    margin:20px 10px;
+    color:#db3444;
+}
 
 /* 页面指示器 */
 .dot {

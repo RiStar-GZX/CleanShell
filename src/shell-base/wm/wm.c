@@ -42,7 +42,7 @@ struct _ClWmWindow{
     GtkWidget * app_icon;
 
     //关闭的时候要用
-    LingOperate * close_op;
+    LingOperate * op;
     window_args * current_args;
 };
 
@@ -50,6 +50,7 @@ struct _ClWm{
     LingFixed parent;
     GList * windows;
     ClWmWindow * current_win;
+    ClWmWindow * focus_win; //聚焦的窗口
 };
 
 G_DEFINE_FINAL_TYPE(ClWmWindow,cl_wm_window,GTK_TYPE_BOX);
@@ -82,6 +83,30 @@ static void wm_close_finish(GtkWidget * widget,LingActionArgs action,gpointer us
     //gtk_widget_set_visible(GTK_WIDGET(window->wm),FALSE);
 }
 
+/*****************************************************************************************************/
+
+//用于taskswitcher向上滑动移除窗口
+
+static void cl_wm_window_begin_focus(GtkWidget * widget,LingBeginArgs args,gpointer user_data){
+    ClWmWindow * window = CL_WM_WINDOW(user_data);
+
+    //有的窗口还按着就无法设置为新的窗口
+    if(window->wm->focus_win == NULL){
+        window->wm->focus_win=window;
+    }
+}
+
+static void cl_wm_window_end_focus(GtkWidget * widget,LingEndArgs args,gpointer user_data){
+    ClWmWindow * window = CL_WM_WINDOW(user_data);
+
+    //松开手才允许focus为其他窗口
+    if(window->wm->focus_win == window){
+        window->wm->focus_win = NULL;
+    }
+}
+
+/*****************************************************************************************************/
+
 static void cl_wm_window_class_init(ClWmWindowClass * klass){
 
 }
@@ -108,13 +133,17 @@ static void cl_wm_window_init(ClWmWindow * self){
     gtk_box_append(GTK_BOX(self),self->gradient);
 
 
-    self->close_op = ling_operate_add(shell->controler,"wm_app_close",GTK_WIDGET(self));
-    ling_operate_add_action(self->close_op,LING_ACTION_EMIT,
+    self->op = ling_operate_add(shell->controler,"wm_window",GTK_WIDGET(self));
+    ling_operate_add_begin(self->op,cl_wm_window_begin_focus,self);
+    ling_operate_add_end(self->op,cl_wm_window_end_focus,self);
+
+    ling_operate_add_action(self->op,LING_ACTION_EMIT,
                             NULL,NULL,
                             wm_close_animate,self,
                             wm_close_start,self,
                             NULL,wm_close_finish,self);
-    ling_operate_set_force_run(self->close_op,TRUE);
+
+    ling_operate_set_force_run(self->op,TRUE);
 }
 
 static GtkWidget * cl_wm_window_new(const char * name,const char * icon_name){
@@ -310,7 +339,7 @@ void cl_wm_window_close(ClWmWindow * window,gdouble offset_x,gdouble offset_y,
     back->offset_y=offset_y;
     back->velocity_x=velocity_x;
     back->velocity_y=velocity_y;
-    ling_operate_emit_end(window->close_op,LING_ACTION_EMIT,back,TRUE);
+    ling_operate_emit_end(window->op,LING_ACTION_EMIT,back,TRUE);
 }
 
 void cl_wm_close_current_window(ClWm * wm,gdouble offset_x,gdouble offset_y,
