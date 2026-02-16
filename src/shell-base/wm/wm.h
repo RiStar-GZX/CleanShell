@@ -43,6 +43,8 @@ ClWmWindow * cl_wm_get_window_by_name(ClWm * self,const char * name);
 
 ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * name);
 
+int cl_wm_remove_window(ClWm * wm,ClWmWindow * window);
+
 void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable);
 
 void cl_wm_move_window(ClWmWindow * window,gdouble x,gdouble y);
@@ -85,5 +87,7 @@ GList * cl_wm_get_window_list(ClWm * wm);
 void cl_wm_set_window_radis(ClWmWindow * window,uint px);
 
 void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win);
+
+ClWmWindow * cl_wm_get_focus_window(ClWm * wm);
 
 G_END_DECLS

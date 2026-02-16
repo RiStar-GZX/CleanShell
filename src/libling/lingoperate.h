@@ -105,7 +105,7 @@ typedef struct LingActionArgs{
 
 typedef void (*BEGIN)(GtkWidget * widget,LingBeginArgs args,gpointer user_data);  //瞬发
 
-typedef void (*END)(GtkWidget * widget,LingEndArgs args,gpointer user_data);  //瞬发
+typedef void (*END)(GtkWidget * widget,LingEndArgs args,gpointer user_data);
 
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
@@ -252,6 +252,12 @@ void ling_operate_run_isbreaked(LingOperate * op);
 gboolean ling_operate_start_operating(LingOperate * op);
 
 int ling_operate_get_action_now(LingOperate * op);
+
+void ling_operate_set_ani_progress(LingOperate * op,int action,gdouble progress);
+
+gdouble ling_operate_get_ani_progress(LingOperate * op,int action);
+
+void ling_operate_ani_end_now(LingOperate * op,int action);
 
 void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progress_end);
 

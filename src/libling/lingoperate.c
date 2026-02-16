@@ -396,6 +396,19 @@ int ling_operate_get_action_now(LingOperate * op){
     return op->action_now;
 }
 
+void ling_operate_set_ani_progress(LingOperate * op,int action,gdouble progress){
+    op->actions[action].ani_progress = progress;
+}
+
+gdouble ling_operate_get_ani_progress(LingOperate * op,int action){
+    return op->actions[action].ani_progress;
+}
+
+void ling_operate_ani_end_now(LingOperate * op,int action){
+    //在ANIMATE中使用，使动画立刻停止
+    op->actions[action].ani_progress = op->actions[action].ani_progress_end;
+}
+
 void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progress_end){
     op->actions[action].ani_progress_end = progress_end;
 }

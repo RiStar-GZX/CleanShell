@@ -5,9 +5,11 @@
 #include <wm/wm.h>
 #include <math.h>
 
-#define ANI_NAME_TASK_FULL_SHOW "task_full_show"
+#define ANI_NAME_SHOW_ALL_TASK "task_full_show"
 #define ANI_NAME_TASK_POS       "task_pos"
 #define ANI_NAME_TASK_RETURN    "task_teturn"
+#define ANI_NAME_TASK_MERGE    "task_merge"
+#define ANI_NAME_SHOW_DESKTOP    "show_desktop"
 
 enum {
     BACK,
@@ -42,6 +44,8 @@ struct _ClmTaskSwitcher{
     GtkWidget * bar;
     full_show info;
     uint fs;
+
+    ClWmWindow * focus_window;  //记录松手前focus的window
 };
 
 G_DEFINE_FINAL_TYPE(ClmTaskSwitcher,clm_task_switcher,GTK_TYPE_BOX);
@@ -53,6 +57,7 @@ static void clm_task_switcher_move_window(ClWmWindow * win,gdouble x,gdouble y,i
     cl_wm_set_window_radis(win,px);
     cl_wm_window_set_gradient_progress(win,1);
     cl_wm_set_window_radis(win,px);
+    gtk_widget_set_opacity(GTK_WIDGET(win),1);
 }
 
 static int target_space=30,task_target_w=300,task_target_h=600;
@@ -65,7 +70,7 @@ void clm_task_switcher_show(ClWm * wm,gdouble x,gdouble y,int w,int h,uint space
     }
 
     int ww= gtk_widget_get_width(GTK_WIDGET(shell->desktop));
-    int hh= gtk_widget_get_width(GTK_WIDGET(shell->desktop));
+    int hh= gtk_widget_get_height(GTK_WIDGET(shell->desktop));
 
     gdouble px = 30;
     if(w>task_target_w){
@@ -186,7 +191,7 @@ static int start_space = 300;
 //     return LING_OPERATE_ANIMATION_DIR_FORWARD;
 // }
 
-static void task_full_show_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static void show_all_task_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     full_show * info = &ts->info;
     gdouble start_x,start_y;
@@ -197,7 +202,7 @@ static void task_full_show_ani(GtkWidget * widget,LingActionArgs args,gpointer u
     clm_task_switcher_show(CL_WM(shell->wm),start_x,start_y,w,h,start_space-(start_space-target_space)*(args.progress/100));
 }
 
-static void task_full_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static void show_all_task_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     ts->fs=1;
 }
@@ -228,7 +233,7 @@ static gdouble task_bar_progress(GtkWidget * widget,LingActionArgs args,gpointer
         new_w=new_h*aspect;
         new_x = (w-new_w)/2+args.offset_x;
         if(args.offset_y<0)new_y = -args.offset_y/2;
-        // if(fabs(args.velocity_y)>100){
+        // if(fabs(args.offset_y)<100){
         //     return 100;
         // }
         // else{
@@ -289,7 +294,7 @@ static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer us
     ClWmWindow * wincur = cl_wm_get_current_window(CL_WM(shell->wm));
     if(wincur==NULL)return;
 
-    if(fabs(args.velocity_y)<50&&fabs(args.offset_y)<100){
+    if(/*fabs(args.velocity_y)<50&&*/fabs(args.offset_y)<100){
         ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_POS),LING_ACTION_ANIMATE,NULL,TRUE);
         return;
     }
@@ -424,17 +429,19 @@ static void wm_switch_finish(GtkWidget * widget,LingActionArgs args,gpointer use
 
 /*----------------------------------------------------------------------------------------------------*/
 static gdouble task_remove_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    int w=gtk_widget_get_width(shell->desktop);
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return 0;
+
     int h=gtk_widget_get_height(shell->desktop);
-    int sx=(w-task_target_w)/2;
-    int ex=sx+task_target_w;
-    int sy=(h-task_target_h)/2;
-    int ey=sy+task_target_h;
 
-    if(args.start_x>=sx&&args.start_x<=ex&&
-        args.start_y>=sy&&args.start_y<=ey){
-
+    ts->focus_window = cl_wm_get_focus_window(CL_WM(shell->wm));
+    if(args.offset_y<-task_target_h/4){
+        ling_operate_set_ani_progress_end(args.op,args.action,-h+(h-task_target_h)/2);
     }
+    else{
+        ling_operate_set_ani_progress_end(args.op,args.action,0);
+    }
+    return args.offset_y;
 }
 
 static ANI_DIR task_remove_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -442,13 +449,193 @@ static ANI_DIR task_remove_release(GtkWidget * widget,LingActionArgs args,gpoint
 }
 
 static void task_remove_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return;
 
+    int w=gtk_widget_get_width(shell->desktop);
+    int h=gtk_widget_get_height(shell->desktop);
+    int sx=(w-task_target_w)/2;
+    int ex=sx+task_target_w;
+    int sy=(h-task_target_h)/2;
+    gdouble x,y;
+    int ww,wh;
+    cl_wm_window_get_info(ts->focus_window,&x,&y,&ww,&wh);
+    cl_wm_move_window(ts->focus_window,x,sy+args.progress);
+    //gtk_widget_set_opacity(GTK_WIDGET(ts->focus_window),1-(args.progress/args.progress_end));
 }
 
 static void task_remove_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return;
+    if(args.progress_end!=0)ling_operate_emit_end(
+        ling_operate_get(shell->controler,ANI_NAME_TASK_MERGE),LING_ACTION_ANIMATE,NULL,TRUE);
 }
 
+/*----------------------------------------------------------------------------------------------------*/
+
+static void task_merge_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->focus_window==NULL)return;
+
+    int w=gtk_widget_get_width(shell->desktop);
+    int h=gtk_widget_get_height(shell->desktop);
+    int sx=(w-task_target_w)/2;
+    int ex=sx+task_target_w;
+    int sy=(h-task_target_h)/2;
+    gdouble x,y;
+    int ww,wh;
+    cl_wm_window_get_info(ts->focus_window,&x,&y,&ww,&wh);
+
+    GList *lcrt=NULL,* l = cl_wm_get_window_list(CL_WM(shell->wm));
+    for(;l!=NULL;l=l->next){
+        if(l->data == ts->focus_window){
+            lcrt=l;
+        }
+    }
+
+    int i;
+    if(lcrt->prev!=NULL){
+        for(i=-1,l =lcrt->prev;l!=NULL;l=l->prev,i--){
+            ClWmWindow * win = CL_WM_WINDOW(l->data);
+            gdouble new_x = (i+(args.progress/100))*(task_target_w+target_space)+sx;
+            cl_wm_move_window(win,new_x,sy);
+        }
+    }
+    else if(lcrt->next!=NULL){
+        for(i=1,l =lcrt->next;l!=NULL;l=l->next,i++){
+            ClWmWindow * win = CL_WM_WINDOW(l->data);
+            gdouble new_x = (i-(args.progress/100))*(task_target_w+target_space)+sx;
+            cl_wm_move_window(win,new_x,sy);
+        }
+    }
+    else{
+        ling_operate_ani_end_now(args.op,args.action);
+    }
+}
+
+static void task_merge_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->focus_window==NULL)return;
+
+    GList *lcrt=NULL,* l = cl_wm_get_window_list(CL_WM(shell->wm));
+    for(;l!=NULL;l=l->next){
+        if(l->data == ts->focus_window){
+            lcrt=l;
+        }
+    }
+    if(lcrt==NULL)return;
+
+    if(lcrt->prev!=NULL){
+        cl_wm_set_current_window(CL_WM(shell->wm),CL_WM_WINDOW(lcrt->prev->data));
+    }
+    else if(lcrt->next!=NULL){
+        cl_wm_set_current_window(CL_WM(shell->wm),CL_WM_WINDOW(lcrt->next->data));
+    }
+    else{
+        ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_SHOW_DESKTOP),LING_ACTION_ANIMATE,NULL,TRUE);
+    }
+    cl_wm_remove_window(CL_WM(shell->wm),CL_WM_WINDOW(lcrt->data));
+}
+
+static void task_show_desktop_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    clm_desktop_set_blur(CLM_DESKTOP(shell->desktop),(1-args.progress/100)*CLM_DESKTOP_BLUR);
+}
+
+static void task_show_desktop_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    ts->mode = TASK_SWITCHER_WIN;
+    gtk_widget_set_visible(shell->wm,FALSE);
+}
+
+/*----------------------------------------------------------------------------------------------------*/
+static gdouble task_fill_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return 0;
+    ts->focus_window = cl_wm_get_focus_window(CL_WM(shell->wm));
+
+    int h=gtk_widget_get_height(shell->desktop);
+
+    if(args.offset_y>(h-task_target_h)/4){
+        ling_operate_set_ani_progress_end(args.op,args.action,(h-task_target_h)/2);
+    }
+    else{
+        ling_operate_set_ani_progress_end(args.op,args.action,0);
+    }
+    if(args.offset_y>(h-task_target_h)/2)args.offset_y = (h-task_target_h)/2;
+    return args.offset_y;
+}
+
+static ANI_DIR task_fill_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    return ANI_DIR_NEAR;
+}
+
+static void task_fill_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return;
+    ClWmWindow * win = cl_wm_get_current_window(CL_WM(shell->wm));
+    if(win!=ts->focus_window)return;    //只有当前窗口能向下拖至全屏
+
+    int w=gtk_widget_get_width(shell->desktop);
+    int h=gtk_widget_get_height(shell->desktop);
+    gdouble aspect=(gdouble)w/(gdouble)h;
+
+    gdouble x,y;
+    cl_wm_window_get_info(win,&x,&y,NULL,NULL);
+
+    int new_h=task_target_h+args.progress*2;
+    int new_w=(gdouble)new_h*aspect;
+
+    int sx=(w-new_w)/2;
+    int sy=(h-new_h)/2;
+
+    clm_task_switcher_show(CL_WM(shell->wm),sx,sy,new_w,new_h,target_space);
+}
+
+static void task_fill_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return;
+    ClWmWindow * win = cl_wm_get_current_window(CL_WM(shell->wm));
+    if(win!=ts->focus_window)return;
+    if(args.progress_end!=0)ts->mode = TASK_SWITCHER_WIN;
+}
+
+//单击
+static ANI_DIR task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    ts->focus_window = cl_wm_get_focus_window(CL_WM(shell->wm));
+    if(ts->focus_window==NULL)return ANI_DIR_BACK;
+    cl_wm_window_get_info(ts->focus_window,&ts->info.start_x,&ts->info.start_y,
+                          &ts->info.start_w,&ts->info.start_h);
+
+    //int h=gtk_widget_get_height(shell->desktop);
+    //ling_operate_set_ani_progress_end(args.op,args.action,(h-task_target_h)/2);
+
+    cl_wm_set_current_window(CL_WM(shell->wm),ts->focus_window);
+    return ANI_DIR_NEAR;
+}
+
+static void task_fill_ani_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return;
+
+    int w=gtk_widget_get_width(shell->desktop);
+    int h=gtk_widget_get_height(shell->desktop);
+    gdouble aspect=(gdouble)w/(gdouble)h;
+
+    int new_h=task_target_h+(h-task_target_h)*(args.progress/args.progress_end);
+    int new_w=(gdouble)new_h*aspect;
+
+    gdouble x = ts->info.start_x-ts->info.start_x*(args.progress/args.progress_end);
+    gdouble y = ts->info.start_y-ts->info.start_y*(args.progress/args.progress_end);
+
+    clm_task_switcher_show(CL_WM(shell->wm),x,y,new_w,new_h,target_space);
+}
+
+// static void task_fill_click_finish(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+//     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
+//     if(ts->mode!=TASK_SWITCHER_SWITCH)return;
+//     if(ts->focus_window!=NULL)cl_wm_set_current_window(CL_WM(shell->wm),ts->focus_window);
+// }
 /*----------------------------------------------------------------------------------------------------*/
 
 static void clm_task_switcher_init(ClmTaskSwitcher * self){
@@ -457,10 +644,10 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
     gtk_widget_set_halign(GTK_WIDGET(self),GTK_ALIGN_CENTER);
 
     //显示所有任务缩略图动画
-    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_FULL_SHOW,
+    ling_operate_add_animate(shell->controler,ANI_NAME_SHOW_ALL_TASK,
                              NULL,NULL,
-                             task_full_show_ani,self,
-                             NULL,task_full_finish,self);
+                             show_all_task_ani,self,
+                             NULL,show_all_task_finish,self);
 
     //所有任务缩略图归位动画
     ling_operate_add_animate(shell->controler,ANI_NAME_TASK_POS,
@@ -494,24 +681,40 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
                             wm_switch_release,self,
                             wm_switch_finish,wm_switch_finish,self);
 
+    //移除一个任务其他任务右移合并
+    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_MERGE,
+                             NULL,self,
+                             task_merge_ani,self,
+                             NULL,task_merge_finish,self);
+
+    //移除所有任务后显示桌面
+    ling_operate_add_animate(shell->controler,ANI_NAME_SHOW_DESKTOP,
+                             NULL,NULL,
+                             task_show_desktop_ani,self,
+                             NULL,task_show_desktop_finish,self);
+
     ling_operate_add_action(wmop,LING_ACTION_DRAG_UP,task_remove_progress,self,
                             task_remove_ani,self,
                             task_remove_release,self,
-                            NULL,task_remove_finish,self);
+                            task_remove_finish,task_remove_finish,self);
 
-    // ling_operate_add_action(wmop,LING_ACTION_DRAG_DOWN,task_full_progress,self,
-    //                         task_remove_ani,self,
-    //                         task_remove_release,self,
-    //                         NULL,task_remove_finish,self);
+    ling_operate_add_action(wmop,LING_ACTION_DRAG_DOWN,task_fill_progress,self,
+                            task_fill_ani,self,
+                            task_fill_release,self,
+                            NULL,task_fill_finish,self);
 
-    // ling_operate_add_action(wmop,LING_ACTION_INSTANT,NULL,NULL,
-    //                         NULL,NULL,
-    //                         wm_release,self,
-    //                         NULL,NULL,NULL);
+    ling_operate_add_action(wmop,LING_ACTION_CLICK,NULL,NULL,
+                            task_fill_ani_click,self,
+                            task_fill_release_click,self,
+                            NULL,task_fill_finish,self);
+
+    // ling_operate_add_action(wmop,LING_ACTION_CLICK,NULL,NULL,
+    //                         task_fill_ani,self,
+    //                         task_fill_release,self,
+    //                         NULL,task_fill_finish,self);
+
 }
 
 GtkWidget * clm_task_switcher_new(){
     return g_object_new(CLM_TYPE_TASK_SWITCHER,NULL);
 }
-
-

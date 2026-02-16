@@ -29,8 +29,9 @@ struct _ClWmWindow{
 
     ClWm * wm;
 
+    GtkWidget * overlay;
     GtkWidget * gradient;
-    //GtkWidget * overlay;
+    GtkWidget * detail; //
 
     GString * window_name;
     gboolean showable;
@@ -51,6 +52,7 @@ struct _ClWm{
     GList * windows;
     ClWmWindow * current_win;
     ClWmWindow * focus_win; //聚焦的窗口
+    gboolean cant_focus;
 };
 
 G_DEFINE_FINAL_TYPE(ClWmWindow,cl_wm_window,GTK_TYPE_BOX);
@@ -91,7 +93,7 @@ static void cl_wm_window_begin_focus(GtkWidget * widget,LingBeginArgs args,gpoin
     ClWmWindow * window = CL_WM_WINDOW(user_data);
 
     //有的窗口还按着就无法设置为新的窗口
-    if(window->wm->focus_win == NULL){
+    if(!window->wm->cant_focus){
         window->wm->focus_win=window;
     }
 }
@@ -100,9 +102,12 @@ static void cl_wm_window_end_focus(GtkWidget * widget,LingEndArgs args,gpointer 
     ClWmWindow * window = CL_WM_WINDOW(user_data);
 
     //松开手才允许focus为其他窗口
-    if(window->wm->focus_win == window){
-        window->wm->focus_win = NULL;
+    if(window->wm->cant_focus&&window->wm->focus_win == window){
+        window->wm->cant_focus=0;
     }
+    // if(window->wm->focus_win == window){
+    //     window->wm->focus_win = NULL;
+    // }
 }
 
 /*****************************************************************************************************/
@@ -144,6 +149,7 @@ static void cl_wm_window_init(ClWmWindow * self){
                             NULL,wm_close_finish,self);
 
     ling_operate_set_force_run(self->op,TRUE);
+
 }
 
 static GtkWidget * cl_wm_window_new(const char * name,const char * icon_name){
@@ -210,6 +216,14 @@ ClWmWindow * cl_wm_add_window(ClWm * self,const char * icon_name,const char * na
     return win;
 }
 
+int cl_wm_remove_window(ClWm * wm,ClWmWindow * window){
+    GList * list = g_list_find(wm->windows,window);
+    if(list==NULL)return FALSE;
+    ling_fixed_remove(LING_FIXED(wm),GTK_WIDGET(window));
+    wm->windows = g_list_remove(wm->windows,window);
+    return TRUE;
+}
+
 void cl_wm_set_window_showable(ClWmWindow * window,gboolean showable){
     if(window->wm==NULL)return;
     GList * list = g_list_find(window->wm->windows,window);
@@ -233,11 +247,11 @@ void cl_wm_move_window(ClWmWindow * window,gdouble x,gdouble y){
 void cl_wm_set_window_size(ClWmWindow * window,uint w,uint h){
     gdouble size = w;
     if(w>h)size = h;
-    if(size>300)gtk_image_set_pixel_size(GTK_IMAGE(window->image),CL_WM_WINDOW_IMAGE_SIZE);
-    else {
+    //if(size>300)gtk_image_set_pixel_size(GTK_IMAGE(window->image),CL_WM_WINDOW_IMAGE_SIZE);
+    //else {
         gtk_image_set_pixel_size(GTK_IMAGE(window->image),CL_WM_WINDOW_IMAGE_SIZE*size/300);
         gtk_image_set_pixel_size(GTK_IMAGE(window->app_icon),CL_WM_WINDOW_IMAGE_SIZE*size/300);
-    }
+    //}
     ling_fixed_set_child_size(LING_FIXED(window->wm),GTK_WIDGET(window),w,h);
 }
 
@@ -389,4 +403,8 @@ GList * cl_wm_get_window_list(ClWm * wm){
 
 void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win){
     wm->current_win = win;
+}
+
+ClWmWindow * cl_wm_get_focus_window(ClWm * wm){
+    return wm->focus_win;
 }
