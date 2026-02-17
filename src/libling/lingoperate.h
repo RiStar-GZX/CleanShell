@@ -207,7 +207,7 @@ typedef struct LingOperate{
     LingAction actions[LING_ACTION_NUM];    //LingAction
     uint action_now;
 
-    uint animation_timer_id;    //每个周期执行动画(以后用一个timer，串起所有的动画)
+    //uint animation_timer_id;    //每个周期执行动画(以后用一个timer，串起所有的动画)
 
     //瞬发
     BEGIN begin;
@@ -276,6 +276,8 @@ void ling_operate_add_action(LingOperate * op,uint type,
                              ANIMATION animate,gpointer animate_data,
                              RELEASE release,gpointer release_data,
                              FINISH finish_s,FINISH finish_e,gpointer finish_data);
+
+void ling_operate_set_drag_propagation_phase(LingOperate * op,GtkPropagationPhase phase);
 
 void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
                                  DRAGSOURCE_PREPARE prepare,gpointer prepare_data,

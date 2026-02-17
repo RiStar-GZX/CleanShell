@@ -256,7 +256,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
                 act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
                 op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
                 ling_operate_run_finish(op,LING_ACTION_FINISH_E);
-                op->animation_timer_id=0;
+                //op->animation_timer_id=0;
                 return G_SOURCE_CONTINUE;
             }
         }
@@ -268,7 +268,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
                 act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
                 op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
                 ling_operate_run_finish(op,LING_ACTION_FINISH_S);
-                op->animation_timer_id=0;
+                //op->animation_timer_id=0;
                 return G_SOURCE_CONTINUE;
             }
         }
@@ -329,7 +329,18 @@ void ling_operate_run_animation(LingOperate * op){
     }
     //act->time=bezier_inverse(0,25,75,100,act->ani_progress);
 
-
+    ANI_DIR dir = act->ani_dir;
+    if(act->ani_dir == ANI_DIR_NEAR){
+        dir = act->nature_dir;
+    }
+    if(dir==ANI_DIR_FORWARD&&act->ani_progress>=act->ani_progress_end){
+        ling_operate_run_finish(op,LING_ACTION_FINISH_E);
+        return;
+    }
+    else if(dir==ANI_DIR_BACK&&act->ani_progress<=act->ani_progress_start){
+        ling_operate_run_finish(op,LING_ACTION_FINISH_S);
+        return;
+    }
     act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
     op->controler->actions_list = g_list_append(op->controler->actions_list,act);
 }
@@ -342,10 +353,6 @@ void ling_operate_run_isbreaked(LingOperate * op){
     }
     LingAction * act = &op->actions[op->action_now];
     gboolean to=op->isbreaked(op->isbreaked_data);
-    if(op->animation_timer_id!=0){
-        g_source_remove(op->animation_timer_id);
-        op->animation_timer_id=0;
-    }
     if(to==LING_OPERATE_BREAK_TO_ANIMATION&&act->animation!=NULL){
         ling_operate_run_animation(op);
     }
@@ -664,6 +671,9 @@ void ling_operate_add_action(LingOperate * op,uint type,
     // }
 }
 
+void ling_operate_set_drag_propagation_phase(LingOperate * op,GtkPropagationPhase phase){
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(op->drag),phase);
+}
 /***************************拖拽*****************************************************************************/
 static GdkContentProvider * operate_drag_source_prepare (
     GtkDragSource* self,gdouble x,gdouble y,gpointer user_data){
@@ -814,7 +824,8 @@ void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gb
     if(op->state==LING_OPERATE_STATE_WAITTING){
         op->action_now = action;
         op->emit_data = emit_data;
-        op->actions[op->action_now].ani_progress = 0;
+        if(S_E==LING_ACTION_FINISH_E)op->actions[op->action_now].ani_progress = 0;
+        else op->actions[op->action_now].ani_progress = 100;
         op->force_run=TRUE;
         ling_operate_start_operating(op);
         op->actions[op->action_now].ani_dir = S_E;

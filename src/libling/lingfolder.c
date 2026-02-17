@@ -61,6 +61,11 @@ static void folder_open_finish(GtkWidget * widget,LingActionArgs args,gpointer u
     item->open_finish(folder,widget,folder->content,item->open_finish_data);
 }
 
+static ANI_DIR folder_close_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+    ling_operate_set_ani_progress(args.op,args.action,0);
+    return ANI_DIR_FORWARD;
+}
+
 static void folder_close_animate(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     LingFolder * folder = LING_FOLDER(user_data);
     if(folder->box_clicked==TRUE)return;
@@ -104,9 +109,9 @@ void ling_folder_init(LingFolder * self){
     ling_operate_add_action(self->close_op,LING_ACTION_INSTANT,
                             NULL,NULL,
                             folder_close_animate,self,
-                            NULL,NULL,
+                            folder_close_start,NULL,
                             NULL,folder_close_finish,self);
-    ling_operate_set_force_run(self->close_op,TRUE);
+    //ling_operate_set_force_run(self->close_op,TRUE);
 
     gtk_widget_set_visible(GTK_WIDGET(self),FALSE);
 }

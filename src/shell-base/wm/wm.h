@@ -37,6 +37,10 @@ void cl_wm_window_add_app_icon(ClWmWindow * window,GtkWidget * widget);
 
 GtkWidget * cl_wm_window_remove_app_icon(ClWmWindow * window);
 
+void cl_wm_window_set_detail_visible(ClWmWindow * window,gboolean visible);
+
+void cl_wm_set_detail_visible(ClWm * wm,gboolean visible);
+
 GtkWidget * cl_wm_new();
 
 ClWmWindow * cl_wm_get_window_by_name(ClWm * self,const char * name);

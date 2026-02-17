@@ -26,11 +26,15 @@ void clm_app_drawer_init(ClmAppDrawer * self){
     //ling_operate_set_force_run(self->op,TRUE);
 }
 
+static void drawer_app_open(ClmDesktopItem * item,gpointer userdata){
+    ling_operate_emit(ling_operate_get(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME),LING_ACTION_EMIT,NULL,TRUE,LING_ACTION_FINISH_S);
+}
 
 gboolean clm_app_drawer_add_item(ClmAppDrawer *self,app_info * info,
                                   int column,int row,int width,int height){
     GtkWidget * item =clm_desktop_item_app_new(info,64,TRUE);
     clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(item),TRUE);
+    g_signal_connect(item,"app_open",G_CALLBACK(drawer_app_open),NULL);
     LingOperate * op = clm_desktop_item_get_operate(CLM_DESKTOP_ITEM(item));
     ling_operate_emit_connect(op,LING_ACTION_CLICK,LING_OPERATE_EMIT_AT_RELEASE,self->op,LING_ACTION_FINISH_E,NULL);
     ling_grid_attach(LING_GRID(self->drawer),item,column,row,width,height);

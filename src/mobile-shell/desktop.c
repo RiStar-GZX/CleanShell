@@ -251,7 +251,7 @@ static void clm_desktop_init(ClmDesktop * self){
 
     //导航
     //GtkWidget * ts = clm_task_switcher_new();
-    self->guide_bar = clm_task_switcher_new();//clm_task_switcher_get_bar(CLM_TASK_SWITCHER(ts));
+    self->guide_bar = clm_task_switcher_new(CL_WM(self->wm));//clm_task_switcher_get_bar(CLM_TASK_SWITCHER(ts));
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),
                            self->guide_bar,LAYER_TASK_SWITCH_BAR);
 
@@ -297,6 +297,13 @@ static void clm_desktop_init(ClmDesktop * self){
                             drawer_ani,s,
                             ling_layer_release,NULL,
                             ling_layer_main_finish,ling_layer_sub_finish,s);
+
+    ling_operate_add_action(drawer_op,LING_ACTION_EMIT,
+                            NULL,NULL,       //100->0
+                            drawer_ani,s,
+                            ling_layer_release,NULL,
+                            ling_layer_main_finish,ling_layer_sub_finish,s);
+
 
     ling_operate_add_action(drawer_op,LING_ACTION_EMIT,
                             NULL,NULL,

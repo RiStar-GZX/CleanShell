@@ -1,8 +1,16 @@
 #include "desktopitem.h"
 #include <desktop.h>
+#include <appdrawer.h>
 #include <wm.h>
 
 #define ICON_SIZE 20
+
+enum {
+    APP_OPEN,
+    SIGNAL_NUM
+};
+
+static guint signals[SIGNAL_NUM];
 
 typedef struct{
     GtkWidget * image;
@@ -66,7 +74,9 @@ static void ds_end(GtkDragSource* source,GdkDrag* drag,gboolean delete_data,gpoi
 
 
 void clm_desktop_item_class_init(ClmDesktopItemClass * klass){
-
+    signals[APP_OPEN] = g_signal_new(
+        "app_open",G_TYPE_FROM_CLASS(klass),G_SIGNAL_RUN_FIRST,
+        0,NULL,NULL,g_cclosure_marshal_VOID__VOID,G_TYPE_NONE,0);
 }
 
 void clm_desktop_item_init(ClmDesktopItem * self){
@@ -231,6 +241,10 @@ static ClWmWindow * app_open_start(GtkWidget * widget,gdouble * x,gdouble * y,gp
     //LingLayer * layer;
     //clm_desktop_get_layer_folder(CLM_DESKTOP(shell->desktop),&layer);
     //ling_folder_close(LING_FOLDER(layer->widget));
+
+    //app_open信号用于自动关闭应用抽屉
+    g_signal_emit_by_name(self,"app_open",0);
+    //ling_operate_emit(ling_operate_get(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME),LING_ACTION_EMIT,NULL,TRUE,LING_ACTION_FINISH_S);
     return win;
 }
 
@@ -464,7 +478,7 @@ GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,uint column,uin
             if(info==NULL)continue;
             GtkWidget * app = clm_desktop_item_app_new(info,ICON_SIZE,FALSE);
             now=now->next;
-            //clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(app),TRUE);
+            clm_desktop_item_app_set_runable(CLM_DESKTOP_ITEM(app),FALSE);
             //gtk_widget_set_hexpand(button,TRUE);
             //gtk_widget_set_vexpand(button,FALSE);
             ling_grid_attach(LING_GRID(self->folder.grid),app,c,r,1,1);
