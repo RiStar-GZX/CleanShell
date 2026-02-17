@@ -11,4 +11,4 @@
 
 ## __界面预览__
 
-<img src="./docs/images/desktop.png" width="600" alt="桌面截图" title="桌面布局">
+<img src="./docs/images/desktop.png" width="300" alt="桌面截图" title="桌面布局">
