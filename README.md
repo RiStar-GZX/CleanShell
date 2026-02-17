@@ -11,3 +11,5 @@ What remains to be implemented: movable desktop icons, desktop folders that can 
 还未实现的内容：可以移动的桌面图标，可以根据图标数量自适应大小的桌面文件夹，完整的通知界面
 
 
+![主界面](docs/images/demo.png "主界面效果")
+<img src="picture/demo.png" width="600" alt="功能演示图" title="点击查看大图">
