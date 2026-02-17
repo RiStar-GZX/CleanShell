@@ -1,4 +1,4 @@
-# A mobile operating interface based on Gtk4
+# A Linux mobile operating interface based on Gtk4
 ## 一个基于Gtk4的Linux手机操作界面
 
 ## __项目进展__
