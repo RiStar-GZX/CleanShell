@@ -1,6 +1,5 @@
 # A Linux mobile operating interface based on Gtk4
-# 一个基于Gtk4的Linux手机操作界面
-
+## 一个基于Gtk4的Linux手机操作界面
 
 ## __项目进展__
 ### What has been implemented so far:lock screen interface, desktop icons, desktop folders, app drawer, notification bar, message center, control center, taskbar, and task background.
@@ -8,6 +7,7 @@
 
 ### What remains to be implemented: movable desktop icons, desktop folders that can automatically adjust their size based on the number of icons, and a complete notification interface.
 ### 还未实现的内容：可以移动的桌面图标，可以根据图标数量自适应大小的桌面文件夹，完整的通知界面
+
 
 ## __界面预览__
 
