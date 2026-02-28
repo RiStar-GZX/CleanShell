@@ -94,4 +94,6 @@ void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win);
 
 ClWmWindow * cl_wm_get_focus_window(ClWm * wm);
 
+ClWmWindow * cl_wm_get_last_focus_window(ClWm * wm);
+
 G_END_DECLS

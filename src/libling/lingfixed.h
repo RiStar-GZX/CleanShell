@@ -17,7 +17,12 @@ struct LingFixedItem{
     uint level1;
     uint level2;
     LING_FIXED_ADJUST adjust;
+    uint type;
     gpointer ex;    //暂时
+};
+
+enum{
+    LING_FIXED_ITEM_TYPE_FIXED = 0
 };
 
 #define LING_FIXED_TOP  0
@@ -67,5 +72,7 @@ void ling_fixed_move(LingFixed * fixed,GtkWidget * widget,gdouble x,gdouble y);
 gpointer ling_fixed_remove(LingFixed * fixed,GtkWidget * widget);
 
 void ling_fixed_item_change_adjust(LingFixed * fixed,GtkWidget * widget,LING_FIXED_ADJUST adjust);
+
+void ling_fixed_fresh(LingFixed * fixed);
 
 G_END_DECLS

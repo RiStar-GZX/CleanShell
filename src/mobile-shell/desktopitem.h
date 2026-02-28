@@ -13,8 +13,19 @@ enum {
     //桌面小组件
 };
 
+
+typedef enum{
+    CLM_DESKTOP_ITEM_NONE = 0,
+    CLM_DESKTOP_ITEM_MOVE,
+    CLM_DESKTOP_ITEM_COPY,
+}CLM_DESKTOP_ITEM_DRAG;
+
 #define CLM_TYPE_DESKTOP_ITEM (clm_desktop_item_get_type())
 G_DECLARE_FINAL_TYPE(ClmDesktopItem,clm_desktop_item,CLM,DESKTOP_ITEM,GtkBox)
+
+void clm_desktop_item_set_drag(ClmDesktopItem * self,CLM_DESKTOP_ITEM_DRAG drag_mode);
+
+CLM_DESKTOP_ITEM_DRAG clm_desktop_item_get_drag(ClmDesktopItem * self);
 
 void clm_desktop_item_set_label_visible(ClmDesktopItem * self,gboolean visible);
 
@@ -37,5 +48,7 @@ GtkWidget * clm_desktop_item_folder_new(LingFolder * folderlayer,
                                        const char * folder_name,gboolean label_visible);
 
 LingOperate  * clm_desktop_item_get_folder_operate(ClmDesktopItem * self);
+
+GtkWidget * clm_desktop_item_copy(ClmDesktopItem * item);
 
 G_END_DECLS

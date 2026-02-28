@@ -19,6 +19,10 @@ gboolean fps_timeout(gpointer user_data){
     return G_SOURCE_CONTINUE;
 }
 
+static void before_paint (GdkFrameClock* self,gpointer user_data){
+    ling_operate_controler_timeout(shell->controler);
+}
+
 static void app_activate (GApplication *app) {
     // 应用CSS样式
     GtkCssProvider * provider = gtk_css_provider_new();
@@ -42,6 +46,7 @@ static void app_activate (GApplication *app) {
     gtk_window_present(GTK_WINDOW(window));
 
     my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
+    g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
     g_timeout_add(500,fps_timeout,appview);
 }
 

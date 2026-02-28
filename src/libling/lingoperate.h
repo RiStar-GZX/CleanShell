@@ -150,8 +150,7 @@ typedef struct LingAction{
     gdouble ani_progress; //进度
     gdouble ani_progress_start;
     gdouble ani_progress_end;
-    //gdouble ani_progress_target;
-    //gdouble time;         //当前时间
+    gdouble time;         //当前时间
     gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
     ANI_DIR ani_dir;     //方向(正反)  //默认正，打断反
 
@@ -301,4 +300,6 @@ void ling_operate_add_begin(LingOperate * op,BEGIN begin,gpointer begin_data);
 
 void ling_operate_add_end(LingOperate * op,END end,gpointer end_data);
 
+
+gboolean ling_operate_controler_timeout(gpointer user_data);//暂时先这么写
 #endif // LINGOPERATE_H

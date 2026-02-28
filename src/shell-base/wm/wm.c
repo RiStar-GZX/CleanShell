@@ -55,6 +55,7 @@ struct _ClWm{
     LingFixed parent;
     GList * windows;
     ClWmWindow * current_win;
+    ClWmWindow * last_focus_win; //记录松手前的窗口
     ClWmWindow * focus_win; //聚焦的窗口
     gboolean cant_focus;
 };
@@ -99,6 +100,7 @@ static void cl_wm_window_begin_focus(GtkWidget * widget,LingBeginArgs args,gpoin
     //有的窗口还按着就无法设置为新的窗口
     if(!window->wm->cant_focus){
         window->wm->focus_win=window;
+        window->wm->last_focus_win = window;
         window->wm->cant_focus=TRUE;
     }
 }
@@ -452,4 +454,8 @@ void cl_wm_set_current_window(ClWm * wm,ClWmWindow * win){
 
 ClWmWindow * cl_wm_get_focus_window(ClWm * wm){
     return wm->focus_win;
+}
+
+ClWmWindow * cl_wm_get_last_focus_window(ClWm * wm){
+    return wm->last_focus_win;
 }

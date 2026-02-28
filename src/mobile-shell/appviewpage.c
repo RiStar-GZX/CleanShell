@@ -29,8 +29,9 @@ GtkWidget * clm_app_view_page_new(style_info style_info){
     self->style_info = style_info;
 
     self->grid = ling_grid_new(style_info.column_num,style_info.row_num,style_info.column_space,style_info.row_space);
-
-    ling_grid_set_drop_target(LING_GRID(self->grid),/*CLM_TYPE_DESKTOP_ITEM*/G_TYPE_STRING,GDK_ACTION_MOVE);
+    ling_grid_set_drop_able(LING_GRID(self->grid),TRUE);
+    ling_grid_set_drop_target(LING_GRID(self->grid),(GType [1]) {
+                                CLM_TYPE_DESKTOP_ITEM},1,GDK_ACTION_MOVE);
 
     gtk_box_append(GTK_BOX(self),self->grid);
 
@@ -60,6 +61,7 @@ gboolean clm_app_view_page_add_item(ClmAppViewPage * self,GtkWidget * content,
                                      int column,int row,int width,int height){
     //ling_grid_add_frame(LING_GRID(self->grid),column,row,width,height);
     ling_grid_attach(LING_GRID(self->grid),content,column,row,width,height);
+
     // LingOperate * op = ling_operate_add(shell->controler,"app_item",content);
     // ling_operate_add_action(op,LING_ACTION_CLICK,
     //                         NULL,NULL,

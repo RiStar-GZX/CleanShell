@@ -1,5 +1,8 @@
 #include "lingoperate.h"
 
+#define DEFAULT_ANI_TIME 0.5
+#define LONG_PRESS_OFFSET 10
+
 static void operate_drag_begin(GtkGestureDrag* self,
                                gdouble start_x,gdouble start_y,gpointer user_data);
 
@@ -228,19 +231,8 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         LingAction * act = l->data;
         LingOperate * op = act->op;
 
-        // if(act->ani_dir==LING_OPERATE_ANIMATION_DIR_NEAR){
-        //     if(act->ani_progress<=act->ani_progress_end){
-        //         dir=act->last_ani_progress<=act->ani_progress_end?
-        //         LING_OPERATE_ANIMATION_DIR_FORWARD:LING_OPERATE_ANIMATION_DIR_BACK;
-        //     }
-        //     else if(act->ani_progress>=act->ani_progress_end){
-        //         dir = act->last_ani_progress>=act->ani_progress_end?
-        //         LING_OPERATE_ANIMATION_DIR_BACK:LING_OPERATE_ANIMATION_DIR_FORWARD;
-        //     }
-        //     act->last_ani_progress = act->ani_progress;
-        // }
-        //gdouble offset = bezier_curve(0,25,75,100,act->time/1000.0000f)/act->ani_time;
-        //act->time+=1000/op->controler->frames;
+        gdouble offset = bezier_curve(0,50,75,100,act->time/1000.0000f)/act->ani_time;
+        act->time+=1000/op->controler->frames;
         //g_print("time:%f %f\n",act->time,offset);
         //IPT FIX
         ANI_DIR dir = act->ani_dir;
@@ -250,7 +242,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         if(dir==ANI_DIR_FORWARD){
             //act->ani_time*op->controler->frames;
             //act->ani_progress = offset;
-            act->ani_progress+=1+0.05*fabs(act->ani_progress_end-act->ani_progress);//00/op->controler->frames;
+            act->ani_progress+=1+0.03*fabs(act->ani_progress_end-act->ani_progress);//00/op->controler->frames;
             if(act->ani_progress>=act->ani_progress_end){
                 act->ani_progress = act->ani_progress_end;
                 act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
@@ -262,7 +254,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         }
         else{
             //act->ani_progress = -offset;
-            act->ani_progress-=1+0.05*fabs(act->ani_progress_start-act->ani_progress);//00/op->controler->frames;
+            act->ani_progress-=1+0.03*fabs(act->ani_progress_start-act->ani_progress);//00/op->controler->frames;
             if(act->ani_progress<=act->ani_progress_start){
                 act->ani_progress = act->ani_progress_start;
                 act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
@@ -341,6 +333,7 @@ void ling_operate_run_animation(LingOperate * op){
         ling_operate_run_finish(op,LING_ACTION_FINISH_S);
         return;
     }
+    act->time=0;
     act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
     op->controler->actions_list = g_list_append(op->controler->actions_list,act);
 }
@@ -443,6 +436,7 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
 static gboolean longpress_timeout(gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
     op->longpress_status = TRUE;
+    //exit(1);
     if(op->actions[LING_ACTION_LONG_PRESS].able){
         op->longpress_id = 0;
         op->action_now = LING_ACTION_LONG_PRESS;
@@ -477,6 +471,10 @@ static void operate_drag_begin(GtkGestureDrag* self,
             ling_operate_run_animation(op);
         }
     }
+
+    op->longpress_id = g_timeout_add(500,longpress_timeout,op);
+    op->longpress_status = FALSE;
+
     //连带触发
     // LingAction * action = &op->actions[op->action_now];
     // if(action->emit[LING_OPERATE_EMIT_AT_START]!=NULL){
@@ -490,17 +488,19 @@ static void operate_drag_update(GtkGestureDrag* self,
     if(!op->able)return;
     if(op->state==LING_OPERATE_STATE_ANIMATION)return;
     if(op->action_now==LING_ACTION_INSTANT)return;
-    if(op->longpress_id!=0){
+    if(op->longpress_status)return;
+    if(op->longpress_id!=0&&(fabs(offset_y)>LONG_PRESS_OFFSET||fabs(offset_x)>LONG_PRESS_OFFSET)){
         g_source_remove(op->longpress_id);
+        op->longpress_status=FALSE;
         op->longpress_id=0;
     }
     op->offset_x = offset_x;
     op->offset_y = offset_y;
+
     // if(offset_y<=0&&op->offset_last>=0||offset_y>=0&&op->offset_last<=0){
     //     //及时结束不同方向的切换
     //     ling_operate_run_finish(op);
     // }
-
     if(op->action_now!=LING_ACTION_CLICK);
     else if(fabs(offset_x)>fabs(offset_y)){
         if(op->actions[LING_ACTION_DRAG_HORIZONTAL].able){
@@ -545,7 +545,7 @@ static void operate_drag_end(GtkGestureDrag* self,
                              gdouble offset_x,gdouble offset_y,gpointer user_data){
     LingOperate * op = (LingOperate*)user_data;
     if(!op->able)return;
-
+    if(op->longpress_status==TRUE)return;
     //通用触发
     if(op->end!=NULL){
         LingEndArgs args={
@@ -649,7 +649,7 @@ void ling_operate_add_action(LingOperate * op,uint type,
     act->finish_data = finish_data;
     act->ani_progress_end = 100;
     act->ani_progress_start = 0;
-    act->ani_time = 0.2;
+    act->ani_time = DEFAULT_ANI_TIME;
 
     if(op->drag==NULL){
         op->drag =gtk_gesture_drag_new();
@@ -796,7 +796,7 @@ void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
 //     act->finish_e = finish;
 //     act->finish_data = finish_data;
 //     act->ani_progress_end = 100;
-//     act->ani_time = 0.2;
+//     act->ani_time = DEFAULT_ANI_TIME;
 
 //     if(op->drag_source==NULL){
 //         op->drag_source = gtk_drag_source_new();
@@ -867,7 +867,7 @@ LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * 
     act->release_data = release_data;
     act->ani_progress_end = 100;
     act->ani_progress_start = 0;
-    act->ani_time = 0.2;
+    act->ani_time = DEFAULT_ANI_TIME;
     return op;
 }
 

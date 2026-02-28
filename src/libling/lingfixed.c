@@ -208,6 +208,7 @@ LingFixedItem * ling_fixed_put(LingFixed * fixed,GtkWidget * widget,LING_FIXED_A
         item->h = -1;
         item->x = x;
         item->y = y;
+        item->type = LING_FIXED_ITEM_TYPE_FIXED;
         item->adjust = adjust;
 
         //gtk_widget_set_parent(widget,GTK_WIDGET(fixed));
@@ -277,4 +278,10 @@ void ling_fixed_item_change_adjust(LingFixed * fixed,GtkWidget * widget,LING_FIX
 GList * ling_fixed_get_items_list(LingFixed * fixed){
     LingFixedPrivate * self = ling_fixed_get_instance_private(fixed);
     return self->items_list;
+}
+
+void ling_fixed_fresh(LingFixed * fixed){
+    GtkLayoutManager * layout = gtk_widget_get_layout_manager(GTK_WIDGET(fixed));
+    if(layout==NULL)return;
+    gtk_layout_manager_allocate(layout,GTK_WIDGET(fixed),-1,-1,-1);
 }

@@ -577,9 +577,9 @@ static gdouble task_fill_progress(GtkWidget * widget,LingActionArgs args,gpointe
     if(ts->mode!=TASK_SWITCHER_SWITCH)return 0;
     ts->focus_window = cl_wm_get_focus_window(ts->wm);
 
-    int h=gtk_widget_get_height(shell->desktop);
+    if(ts->focus_window!=NULL)task_switcher_set_detail_visible(ts,FALSE);
 
-    task_switcher_set_detail_visible(ts,FALSE);
+    int h=gtk_widget_get_height(shell->desktop);
     if(args.offset_y>(h-task_target_h)/4){
         ling_operate_set_ani_progress_end(args.op,args.action,(h-task_target_h)/2);
     }
@@ -633,7 +633,10 @@ static void task_fill_finish_s(GtkWidget * widget,LingActionArgs args,gpointer u
 //单击
 static ANI_DIR task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
-    ts->focus_window = cl_wm_get_focus_window(ts->wm);
+
+    //由于已经松开鼠标所以读取上一次记录的focus_window
+    //之所以不使用BEGIN来获取focus_window是因为begin的触发在前
+    ts->focus_window = cl_wm_get_last_focus_window(ts->wm);
     if(ts->focus_window==NULL){
         //点击空白
         if(ts->mode==TASK_SWITCHER_SWITCH){
