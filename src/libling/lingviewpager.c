@@ -160,7 +160,7 @@ gdouble ling_view_pager_progress(GtkWidget * widget,LingActionArgs args,gpointer
     return p;
 }
 
-ANI_DIR ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data){
+PLEN ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(widget);
     if(args.action == LING_ACTION_DRAG_LEFT&&self->page_now_pos==self->page_num||
         args.action == LING_ACTION_DRAG_RIGHT&&self->page_now_pos==1)return ANI_DIR_BACK;

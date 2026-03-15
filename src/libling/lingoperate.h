@@ -3,7 +3,7 @@
 
 #include <gtk/gtk.h>
 
-typedef struct LingOpControler{
+typedef struct LingOpControler {
     uint frames;
     GList * operates;
     uint timeout;
@@ -18,7 +18,7 @@ typedef enum {
 }LING_OPERATE_STATE;
 
 
-typedef enum{
+typedef enum {
     LING_OPERATE_EMIT_AT_START=0,
     LING_OPERATE_EMIT_AT_RELEASE,
     LING_OPERATE_EMIT_AT_FINISH,
@@ -33,18 +33,22 @@ typedef enum{
 #define    LING_OPERATE_BREAK_TO_ANIMATION     FALSE
 #define    LING_OPERATE_BREAK_TO_FINISH        TRUE
 
-typedef enum{
-    ANI_DIR_BACK = 0,
-    ANI_DIR_FORWARD,
-    ANI_DIR_NEAR,
-}ANI_DIR;
+// typedef enum {
+//     ANI_DIR_BACK = 0,
+//     ANI_DIR_FORWARD,
+//     ANI_DIR_NEAR,
+// }ANI_DIR;
+
+#define ANI_DIR_FORWARD  100
+#define ANI_DIR_BACK     0
+#define ANI_DIR_NEAR     1000000
 
 #define    LING_ACTION_FINISH_S                 FALSE
 #define    LING_ACTION_FINISH_E                 TRUE
 
 #define    LING_ANI_TIME
 
-typedef enum{
+typedef enum {
     LING_ACTION_CLICK=0,
     LING_ACTION_DRAG_UP,
     LING_ACTION_DRAG_DOWN,
@@ -103,13 +107,19 @@ typedef struct LingActionArgs{
     uint action;
 }LingActionArgs;
 
+//在区域的左右,左往右移,右往左移,在progress_end结束
+#define ALEFT  0
+#define ARIGHT 1
+
+#define PLEN gdouble
+
 typedef void (*BEGIN)(GtkWidget * widget,LingBeginArgs args,gpointer user_data);  //瞬发
 
 typedef void (*END)(GtkWidget * widget,LingEndArgs args,gpointer user_data);
 
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
-typedef ANI_DIR (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
+typedef PLEN (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
 
 typedef void (*ANIMATION)(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
@@ -148,13 +158,14 @@ typedef struct LingAction{
     gpointer animate_data;
 
     gdouble ani_progress; //进度
-    gdouble ani_progress_start;
+    //gdouble ani_progress_start;
+    gdouble ani_progress_lenth;
     gdouble ani_progress_end;
-    gdouble time;         //当前时间
     gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
-    ANI_DIR ani_dir;     //方向(正反)  //默认正，打断反
+    //ANI_DIR ani_dir;     //方向(正反)  //默认正，打断反
 
-    ANI_DIR nature_dir; //
+    gboolean dir;
+    //ANI_DIR nature_dir; //
 
     //曲线
 
@@ -206,6 +217,7 @@ typedef struct LingOperate{
     LingAction actions[LING_ACTION_NUM];    //LingAction
     uint action_now;
 
+    gdouble time;         //当前时间0-100
     //uint animation_timer_id;    //每个周期执行动画(以后用一个timer，串起所有的动画)
 
     //瞬发
@@ -262,9 +274,13 @@ void ling_operate_set_ani_progress_end(LingOperate * op,int action,gdouble progr
 
 gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 
-void ling_operate_set_ani_dir(LingOperate * op,int action,ANI_DIR ani_dir);
+void ling_operate_set_ani_progress_lenth(LingOperate * op,int action,double lenth);
 
-ANI_DIR ling_operate_get_ani_dir(LingOperate * op,int action);
+gdouble ling_operate_get_ani_progress_lenth(LingOperate * op,int action);
+
+//void ling_operate_set_ani_dir(LingOperate * op,int action,ANI_DIR ani_dir);
+
+//ANI_DIR ling_operate_get_ani_dir(LingOperate * op,int action);
 
 //GtkGesture * ling_operate_click_ignore(LingOperate * op,GtkWidget * widget);
 

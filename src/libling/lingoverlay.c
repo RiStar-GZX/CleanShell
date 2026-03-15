@@ -82,7 +82,7 @@ gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user
     return p;
 }
 
-ANI_DIR ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+PLEN ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     gdouble t=fabs(args.offset_y)+fabs(args.velocity_y);
     if(t<20){
         if(args.action==LING_ACTION_DRAG_DOWN)return ANI_DIR_FORWARD;

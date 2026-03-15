@@ -61,7 +61,7 @@ void ling_view_pager_finish_center(GtkWidget * widget,LingActionArgs args,gpoint
 
 gdouble ling_view_pager_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 
-ANI_DIR ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data);
+PLEN ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data);
 
 void ling_view_pager_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data);
 

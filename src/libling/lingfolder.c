@@ -34,7 +34,7 @@ static LingFolderItem * ling_folder_get_item(LingFolder * folder,GtkWidget * wid
     return NULL;
 }
 
-static ANI_DIR folder_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN folder_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     LingFolder * folder = LING_FOLDER(user_data);
     LingFolderItem *item = ling_folder_get_item(folder,widget);
     if(item==NULL)return ANI_DIR_BACK;
@@ -61,7 +61,7 @@ static void folder_open_finish(GtkWidget * widget,LingActionArgs args,gpointer u
     item->open_finish(folder,widget,folder->content,item->open_finish_data);
 }
 
-static ANI_DIR folder_close_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN folder_close_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ling_operate_set_ani_progress(args.op,args.action,0);
     return ANI_DIR_FORWARD;
 }

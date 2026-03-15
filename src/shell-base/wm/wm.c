@@ -62,7 +62,7 @@ struct _ClWm{
 
 G_DEFINE_FINAL_TYPE(ClWmWindow,cl_wm_window,GTK_TYPE_BOX);
 
-static ANI_DIR wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer user_data){
+static PLEN wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer user_data){
     ClWmWindow * window = CL_WM_WINDOW(user_data);
     window_args * wa=window->current_args;
     if(wa->close_start!=NULL){
@@ -330,7 +330,7 @@ void cl_wm_set_window_radis(ClWmWindow * window,uint px){
 //     gtk_widget_set_size_request(GTK_WIDGET(window),n_w,n_h);
 // }
 
-static ANI_DIR cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     window_args * arg = (window_args*)user_data;
     gdouble x,y;
     ClWmWindow * window=NULL;

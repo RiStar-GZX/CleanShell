@@ -1,6 +1,6 @@
 #include "lingoperate.h"
 
-#define DEFAULT_ANI_TIME 0.5
+#define DEFAULT_ANI_TIME 0.4
 #define LONG_PRESS_OFFSET 10
 
 static void operate_drag_begin(GtkGestureDrag* self,
@@ -231,47 +231,39 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         LingAction * act = l->data;
         LingOperate * op = act->op;
 
-        gdouble offset = bezier_curve(0,50,75,100,act->time/1000.0000f)/act->ani_time;
-        act->time+=1000/op->controler->frames;
-        //g_print("time:%f %f\n",act->time,offset);
-        //IPT FIX
-        ANI_DIR dir = act->ani_dir;
-        if(act->ani_dir == ANI_DIR_NEAR){
-            dir = act->nature_dir;
-        }
-        if(dir==ANI_DIR_FORWARD){
-            //act->ani_time*op->controler->frames;
-            //act->ani_progress = offset;
-            act->ani_progress+=1+0.03*fabs(act->ani_progress_end-act->ani_progress);//00/op->controler->frames;
-            if(act->ani_progress>=act->ani_progress_end){
-                act->ani_progress = act->ani_progress_end;
-                act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
-                op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
-                ling_operate_run_finish(op,LING_ACTION_FINISH_E);
-                //op->animation_timer_id=0;
-                return G_SOURCE_CONTINUE;
-            }
+        //op->time = bezier_curve(0,50,75,100,op->time/1000.0000f)/act->ani_time;
+
+        op->time+=100.0000f/op->controler->frames/act->ani_time;
+
+        gdouble offset;
+        gdouble right = act->ani_progress_end+act->ani_progress_lenth;
+        gdouble left = act->ani_progress_end-act->ani_progress_lenth;
+
+        if(act->dir == ALEFT){
+            offset = left*(1-op->time/100)+act->ani_progress_end*(op->time/100);
         }
         else{
-            //act->ani_progress = -offset;
-            act->ani_progress-=1+0.03*fabs(act->ani_progress_start-act->ani_progress);//00/op->controler->frames;
-            if(act->ani_progress<=act->ani_progress_start){
-                act->ani_progress = act->ani_progress_start;
-                act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
-                op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
-                ling_operate_run_finish(op,LING_ACTION_FINISH_S);
-                //op->animation_timer_id=0;
-                return G_SOURCE_CONTINUE;
-            }
+            offset = right*(1-op->time/100)+act->ani_progress_end*(op->time/100);
         }
+
+        g_print("time:%f %f %f %f\n",op->time,offset,act->ani_progress,act->ani_progress_lenth);
+
+        act->ani_progress = offset;
+        if(op->time>=100){
+            act->ani_progress = act->ani_progress_end;
+            act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
+            op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
+            if(act->dir==ALEFT){
+                ling_operate_run_finish(op,LING_ACTION_FINISH_E);
+            }
+            else{
+                ling_operate_run_finish(op,LING_ACTION_FINISH_S);
+            }
+            return G_SOURCE_CONTINUE;
+        }
+
         act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
 
-        // if(op->action_now==LING_ACTION_ALL)g_print("progress:%f\n",act->ani_progress);
-        // if(op->animation(op->velocity_x,op->velocity_y,0,op->animation_data)==LING_OPERATE_ANIMATION_REMOVE){
-        //     ling_operate_run_finish(op);
-        //     op->animation_timer_id=0;
-        //     return G_SOURCE_REMOVE;
-        // }
     }
     return G_SOURCE_CONTINUE;
 }
@@ -280,7 +272,10 @@ void ling_operate_run_animation(LingOperate * op){
     if(op==NULL||op->state!=LING_OPERATE_STATE_OPERATING)return;
     op->state = LING_OPERATE_STATE_ANIMATION;
     LingAction * act = &op->actions[op->action_now];
-    if(act->release!=NULL)act->ani_dir = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
+    if(act->release!=NULL){
+        double progress_end = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
+        if(progress_end!=ANI_DIR_NEAR)act->ani_progress_end = progress_end;
+    }
     //else act->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
     //连带触发
     if(act->emit[LING_OPERATE_EMIT_AT_RELEASE]!=NULL){
@@ -292,21 +287,22 @@ void ling_operate_run_animation(LingOperate * op){
     //去除长按标识
     op->longpress_status = FALSE;
 
-    if(act->ani_dir==ANI_DIR_NEAR){
-        act->ani_progress_start = act->ani_progress_end;
-        if(act->ani_progress<=act->ani_progress_end){
-            act->nature_dir = ANI_DIR_FORWARD;
-        }
-        else{
-            act->nature_dir = ANI_DIR_BACK;
-        }
+    gdouble right = act->ani_progress_end+act->ani_progress_lenth;
+    gdouble left = act->ani_progress_end-act->ani_progress_lenth;
+    if(act->ani_progress>=act->ani_progress_end&&act->ani_progress<=right){
+        act->dir = ARIGHT;
     }
+    else if(act->ani_progress>=left&&act->ani_progress<=act->ani_progress_end){
+        act->dir = ALEFT;
+    }
+    op->time = (1-fabs((act->ani_progress-act->ani_progress_end)/act->ani_progress_lenth))*100;
+    g_print("time:%f\n",op->time);
 
     if(act->animation==NULL){
-        if(act->ani_dir==ANI_DIR_FORWARD){
+        if(act->dir==ANI_DIR_FORWARD){
             ling_operate_run_finish(op,LING_ACTION_FINISH_E);
         }
-        else if(act->ani_dir==ANI_DIR_BACK){
+        else if(act->dir==ANI_DIR_BACK){
             ling_operate_run_finish(op,LING_ACTION_FINISH_S);
         }
         else{
@@ -321,19 +317,6 @@ void ling_operate_run_animation(LingOperate * op){
     }
     //act->time=bezier_inverse(0,25,75,100,act->ani_progress);
 
-    ANI_DIR dir = act->ani_dir;
-    if(act->ani_dir == ANI_DIR_NEAR){
-        dir = act->nature_dir;
-    }
-    if(dir==ANI_DIR_FORWARD&&act->ani_progress>=act->ani_progress_end){
-        ling_operate_run_finish(op,LING_ACTION_FINISH_E);
-        return;
-    }
-    else if(dir==ANI_DIR_BACK&&act->ani_progress<=act->ani_progress_start){
-        ling_operate_run_finish(op,LING_ACTION_FINISH_S);
-        return;
-    }
-    act->time=0;
     act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
     op->controler->actions_list = g_list_append(op->controler->actions_list,act);
 }
@@ -417,12 +400,12 @@ gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action){
     return op->actions[action].ani_progress_end;
 }
 
-void ling_operate_set_ani_dir(LingOperate * op,int action,ANI_DIR ani_dir){
-    op->actions[action].ani_dir = ani_dir;
+void ling_operate_set_ani_progress_lenth(LingOperate * op,int action,double lenth){
+    op->actions[action].ani_progress_lenth = lenth;
 }
 
-ANI_DIR ling_operate_get_ani_dir(LingOperate * op,int action){
-    return op->actions[action].ani_dir;
+gdouble ling_operate_get_ani_progress_lenth(LingOperate * op,int action){
+    return op->actions[action].ani_progress_lenth;
 }
 
 /***************************拖拽点击*****************************************************************************/
@@ -648,7 +631,7 @@ void ling_operate_add_action(LingOperate * op,uint type,
     act->finish_s = finish_s;
     act->finish_data = finish_data;
     act->ani_progress_end = 100;
-    act->ani_progress_start = 0;
+    act->ani_progress_lenth = 100;
     act->ani_time = DEFAULT_ANI_TIME;
 
     if(op->drag==NULL){
@@ -828,7 +811,7 @@ void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gb
         else op->actions[op->action_now].ani_progress = 100;
         op->force_run=TRUE;
         ling_operate_start_operating(op);
-        op->actions[op->action_now].ani_dir = S_E;
+        //op->actions[op->action_now].ani_dir = S_E;
         if(ani)ling_operate_run_animation(op);
         else ling_operate_run_finish(op,S_E);
     }
@@ -866,7 +849,7 @@ LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * 
     act->release = release;
     act->release_data = release_data;
     act->ani_progress_end = 100;
-    act->ani_progress_start = 0;
+    act->ani_progress_lenth = 100;
     act->ani_time = DEFAULT_ANI_TIME;
     return op;
 }

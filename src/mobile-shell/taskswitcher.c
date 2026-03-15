@@ -134,7 +134,7 @@ static void clm_task_switcher_class_init(ClmTaskSwitcherClass * klass){
 
 /*----------------------------------------------------------------------------------------------------*/
 
-static ANI_DIR task_return_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN task_return_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     ClWmWindow * win = cl_wm_get_current_window(ts->wm);
     cl_wm_window_get_info(win,&ts->info.start_x,&ts->info.start_y,&ts->info.start_w,&ts->info.start_h);
@@ -170,7 +170,7 @@ static void task_return_finish(GtkWidget * widget,LingActionArgs args,gpointer u
 }
 /*----------------------------------------------------------------------------------------------------*/
 
-static ANI_DIR task_pos_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN task_pos_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     ClWmWindow * win = cl_wm_get_current_window(ts->wm);
     cl_wm_window_get_info(win,&ts->info.start_x,&ts->info.start_y,&ts->info.start_w,&ts->info.start_h);
@@ -276,7 +276,7 @@ static gdouble task_bar_progress(GtkWidget * widget,LingActionArgs args,gpointer
     return 100;
 }
 
-static ANI_DIR task_bar_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN task_bar_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     ts->fs = 0;
     if(fabs(args.offset_y)>100)task_switcher_set_detail_visible(ts,FALSE);
@@ -286,7 +286,7 @@ static ANI_DIR task_bar_release(GtkWidget * widget,LingActionArgs args,gpointer 
 static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     //触发返回信号
-    g_signal_emit_by_name(ts,"back",args.offset_x,args.offset_y,args.velocity_x,args.velocity_y);
+    //g_signal_emit_by_name(ts,"back",args.offset_x,args.offset_y,args.velocity_x,args.velocity_y);
 
     //位于桌面,将最近一次打开的窗口设为当前窗口
     gboolean wm_visible = gtk_widget_get_visible(shell->wm);
@@ -381,15 +381,15 @@ static gdouble wm_switch_progress(GtkWidget * widget,LingActionArgs args,gpointe
     return args.offset_x;
 }
 
-static ANI_DIR wm_switch_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN wm_switch_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
-    if(ts->mode!=TASK_SWITCHER_SWITCH)return ANI_DIR_NEAR;
+    if(ts->mode!=TASK_SWITCHER_SWITCH)return 0;
 
     gdouble target_x = args.offset_x;
     if(args.offset_x*args.velocity_x>=0)target_x =args.offset_x+args.velocity_x/3;
     gdouble end_x=wm_task_move(ts->wm,target_x,&ts->info.pos_offset);
-    ling_operate_set_ani_progress_end(args.op,LING_ACTION_DRAG_HORIZONTAL,end_x);
-    return ANI_DIR_NEAR;
+    //ling_operate_set_ani_progress_end(args.op,LING_ACTION_DRAG_HORIZONTAL,end_x);
+    return end_x;
 }
 
 static void wm_switch_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -458,15 +458,14 @@ static gdouble task_remove_progress(GtkWidget * widget,LingActionArgs args,gpoin
     ts->focus_window = cl_wm_get_focus_window(ts->wm);
     if(args.offset_y<-task_target_h/4){
         ling_operate_set_ani_progress_end(args.op,args.action,-h+(h-task_target_h)/2);
+        ling_operate_set_ani_progress_lenth(args.op,args.action,-h+(h-task_target_h)/2);
     }
     else{
         ling_operate_set_ani_progress_end(args.op,args.action,0);
+        ling_operate_set_ani_progress_lenth(args.op,args.action,task_target_h/4);
     }
-    return args.offset_y;
-}
 
-static ANI_DIR task_remove_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    return ANI_DIR_NEAR;
+    return args.offset_y;
 }
 
 static void task_remove_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -590,9 +589,9 @@ static gdouble task_fill_progress(GtkWidget * widget,LingActionArgs args,gpointe
     return args.offset_y;
 }
 
-static ANI_DIR task_fill_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
-    return ANI_DIR_NEAR;
-}
+// static PLEN task_fill_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+//     return ANI_DIR_NEAR;
+// }
 
 static void task_fill_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
@@ -631,7 +630,7 @@ static void task_fill_finish_s(GtkWidget * widget,LingActionArgs args,gpointer u
 }
 
 //单击
-static ANI_DIR task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
+static PLEN task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
 
     //由于已经松开鼠标所以读取上一次记录的focus_window
@@ -761,12 +760,14 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
 
     ling_operate_add_action(wmop,LING_ACTION_DRAG_UP,task_remove_progress,self,
                             task_remove_ani,self,
-                            task_remove_release,self,
+                            //task_remove_release,self,
+                            NULL,NULL,
                             task_remove_finish,task_remove_finish,self);
 
     ling_operate_add_action(wmop,LING_ACTION_DRAG_DOWN,task_fill_progress,self,
                             task_fill_ani,self,
-                            task_fill_release,self,
+                            //task_fill_release,self,
+                            NULL,NULL,
                             task_fill_finish_s,task_fill_finish_e,self);
 
     ling_operate_add_action(wmop,LING_ACTION_CLICK,NULL,NULL,
