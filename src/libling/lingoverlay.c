@@ -85,12 +85,12 @@ gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user
 PLEN ling_layer_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     gdouble t=fabs(args.offset_y)+fabs(args.velocity_y);
     if(t<20){
-        if(args.action==LING_ACTION_DRAG_DOWN)return ANI_DIR_FORWARD;
-        else return ANI_DIR_BACK;
+        if(args.action==LING_ACTION_DRAG_DOWN)return ANI_END_FORWARD;
+        else return ANI_END_BACK;
     }
     else{
-        if(args.action==LING_ACTION_DRAG_DOWN)return ANI_DIR_BACK;
-        else return ANI_DIR_FORWARD;
+        if(args.action==LING_ACTION_DRAG_DOWN)return ANI_END_BACK;
+        else return ANI_END_FORWARD;
     }
 }
 

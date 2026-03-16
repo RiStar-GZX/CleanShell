@@ -178,50 +178,56 @@ double bezier_curve(double p0, double p1, double p2, double p3, double t) {
 }
 
 // 计算贝塞尔曲线的一阶导数(速度)
-double bezier_derivative(double p0, double p1, double p2, double p3, double t) {
-    if (t < 0.0) t = 0.0;
-    if (t > 1.0) t = 1.0;
+// double bezier_derivative(double p0, double p1, double p2, double p3, double t) {
+//     if (t < 0.0) t = 0.0;
+//     if (t > 1.0) t = 1.0;
 
-    double one_minus_t = 1.0 - t;
-    return 3.0 * one_minus_t * one_minus_t * (p1 - p0) +
-           6.0 * one_minus_t * t * (p2 - p1) +
-           3.0 * t * t * (p3 - p2);
-}
+//     double one_minus_t = 1.0 - t;
+//     return 3.0 * one_minus_t * one_minus_t * (p1 - p0) +
+//            6.0 * one_minus_t * t * (p2 - p1) +
+//            3.0 * t * t * (p3 - p2);
+// }
 
-// 使用牛顿迭代法求解贝塞尔曲线反向映射
-double bezier_inverse(double p0, double p1, double p2, double p3, double target_y) {
-    // 归一化目标值到0-1区间
-    double normalized_target = target_y / 100.0;
+// // 使用牛顿迭代法求解贝塞尔曲线反向映射
+// double bezier_inverse(double p0, double p1, double p2, double p3, double target_y) {
+//     // 归一化目标值到0-1区间
+//     double normalized_target = target_y / 100.0;
 
-    // 边界检查
-    if (normalized_target <= p0) return 0.0;
-    if (normalized_target >= p3) return 1.0;
+//     // 边界检查
+//     if (normalized_target <= p0) return 0.0;
+//     if (normalized_target >= p3) return 1.0;
 
-    // 初始猜测值
-    double t = normalized_target; // 使用线性插值作为初始值
+//     // 初始猜测值
+//     double t = normalized_target; // 使用线性插值作为初始值
 
-    // 牛顿迭代法求解
-    for (int i = 0; i < 10; i++) { // 最多迭代10次
-        double curve_value = bezier_curve(p0, p1, p2, p3, t);
-        double derivative = bezier_derivative(p0, p1, p2, p3, t);
+//     // 牛顿迭代法求解
+//     for (int i = 0; i < 10; i++) { // 最多迭代10次
+//         double curve_value = bezier_curve(p0, p1, p2, p3, t);
+//         double derivative = bezier_derivative(p0, p1, p2, p3, t);
 
-        // 防止除零错误
-        if (fabs(derivative) < 1e-10) break;
+//         // 防止除零错误
+//         if (fabs(derivative) < 1e-10) break;
 
-        // 牛顿迭代公式
-        double delta = (curve_value - normalized_target) / derivative;
-        t -= delta;
+//         // 牛顿迭代公式
+//         double delta = (curve_value - normalized_target) / derivative;
+//         t -= delta;
 
-        // 边界检查
-        if (t < 0.0) t = 0.0;
-        if (t > 1.0) t = 1.0;
+//         // 边界检查
+//         if (t < 0.0) t = 0.0;
+//         if (t > 1.0) t = 1.0;
 
-        // 收敛检查
-        if (fabs(delta) < 1e-6) break;
-    }
+//         // 收敛检查
+//         if (fabs(delta) < 1e-6) break;
+//     }
 
-    return t;
-}
+//     return t;
+// }
+
+// double bezier_curve(double p0, double p1, double p2, double p3, double x/*x范围从0到1*/){
+//     /* 补全代码 */
+//     double y = (1-x)*(1-x)*(1-x)*p0 + 3*(1-x)*(1-x)*x*p1 + 3*(1-x)*x*x*p2 + x*x*x*p3;
+//     return y;/*(从0到1)*/
+// }
 
 gboolean ling_operate_controler_timeout(gpointer user_data){
     LingOpControler * controler = (LingOpControler*)user_data;
@@ -231,22 +237,32 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         LingAction * act = l->data;
         LingOperate * op = act->op;
 
-        //op->time = bezier_curve(0,50,75,100,op->time/1000.0000f)/act->ani_time;
+        op->time+=100.00f/op->controler->frames/act->ani_time;
+        gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
+        //g_print("Y:%f\n",y);
 
-        op->time+=100.0000f/op->controler->frames/act->ani_time;
+
+        //op->time = bezier_curve(0,50,75,100,op->time/1000.0000f)/act->ani_time;
+        // if(act->ani_progress_lenth<=0){
+        //     op->time+=100.00f/op->controler->frames/act->ani_time;
+        // }
+        // else{
+        //     op->time+=act->ani_progress_lenth/op->controler->frames/act->ani_time;
+        // }
+
 
         gdouble offset;
         gdouble right = act->ani_progress_end+act->ani_progress_lenth;
         gdouble left = act->ani_progress_end-act->ani_progress_lenth;
 
         if(act->dir == ALEFT){
-            offset = left*(1-op->time/100)+act->ani_progress_end*(op->time/100);
+            offset = left*(1-y/100)+act->ani_progress_end*(y/100);
         }
         else{
-            offset = right*(1-op->time/100)+act->ani_progress_end*(op->time/100);
+            offset = right*(1-y/100)+act->ani_progress_end*(y/100);
         }
 
-        g_print("time:%f %f %f %f\n",op->time,offset,act->ani_progress,act->ani_progress_lenth);
+        //g_print("time:%f %f %f %f\n",op->time,offset,act->ani_progress,act->ani_progress_lenth);
 
         act->ani_progress = offset;
         if(op->time>=100){
@@ -274,7 +290,7 @@ void ling_operate_run_animation(LingOperate * op){
     LingAction * act = &op->actions[op->action_now];
     if(act->release!=NULL){
         double progress_end = act->release(op->widget,operate_action_args(op,op->action_now),act->release_data);
-        if(progress_end!=ANI_DIR_NEAR)act->ani_progress_end = progress_end;
+        if(progress_end!=ANI_END_NOT_CHANGE)act->ani_progress_end = progress_end;
     }
     //else act->ani_dir = LING_OPERATE_ANIMATION_DIR_FORWARD;
     //连带触发
@@ -296,13 +312,13 @@ void ling_operate_run_animation(LingOperate * op){
         act->dir = ALEFT;
     }
     op->time = (1-fabs((act->ani_progress-act->ani_progress_end)/act->ani_progress_lenth))*100;
-    g_print("time:%f\n",op->time);
+    //g_print("time:%f\n",op->time);
 
     if(act->animation==NULL){
-        if(act->dir==ANI_DIR_FORWARD){
+        if(act->dir==ANI_END_FORWARD){
             ling_operate_run_finish(op,LING_ACTION_FINISH_E);
         }
-        else if(act->dir==ANI_DIR_BACK){
+        else if(act->dir==ANI_END_BACK){
             ling_operate_run_finish(op,LING_ACTION_FINISH_S);
         }
         else{
@@ -315,7 +331,6 @@ void ling_operate_run_animation(LingOperate * op){
         }
         return;
     }
-    //act->time=bezier_inverse(0,25,75,100,act->ani_progress);
 
     act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
     op->controler->actions_list = g_list_append(op->controler->actions_list,act);
@@ -406,6 +421,14 @@ void ling_operate_set_ani_progress_lenth(LingOperate * op,int action,double lent
 
 gdouble ling_operate_get_ani_progress_lenth(LingOperate * op,int action){
     return op->actions[action].ani_progress_lenth;
+}
+
+void ling_operate_set_ani_time(LingOperate * op,LING_ACTION action,gdouble time){
+    op->actions[action].ani_time = time;
+}
+
+gdouble ling_opertae_get_ani_time(LingOperate * op,LING_ACTION action){
+    return op->actions[action].ani_time;
 }
 
 /***************************拖拽点击*****************************************************************************/
@@ -807,8 +830,15 @@ void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gb
     if(op->state==LING_OPERATE_STATE_WAITTING){
         op->action_now = action;
         op->emit_data = emit_data;
-        if(S_E==LING_ACTION_FINISH_E)op->actions[op->action_now].ani_progress = 0;
-        else op->actions[op->action_now].ani_progress = 100;
+        LingAction * act = &op->actions[op->action_now];
+        if(S_E==LING_ACTION_FINISH_E){
+            act->ani_progress = 0;
+            act->ani_progress_end = 100;
+        }
+        else{
+            op->actions[op->action_now].ani_progress = 100;
+            act->ani_progress_end = 0;
+        }
         op->force_run=TRUE;
         ling_operate_start_operating(op);
         //op->actions[op->action_now].ani_dir = S_E;

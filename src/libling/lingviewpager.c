@@ -163,10 +163,10 @@ gdouble ling_view_pager_progress(GtkWidget * widget,LingActionArgs args,gpointer
 PLEN ling_view_pager_release(GtkWidget * widget,LingActionArgs args,gpointer data){
     LingViewPager * self = LING_VIEW_PAGER(widget);
     if(args.action == LING_ACTION_DRAG_LEFT&&self->page_now_pos==self->page_num||
-        args.action == LING_ACTION_DRAG_RIGHT&&self->page_now_pos==1)return ANI_DIR_BACK;
+        args.action == LING_ACTION_DRAG_RIGHT&&self->page_now_pos==1)return ANI_END_BACK;
     gdouble t=args.progress+fabs(args.offset_x)*0.5;
-    if(t>20)return ANI_DIR_FORWARD;
-    else return ANI_DIR_BACK;
+    if(t>20)return ANI_END_FORWARD;
+    else return ANI_END_BACK;
 }
 
 void ling_view_pager_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){

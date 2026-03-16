@@ -68,7 +68,7 @@ static PLEN wm_close_start(GtkWidget * widget,LingActionArgs action,gpointer use
     if(wa->close_start!=NULL){
         wa->close_start(wa->widget,wa->window,action,wa->close_start_data);
     }
-    return ANI_DIR_FORWARD;
+    return ANI_END_FORWARD;
 }
 
 static void wm_close_animate(GtkWidget * widget,LingActionArgs action,gpointer user_data){
@@ -335,7 +335,7 @@ static PLEN cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer use
     gdouble x,y;
     ClWmWindow * window=NULL;
     if(arg->open_start!=NULL)window = arg->open_start(widget,&x,&y,arg->open_start_data);
-    if(window==NULL)return ANI_DIR_BACK;
+    if(window==NULL)return ANI_END_BACK;
 
     arg->window = window;
     arg->window->wm->current_win = arg->window;
@@ -345,7 +345,7 @@ static PLEN cl_wm_open_start(GtkWidget * widget,LingActionArgs args,gpointer use
     arg->window->wm->windows = g_list_append(arg->window->wm->windows,arg->window);
 
     cl_wm_set_window_showable(arg->window,TRUE);
-    return ANI_DIR_FORWARD;
+    return ANI_END_FORWARD;
 }
 
 static void cl_wm_open_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){

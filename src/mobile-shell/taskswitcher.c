@@ -140,14 +140,14 @@ static PLEN task_return_release(GtkWidget * widget,LingActionArgs args,gpointer 
     cl_wm_window_get_info(win,&ts->info.start_x,&ts->info.start_y,&ts->info.start_w,&ts->info.start_h);
 
     GList *l,*lcrt = cl_wm_get_window_list(ts->wm);
-    if(lcrt==NULL)return ANI_DIR_BACK;
+    if(lcrt==NULL)return ANI_END_BACK;
 
     int i;
     for(i=-1,l=lcrt;l!=NULL;l=l->next,i--);
     ts->info.target_x = i*(ts->info.start_w+target_space);
 
     task_switcher_set_detail_visible(ts,FALSE);
-    return ANI_DIR_FORWARD;
+    return ANI_END_FORWARD;
 }
 
 static void task_return_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -183,7 +183,7 @@ static PLEN task_pos_release(GtkWidget * widget,LingActionArgs args,gpointer use
     ts->info.target_x = (w-task_target_w)/2;
     ts->info.target_y = (h-task_target_h)/2;
 
-    return ANI_DIR_FORWARD;
+    return ANI_END_FORWARD;
 }
 
 static void task_pos_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -280,13 +280,13 @@ static PLEN task_bar_release(GtkWidget * widget,LingActionArgs args,gpointer use
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     ts->fs = 0;
     if(fabs(args.offset_y)>100)task_switcher_set_detail_visible(ts,FALSE);
-    return ANI_DIR_FORWARD;
+    return ANI_END_FORWARD;
 }
 
 static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     //触发返回信号
-    //g_signal_emit_by_name(ts,"back",args.offset_x,args.offset_y,args.velocity_x,args.velocity_y);
+    g_signal_emit_by_name(ts,"back",args.offset_x,args.offset_y,args.velocity_x,args.velocity_y);
 
     //位于桌面,将最近一次打开的窗口设为当前窗口
     gboolean wm_visible = gtk_widget_get_visible(shell->wm);
@@ -458,7 +458,7 @@ static gdouble task_remove_progress(GtkWidget * widget,LingActionArgs args,gpoin
     ts->focus_window = cl_wm_get_focus_window(ts->wm);
     if(args.offset_y<-task_target_h/4){
         ling_operate_set_ani_progress_end(args.op,args.action,-h+(h-task_target_h)/2);
-        ling_operate_set_ani_progress_lenth(args.op,args.action,-h+(h-task_target_h)/2);
+        ling_operate_set_ani_progress_lenth(args.op,args.action,h+(task_target_h-h)/2);
     }
     else{
         ling_operate_set_ani_progress_end(args.op,args.action,0);
@@ -641,7 +641,7 @@ static PLEN task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpoin
         if(ts->mode==TASK_SWITCHER_SWITCH){
             ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_RETURN),LING_ACTION_ANIMATE,NULL,TRUE);
         }
-        return ANI_DIR_BACK;
+        return ANI_END_BACK;
     }
     cl_wm_window_get_info(ts->focus_window,&ts->info.start_x,&ts->info.start_y,
                           &ts->info.start_w,&ts->info.start_h);
@@ -650,7 +650,7 @@ static PLEN task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpoin
     //ling_operate_set_ani_progress_end(args.op,args.action,(h-task_target_h)/2);
     task_switcher_set_detail_visible(ts,FALSE);
     cl_wm_set_current_window(ts->wm,ts->focus_window);
-    return ANI_DIR_NEAR;
+    return ANI_END_NOT_CHANGE;
 }
 
 static void task_fill_ani_click(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -763,6 +763,8 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
                             //task_remove_release,self,
                             NULL,NULL,
                             task_remove_finish,task_remove_finish,self);
+    ling_operate_set_ani_time(wmop,LING_ACTION_DRAG_UP,0.1);
+
 
     ling_operate_add_action(wmop,LING_ACTION_DRAG_DOWN,task_fill_progress,self,
                             task_fill_ani,self,

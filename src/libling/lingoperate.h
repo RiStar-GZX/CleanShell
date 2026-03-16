@@ -39,9 +39,9 @@ typedef enum {
 //     ANI_DIR_NEAR,
 // }ANI_DIR;
 
-#define ANI_DIR_FORWARD  100
-#define ANI_DIR_BACK     0
-#define ANI_DIR_NEAR     1000000
+#define ANI_END_FORWARD  100
+#define ANI_END_BACK     0
+#define ANI_END_NOT_CHANGE     1000000
 
 #define    LING_ACTION_FINISH_S                 FALSE
 #define    LING_ACTION_FINISH_E                 TRUE
@@ -277,6 +277,10 @@ gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 void ling_operate_set_ani_progress_lenth(LingOperate * op,int action,double lenth);
 
 gdouble ling_operate_get_ani_progress_lenth(LingOperate * op,int action);
+
+void ling_operate_set_ani_time(LingOperate * op,LING_ACTION action,gdouble time);
+
+gdouble ling_opertae_get_ani_time(LingOperate * op,LING_ACTION action);
 
 //void ling_operate_set_ani_dir(LingOperate * op,int action,ANI_DIR ani_dir);
 
