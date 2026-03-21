@@ -5,6 +5,7 @@
 #include <lockscreen.h>
 
 #include <gtk/gtk.h>
+#include <store/store.h>
 
 GdkFrameClock * my_clock;
 
@@ -23,6 +24,8 @@ static void before_paint (GdkFrameClock* self,gpointer user_data){
     ling_operate_controler_timeout(shell->controler);
 }
 
+//#define SHELL_MODE
+
 static void app_activate (GApplication *app) {
     // 应用CSS样式
     GtkCssProvider * provider = gtk_css_provider_new();
@@ -36,18 +39,25 @@ static void app_activate (GApplication *app) {
     g_object_set(settings, "gtk-dnd-drag-threshold", 1, NULL);
 
     GtkWidget * window=gtk_window_new();
-    //GtkWidget * appview = ling_desktop_new();
-    //GtkWidget * appview = ling_lock_screen_new();
+#ifdef SHELL_MODE
     GtkWidget * appview = clm_shell_start();
-    gtk_window_set_child(GTK_WINDOW(window),appview);
-    gtk_window_set_application(GTK_WINDOW(window),GTK_APPLICATION(app));
     gtk_window_set_default_size(GTK_WINDOW(window),500,1000);
     gtk_window_set_resizable(GTK_WINDOW(window),0);
+#else
+    clm_shell_start();
+    GtkWidget * appview = ling_store_new();
+    gtk_window_set_default_size(GTK_WINDOW(window),1000,500);
+    gtk_window_set_resizable(GTK_WINDOW(window),0);
+#endif
+
+
+    gtk_window_set_child(GTK_WINDOW(window),appview);
+    gtk_window_set_application(GTK_WINDOW(window),GTK_APPLICATION(app));
     gtk_window_present(GTK_WINDOW(window));
 
-    my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
-    g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
-    g_timeout_add(500,fps_timeout,appview);
+    // my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
+    // g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
+    // g_timeout_add(500,fps_timeout,appview);
 }
 
 static void app_open (GApplication *app, GFile ** files, gint n_files, gchar *hint) {

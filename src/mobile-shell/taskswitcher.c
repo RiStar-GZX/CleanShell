@@ -232,7 +232,7 @@ static gdouble task_bar_progress(GtkWidget * widget,LingActionArgs args,gpointer
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     if(args.offset_y>0)args.offset_y=0;
 
-    if(cl_wm_get_current_window(ts->wm)==NULL)return 100;
+    if(cl_wm_get_current_window(ts->wm)==NULL)return 0;
     uint w=gtk_widget_get_width(shell->desktop);
     uint h=gtk_widget_get_height(shell->desktop);
     gdouble aspect=(gdouble)w/(gdouble)h;
@@ -253,7 +253,7 @@ static gdouble task_bar_progress(GtkWidget * widget,LingActionArgs args,gpointer
         new_x = (w-new_w)/2+args.offset_x;
         if(args.offset_y<0)new_y = -args.offset_y/2;
         // if(fabs(args.offset_y)<100){
-        //     return 100;
+        //     return 0;
         // }
         // else{
             //if(ts->fs==0)ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_FULL_SHOW),LING_ACTION_ANIMATE,NULL,TRUE);
@@ -273,7 +273,7 @@ static gdouble task_bar_progress(GtkWidget * widget,LingActionArgs args,gpointer
         ClWmWindow * win = cl_wm_get_current_window(ts->wm);
         clm_task_switcher_show(ts->wm,new_x,new_y,new_w,new_h,target_space);
     }
-    return 100;
+    return 0;
 }
 
 static PLEN task_bar_release(GtkWidget * widget,LingActionArgs args,gpointer user_data){

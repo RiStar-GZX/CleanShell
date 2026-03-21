@@ -65,6 +65,14 @@ int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level){
     return 1;
 }
 
+void ling_overlay_remove_layer(LingOverlay * self,GtkWidget * widget){
+    for(GList * l = self->layers;l!=NULL;l=l->next){
+        LingLayer * layer = (LingLayer*)l->data;
+        if(layer->widget != widget)continue;
+        gtk_overlay_remove_overlay(GTK_OVERLAY(self->overlay),widget);
+        self->layers = g_list_remove(self->layers,l->data);
+    }
+}
 
 gdouble ling_layer_progress(GtkWidget * widget,LingActionArgs args,gpointer user_data){
     //y正方向起点为100，终点为0

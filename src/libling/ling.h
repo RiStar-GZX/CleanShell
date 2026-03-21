@@ -19,6 +19,8 @@
 #include <lingdragface.h>
 #include <linggradient.h>
 
+#include <lingwindow.h>
+
 typedef struct{
     //网格信息
     int column;

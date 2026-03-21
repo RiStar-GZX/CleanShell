@@ -154,5 +154,5 @@ void ling_folder_operate(LingOperate * op,LingFolder * self,uint action_type,
 void ling_folder_close(LingFolder * folder,gboolean ani){
     if(folder==NULL)return;
     //ling_operate_emit(folder->close_op,LING_ACTION_INSTANT,NULL);
-    ling_operate_emit(folder->close_op,LING_ACTION_INSTANT,NULL,ani,LING_ACTION_FINISH_E);
+    ling_operate_emit(folder->close_op,LING_ACTION_INSTANT,NULL,ani,FINISH_DIR_END);
 }

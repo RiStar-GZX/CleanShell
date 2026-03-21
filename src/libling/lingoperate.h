@@ -33,18 +33,9 @@ typedef enum {
 #define    LING_OPERATE_BREAK_TO_ANIMATION     FALSE
 #define    LING_OPERATE_BREAK_TO_FINISH        TRUE
 
-// typedef enum {
-//     ANI_DIR_BACK = 0,
-//     ANI_DIR_FORWARD,
-//     ANI_DIR_NEAR,
-// }ANI_DIR;
-
 #define ANI_END_FORWARD  100
 #define ANI_END_BACK     0
 #define ANI_END_NOT_CHANGE     1000000
-
-#define    LING_ACTION_FINISH_S                 FALSE
-#define    LING_ACTION_FINISH_E                 TRUE
 
 #define    LING_ANI_TIME
 
@@ -107,9 +98,16 @@ typedef struct LingActionArgs{
     uint action;
 }LingActionArgs;
 
-//在区域的左右,左往右移,右往左移,在progress_end结束
-#define ALEFT  0
-#define ARIGHT 1
+typedef enum{
+    FINISH_DIR_START = 0,
+    FINISH_DIR_END = 1,
+}FINISH_DIR;
+
+typedef enum{
+    EMIT_FINISH_DIR_START = FINISH_DIR_START,
+    EMIT_FINISH_DIR_END = FINISH_DIR_END,
+    EMIT_FINISH_DIR_REVERSE,
+}EMIT_FINISH_DIR;
 
 #define PLEN gdouble
 
@@ -117,6 +115,8 @@ typedef void (*BEGIN)(GtkWidget * widget,LingBeginArgs args,gpointer user_data);
 
 typedef void (*END)(GtkWidget * widget,LingEndArgs args,gpointer user_data);
 
+
+/*drag*/
 typedef gdouble (*PROGRESS)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //返回
 
 typedef PLEN (*RELEASE)(GtkWidget * widget,LingActionArgs args,gpointer user_data);  //pos
@@ -158,18 +158,22 @@ typedef struct LingAction{
     gpointer animate_data;
 
     gdouble ani_progress; //进度
-    //gdouble ani_progress_start;
+    gdouble ani_progress_start; //记录第一次触发progress的位置
+    gboolean ani_start;         //是否已经记录ani_progress_start
+
     gdouble ani_progress_lenth;
     gdouble ani_progress_end;
     gdouble ani_time;     //进度从0到ani_progress_end所需要的时间
     //ANI_DIR ani_dir;     //方向(正反)  //默认正，打断反
 
-    gboolean dir;
+    FINISH_DIR dir; //将往何去,终停于何处
+    //gboolean dir;
     //ANI_DIR nature_dir; //
 
     //曲线
 
     //完成
+    //FINISH_DIR finish_pos;
     FINISH finish_s;
     FINISH finish_e;
     gpointer finish_data;
@@ -254,7 +258,7 @@ void ling_operate_set_able(LingOperate * op,gboolean able);
 
 void ling_operate_remove(LingOperate * op);
 
-void ling_operate_run_finish(LingOperate * op,gboolean s_e);
+void ling_operate_run_finish(LingOperate * op,FINISH_DIR dir);
 
 void ling_operate_run_animation(LingOperate * op);
 
@@ -277,6 +281,10 @@ gdouble ling_operate_get_ani_progress_end(LingOperate * op,int action);
 void ling_operate_set_ani_progress_lenth(LingOperate * op,int action,double lenth);
 
 gdouble ling_operate_get_ani_progress_lenth(LingOperate * op,int action);
+
+gdouble ling_operate_get_dir(LingOperate * op,int action);
+
+void ling_operate_set_dir(LingOperate * op,int action,FINISH_DIR dir);
 
 void ling_operate_set_ani_time(LingOperate * op,LING_ACTION action,gdouble time);
 
@@ -308,9 +316,9 @@ void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的
 
 void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
 
-void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani,gboolean S_E);
+void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani,EMIT_FINISH_DIR dir);
 
-void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,gboolean S_E,gpointer emit_data);
+void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,EMIT_FINISH_DIR dir,gpointer emit_data);
 
 LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,
                                       RELEASE release,gpointer release_data,ANIMATION ani,gpointer ani_data,
@@ -320,6 +328,6 @@ void ling_operate_add_begin(LingOperate * op,BEGIN begin,gpointer begin_data);
 
 void ling_operate_add_end(LingOperate * op,END end,gpointer end_data);
 
-
 gboolean ling_operate_controler_timeout(gpointer user_data);//暂时先这么写
+
 #endif // LINGOPERATE_H

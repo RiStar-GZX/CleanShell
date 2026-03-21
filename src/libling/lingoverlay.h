@@ -42,6 +42,8 @@ GtkWidget * ling_overlay_new();
 
 int ling_overlay_add_layer(LingOverlay * self,GtkWidget * widget,uint8_t level);
 
+void ling_overlay_remove_layer(LingOverlay * self,GtkWidget * widget);
+
 // void ling_layer_add_switch(LingOperate * op_m,LingOverlay * overlay_m,uint lay_main,
 //                            LingOperate * op_s,LingOverlay * overlay_s,uint lay_sub,
 //                            uint op_type,

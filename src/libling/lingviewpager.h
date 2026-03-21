@@ -8,7 +8,7 @@
 G_BEGIN_DECLS
 
 #define LING_TYPE_VIEW_PAGER (ling_view_pager_get_type())
-    G_DECLARE_FINAL_TYPE(LingViewPager,ling_view_pager,LING,VIEW_PAGER,GtkBox)
+G_DECLARE_FINAL_TYPE(LingViewPager,ling_view_pager,LING,VIEW_PAGER,GtkBox)
 
 void ling_view_pager_fixed_set_page_pos(LingViewPager * self,uint pos,gdouble x,gdouble y,int level);
 
