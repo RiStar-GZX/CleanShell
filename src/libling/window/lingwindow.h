@@ -4,21 +4,28 @@
 #include <ling.h>
 
 typedef enum{
-    LING_WINDOW_GUIDE_NONE =0,
-    LING_WINDOW_GUIDE_LEFT ,
-    LING_WINDOW_GUIDE_RIGHT,
-    LING_WINDOW_GUIDE_TOP,
-    LING_WINDOW_GUIDE_BOTTOM,
-}LING_WINDOW_GUIDE_SIDE;
+    LING_WINDOW_TYPE_SINGAL = 0,
+    LING_WINDOW_TYPE_MULTI,
+}LING_WINDOW_TYPE;
 
-typedef struct LingGuide LingGuide;
-
-// typedef GtkAllocation (*LING_WINDOW_ADJUST)(GtkWidget * window,LingGuide *guide,
-//                                             int width,int height,int baseline,graphene_rect_t rect);
-
-
+typedef enum{
+    LING_WINDOW_SIDE_NONE =0,
+    LING_WINDOW_SIDE_LEFT ,
+    LING_WINDOW_SIDE_RIGHT,
+    LING_WINDOW_SIDE_TOP,
+    LING_WINDOW_SIDE_BOTTOM,
+}LING_WINDOW_SIDE;
 
 G_BEGIN_DECLS
+
+
+typedef struct{
+    GtkWidget * widget; //在main上显示的
+    gpointer user_data; //存储该页面的信息
+}WindowPage;
+
+// #define LING_TYPE_WINDOW_MULTI (ling_window_multi_get_type())
+// G_DECLARE_FINAL_TYPE(LingWindowMulti,ling_window_mulit,LING,WINDOW_MULTI,GtkBox)
 
 #define LING_TYPE_WINDOW_LAYOUT (ling_window_layout_get_type())
 G_DECLARE_FINAL_TYPE(LingWindowLayout,ling_window_layout,LING,WINDOW_LAYOUT,GtkLayoutManager)
@@ -26,17 +33,33 @@ G_DECLARE_FINAL_TYPE(LingWindowLayout,ling_window_layout,LING,WINDOW_LAYOUT,GtkL
 #define LING_TYPE_WINDOW (ling_window_get_type())
 G_DECLARE_FINAL_TYPE(LingWindow,ling_window,LING,WINDOW,GtkBox)
 
-GtkWidget * ling_window_new();
+typedef void (*GUIDE_LOAD)(LingWindow * window,GtkWidget * widget,GList * pages,gpointer user_data);
+
+GtkWidget * ling_window_new(LING_WINDOW_TYPE type);
 
 void ling_window_set_main(LingWindow * window,GtkWidget * widget);
 
-void ling_window_add_guide(LingWindow * window,GtkWidget * widget,
-                           LING_WINDOW_GUIDE_SIDE side,gdouble proportion);
+void ling_window_add_page(LingWindow * window,GtkWidget * widget,gpointer user_data);
+
+void ling_window_remove_page(LingWindow * window,GtkWidget * widget);
+
+void ling_window_page_set_pos(LingWindow * window,uint pos);
+
+void ling_window_side_guide_update(LingWindow * window);
+
+void ling_window_add_side(LingWindow * window,GtkWidget * widget,
+                           LING_WINDOW_SIDE side,gdouble proportion);
+
+void ling_window_side_set_side(LingWindow * window,GtkWidget * widget,LING_WINDOW_SIDE side);
 
 void ling_window_remove(LingWindow * window,GtkWidget * widget);
 
-LingOperate * ling_window_guide_enable_ani(LingWindow * window,GtkWidget * widget);
+LingOperate * ling_window_side_enable_ani(LingWindow * window,GtkWidget * widget);
 
-void ling_window_guide_set_show_progress(LingWindow * window,GtkWidget * widget,gdouble progress);
+void ling_window_side_set_show_progress(LingWindow * window,GtkWidget * widget,gdouble progress);
+
+void ling_window_side_set_guide(LingWindow * window, GtkWidget * widget, GUIDE_LOAD load, gpointer load_data);
+
+void ling_window_side_guide_update(LingWindow * window);
 
 G_END_DECLS

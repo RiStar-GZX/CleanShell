@@ -46,13 +46,6 @@ void ling_view_pager_show_page(LingViewPager * self,uint pos);
 
 void ling_view_pager_set_page_cycle(LingViewPager * self,gboolean able);
 
-gboolean ling_view_pager_next(LingViewPager * self,gboolean animate);
-
-gboolean ling_view_pager_prev(LingViewPager * self,gboolean animate);
-
-
-
-
 void ling_view_pager_finish_left(GtkWidget * widget,LingActionArgs args,gpointer data);
 
 void ling_view_pager_finish_right(GtkWidget * widget,LingActionArgs args,gpointer data);

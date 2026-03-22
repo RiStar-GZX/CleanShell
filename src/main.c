@@ -46,8 +46,8 @@ static void app_activate (GApplication *app) {
 #else
     clm_shell_start();
     GtkWidget * appview = ling_store_new();
-    gtk_window_set_default_size(GTK_WINDOW(window),1000,500);
-    gtk_window_set_resizable(GTK_WINDOW(window),0);
+    gtk_window_set_default_size(GTK_WINDOW(window),500,1000);
+    //gtk_window_set_resizable(GTK_WINDOW(window),0);
 #endif
 
 
