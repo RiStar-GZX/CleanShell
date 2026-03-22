@@ -3,6 +3,9 @@
 #include <gtk/gtk.h>
 #include <ling.h>
 
+
+G_BEGIN_DECLS
+
 typedef enum{
     LING_WINDOW_TYPE_SINGAL = 0,
     LING_WINDOW_TYPE_MULTI,
@@ -16,22 +19,16 @@ typedef enum{
     LING_WINDOW_SIDE_BOTTOM,
 }LING_WINDOW_SIDE;
 
-G_BEGIN_DECLS
-
-
 typedef struct{
     GtkWidget * widget; //在main上显示的
     gpointer user_data; //存储该页面的信息
 }WindowPage;
 
-// #define LING_TYPE_WINDOW_MULTI (ling_window_multi_get_type())
-// G_DECLARE_FINAL_TYPE(LingWindowMulti,ling_window_mulit,LING,WINDOW_MULTI,GtkBox)
-
 #define LING_TYPE_WINDOW_LAYOUT (ling_window_layout_get_type())
 G_DECLARE_FINAL_TYPE(LingWindowLayout,ling_window_layout,LING,WINDOW_LAYOUT,GtkLayoutManager)
 
 #define LING_TYPE_WINDOW (ling_window_get_type())
-G_DECLARE_FINAL_TYPE(LingWindow,ling_window,LING,WINDOW,GtkBox)
+G_DECLARE_FINAL_TYPE(LingWindow,ling_window,LING,WINDOW,GtkWidget)
 
 typedef void (*GUIDE_LOAD)(LingWindow * window,GtkWidget * widget,GList * pages,gpointer user_data);
 

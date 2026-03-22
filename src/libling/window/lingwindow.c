@@ -1,48 +1,5 @@
 #include "lingwindow.h"
 
-
-// struct _LingWindowMulti{
-//     GtkBox parent;
-//     LingViewPager * vp;
-//     GList * pages;   //MultiPage
-// };
-
-// G_DEFINE_FINAL_TYPE(LingWindowMulti,ling_window_multi,GTK_TYPE_BOX);
-
-// void ling_window_multi_class_init(LingWindowMultiClass * klass){
-
-// }
-
-// void ling_window_multi_init(LingWindowMulti * self){
-//     self->vp = LING_VIEW_PAGER(ling_view_pager_new(TRUE));
-//     gtk_box_append(GTK_BOX(self),GTK_WIDGET(self->vp));
-// }
-
-// GtkWidget * ling_window_multi_new(){
-//     return g_object_new(LING_TYPE_WINDOW_MULTI,NULL);
-// }
-
-// void ling_window_mutli_add(LingWindowMulti * self,GtkWidget * widget,gpointer user_data){
-//     MultiPage * page = g_malloc0(sizeof(MultiPage));
-//     page->widget = widget;
-//     page->user_data = user_data;
-//     ling_view_pager_add_page(self->vp,widget);
-//     self->pages = g_list_append(self->pages,page);
-// }
-
-// void ling_window_mutli_remove(LingWindowMulti * self,GtkWidget * widget){
-//     ling_view_pager_remove_page(self->vp,widget);
-//     for(GList * l = self->pages;l!=NULL;l=l->next){
-//         MultiPage * page = l->data;
-//         self->pages = g_list_remove(self->pages,page);
-//     }
-// }
-
-// void ling_window_mutli_set_pos(LingWindowMulti * self,uint pos){
-//     ling_view_pager_set_pos(self->vp,pos);
-// }
-
-
 /****************侧边栏***************************************************/
 typedef struct{
     GtkWidget * widget;
@@ -56,7 +13,7 @@ typedef struct{
 }LingSide;
 
 struct _LingWindow{
-    GtkBox parent;
+    GtkWidget parent;
     LING_WINDOW_TYPE type;
 
     GtkLayoutManager * manager;
@@ -66,7 +23,7 @@ struct _LingWindow{
     GList * sides;  //LingSide
 };
 
-G_DEFINE_FINAL_TYPE(LingWindow,ling_window,GTK_TYPE_BOX);
+G_DEFINE_FINAL_TYPE(LingWindow,ling_window,GTK_TYPE_WIDGET);
 
 
 struct _LingWindowLayout{
