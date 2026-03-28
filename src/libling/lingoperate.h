@@ -314,6 +314,8 @@ void ling_operate_add_dragsource(LingOperate * op,LING_DRAG_SOURCE_TYPE type,
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run);//暂时的方案，以后改成优先级
 
+void ling_operate_emit_start(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
+
 void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
 
 void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani,EMIT_FINISH_DIR dir);

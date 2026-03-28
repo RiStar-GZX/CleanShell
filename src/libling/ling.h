@@ -20,6 +20,7 @@
 #include <linggradient.h>
 
 #include <lingwindow.h>
+#include <lingwindowstack.h>
 
 typedef struct{
     //网格信息

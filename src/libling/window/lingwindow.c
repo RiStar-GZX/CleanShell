@@ -148,7 +148,7 @@ void ling_window_set_main(LingWindow * window,GtkWidget * widget){
     if(widget == NULL || window == NULL)return;
     if(window->type!=LING_WINDOW_TYPE_SINGAL)return;
     if(window->main!=NULL){
-        gtk_widget_set_parent(window->main,NULL);
+        gtk_widget_unparent(window->main);
     }
     window->main = widget;
     gtk_widget_set_parent(window->main,GTK_WIDGET(window));
@@ -191,7 +191,7 @@ void ling_window_page_set_pos(LingWindow * window,uint pos){
 
 
 /********************侧栏*************************/
-static GList * ling_window_get_side(LingWindow * window,GtkWidget * widget){
+static GList * ling_window_get_side_list(LingWindow * window,GtkWidget * widget){
     if(window==NULL||widget==NULL)return NULL;
     for(GList * l = window->sides;l!=NULL;l=l->next){
         LingSide * side = (LingSide*)l->data;
@@ -200,7 +200,7 @@ static GList * ling_window_get_side(LingWindow * window,GtkWidget * widget){
     return NULL;
 }
 
-LingSide * ling_window_get_side2(LingWindow * window,GtkWidget * widget){
+LingSide * ling_window_get_side(LingWindow * window,GtkWidget * widget){
     if(window==NULL||widget==NULL)return NULL;
     for(GList * l = window->sides;l!=NULL;l=l->next){
         LingSide * side = (LingSide*)l->data;
@@ -232,24 +232,24 @@ void ling_window_update_allocate(LingSide * side){
 }
 
 void ling_window_remove(LingWindow * window,GtkWidget * widget){
-    GList * l = ling_window_get_side(window,widget);
+    GList * l = ling_window_get_side_list(window,widget);
     if(l!=NULL){
         LingSide * side = (LingSide *)l->data;
-        gtk_widget_set_parent(side->widget,NULL);
+        gtk_widget_unparent(side->widget);
         window->sides = g_list_remove(window->sides,l->data);
         free(side);
     }
 }
 
 void ling_window_side_set_side(LingWindow * window,GtkWidget * widget,LING_WINDOW_SIDE side){
-    LingSide * get_side = ling_window_get_side2(window,widget);
+    LingSide * get_side = ling_window_get_side(window,widget);
     if(get_side==NULL)return;
     get_side->side = side;
     ling_window_update_allocate(get_side);
 }
 
 void ling_window_set_side_proportion(LingWindow * window,GtkWidget * widget,gdouble proportion){
-    LingSide * side = ling_window_get_side2(window,widget);
+    LingSide * side = ling_window_get_side(window,widget);
     if(side==NULL)return;
     if(proportion<0||proportion>100)return;
     side->proportion = proportion;
@@ -263,7 +263,7 @@ static void side_slide_animate(GtkWidget * widget,LingActionArgs args,gpointer u
 }
 
 LingOperate * ling_window_side_enable_ani(LingWindow * window,GtkWidget * widget){
-    LingSide * side = ling_window_get_side2(window,widget);
+    LingSide * side = ling_window_get_side(window,widget);
     if(side==NULL)return NULL;
 
     side->show_ani = ling_operate_add_animate(shell->controler,"side_slide",
@@ -277,13 +277,13 @@ LingOperate * ling_window_side_enable_ani(LingWindow * window,GtkWidget * widget
 }
 
 void ling_window_side_set_show_progress(LingWindow * window,GtkWidget * widget,gdouble progress){
-    LingSide * side = ling_window_get_side2(window,widget);
+    LingSide * side = ling_window_get_side(window,widget);
     if(side==NULL)return;
     side->show_progress = progress;
 }
 
 void ling_window_side_set_guide(LingWindow * window,GtkWidget * widget,GUIDE_LOAD load,gpointer load_data){
-    LingSide * side = ling_window_get_side2(window,widget);
+    LingSide * side = ling_window_get_side(window,widget);
     if(side==NULL)return;
     side->load = load;
     side->load_data = load_data;

@@ -1,6 +1,6 @@
 #include "lingoperate.h"
 
-#define DEFAULT_ANI_TIME 0.2
+#define DEFAULT_ANI_TIME 0.3
 #define LONG_PRESS_OFFSET 10
 
 static void operate_drag_begin(GtkGestureDrag* self,
@@ -254,7 +254,8 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         else{
             op->time-=100.00f/op->controler->frames/act->ani_time;
         }
-        gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
+        gdouble y = op->time;
+        //gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
         //g_print("Y:%f\n",op->time);
 
 
@@ -888,7 +889,10 @@ void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gb
     if(op->state==LING_OPERATE_STATE_WAITTING){
     }
     else if(op->state==LING_OPERATE_STATE_ANIMATION){
-        if(act->dir==(FINISH_DIR)dir)return;
+        if(act->dir==(FINISH_DIR)dir){
+            //act->dir = !dir;
+            return;
+        }
     }
     else return;
 
@@ -916,8 +920,12 @@ void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gb
     else ling_operate_run_finish(op,(FINISH_DIR)dir);
 }
 
+void ling_operate_emit_start(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani){
+    ling_operate_emit(op,action,emit_data,ani,(EMIT_FINISH_DIR)EMIT_FINISH_DIR_START);
+}
+
 void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani){
-    ling_operate_emit(op,action,emit_data,ani,(EMIT_FINISH_DIR)FINISH_DIR_END);
+    ling_operate_emit(op,action,emit_data,ani,(EMIT_FINISH_DIR)EMIT_FINISH_DIR_END);
 }
 
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run){

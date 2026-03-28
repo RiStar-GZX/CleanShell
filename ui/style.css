@@ -378,3 +378,7 @@ fixed { min-width: 100%; min-height: 100%; }
     transform: scale(0.95);
     transition:transform 0.2s;
 }
+
+.no_focus_button:active{
+    background:rgba(255,255,255,1);
+};

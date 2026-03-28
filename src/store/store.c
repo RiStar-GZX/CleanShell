@@ -23,10 +23,10 @@ static void item_clicked(GtkButton * button, click_data * d){
 
 void item_load(LingWindow * window,GtkWidget * widget,GList * pages,gpointer user_data){
     int i=1;
-    GtkWidget * w = gtk_widget_get_first_child(widget);
+    GtkWidget * w = gtk_widget_get_last_child(widget);
     while(w!=NULL){
         gtk_box_remove(GTK_BOX(widget),w);
-        w = gtk_widget_get_first_child(widget);
+        w = gtk_widget_get_last_child(widget);
     }
     for(GList * l = pages;l!=NULL;l=l->next,i++){
         WindowPage * page = l->data;
@@ -74,28 +74,68 @@ static void add_page(LingWindow * window,GtkWidget * widget,LingOperate * op,con
     g_signal_connect(widget,"clicked",G_CALLBACK(main_clicked),op);
 }
 
+// GtkWidget * ling_store_new(){
+//     GtkWidget * button;
+//     GtkWidget * fixed = ling_fixed_new();
+
+//     GtkWidget * win = ling_window_new(LING_WINDOW_TYPE_MULTI);
+
+//     GtkWidget * side = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
+//     ling_window_add_side(LING_WINDOW(win),side,LING_WINDOW_SIDE_LEFT,15);
+//     LingOperate * op = ling_window_side_enable_ani(LING_WINDOW(win),side);
+//     ling_window_side_set_guide(LING_WINDOW(win),side,item_load,NULL);
+
+//     add_page(LING_WINDOW(win),gtk_button_new_with_label("1"),op,"1","firefox");
+//     add_page(LING_WINDOW(win),gtk_button_new_with_label("2"),op,"2","spotify");
+//     add_page(LING_WINDOW(win),gtk_button_new_with_label("3"),op,"3","vscode");
+//     add_page(LING_WINDOW(win),gtk_button_new_with_label("4"),op,"4","konsole");
+
+//     ling_window_side_guide_update(LING_WINDOW(win));
+
+//     // GtkWidget * win = ling_window_new(LING_WINDOW_TYPE_SINGAL);
+//     // ling_fixed_put_none(LING_FIXED(fixed),button,200,400,0,0);
+//     // ling_fixed_set_child_size(LING_FIXED(fixed),button,30,30);
+//     // ling_window_set_main(LING_WINDOW(win),fixed);
+
+//     return win;
+// }
+
+typedef struct{
+    LingWindowStack * stack;
+    GtkWidget * window;
+}argssd;
+
+static void win2_clicked(GtkButton * button,argssd * arg){
+    ling_window_stack_push_ani(arg->stack,arg->window);
+}
+
 GtkWidget * ling_store_new(){
-    GtkWidget * button;
-    GtkWidget * fixed = ling_fixed_new();
+    LingWindowStack * stack = LING_WINDOW_STACK(ling_window_stack_new());
 
-    GtkWidget * win = ling_window_new(LING_WINDOW_TYPE_MULTI);
+    GtkWidget * win1 = gtk_button_new_with_label("win1");
+    GtkWidget * win2 = gtk_button_new_with_label("win2");
+    gtk_widget_add_css_class(win1,"no_focus_button");
+    gtk_widget_add_css_class(win2,"no_focus_button");
 
-    GtkWidget * side = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    ling_window_add_side(LING_WINDOW(win),side,LING_WINDOW_SIDE_LEFT,15);
-    LingOperate * op = ling_window_side_enable_ani(LING_WINDOW(win),side);
-    ling_window_side_set_guide(LING_WINDOW(win),side,item_load,NULL);
+    argssd * w1 = g_malloc0(sizeof(argssd));
+    w1->stack = stack;
+    w1->window = win2;
+    argssd * w2 = g_malloc0(sizeof(argssd));
+    w2->stack = stack;
+    w2->window = win1;
+    g_signal_connect(win2,"clicked",G_CALLBACK(win2_clicked),w2);
+    g_signal_connect(win1,"clicked",G_CALLBACK(win2_clicked),w1);
+    ling_window_stack_add_window(stack,win1);
+    ling_window_stack_set_ani(stack,win1,LING_WINDOW_STACK_ANI_LEFT);
+    ling_window_stack_add_window(stack,win2);
+    ling_window_stack_set_ani(stack,win2,LING_WINDOW_STACK_ANI_RIGHT);
+    ling_window_stack_push(stack,win1);
+    ling_window_stack_push(stack,win2);
+    ling_window_stack_add_window(stack,win1);
 
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("1"),op,"1","firefox");
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("2"),op,"2","spotify");
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("3"),op,"3","vscode");
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("4"),op,"4","konsole");
+    ling_window_stack_push(stack,win1);
 
-    ling_window_side_guide_update(LING_WINDOW(win));
-
-    // GtkWidget * win = ling_window_new(LING_WINDOW_TYPE_SINGAL);
-    // ling_fixed_put_none(LING_FIXED(fixed),button,200,400,0,0);
-    // ling_fixed_set_child_size(LING_FIXED(fixed),button,30,30);
-    // ling_window_set_main(LING_WINDOW(win),fixed);
-
-    return win;
+    //ling_window_stack_pop(stack);
+    //ling_window_stack_pop(stack);
+    return GTK_WIDGET(stack);
 }
