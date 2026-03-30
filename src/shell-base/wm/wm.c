@@ -163,7 +163,7 @@ static void cl_wm_window_init(ClWmWindow * self){
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->gradient,LAYER_WINDOW);
 
 
-    self->op = ling_operate_add(shell->controler,"wm_window",GTK_WIDGET(self->gradient));
+    self->op = ling_operate_add("wm_window",GTK_WIDGET(self->gradient));
     ling_operate_add_begin(self->op,cl_wm_window_begin_focus,self);
     ling_operate_add_end(self->op,cl_wm_window_end_focus,self);
 

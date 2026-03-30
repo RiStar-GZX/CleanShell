@@ -165,7 +165,7 @@ static void cl_status_bar_init(ClStatusBar * self){
     self->statusbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,3);
     gtk_widget_set_margin_top(self->statusbar,3);
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->statusbar,LAYER_STATUSBAR);
-    ling_operate_add(shell->controler,CL_STATUSBAR_BAR_OP_NAME,self->statusbar);
+    ling_operate_add(CL_STATUSBAR_BAR_OP_NAME,self->statusbar);
     gtk_widget_add_css_class(self->statusbar,"statusbar");
 
     //添加控件
@@ -216,7 +216,7 @@ static void cl_status_bar_setting(ClStatusBar * self){
     ling_overlay_add_layer(LING_OVERLAY(self->overlay),self->viewpager,LAYER_CENTER);
     gtk_widget_set_size_request(self->viewpager,500,//gtk_widget_get_width(shell->lingoverlay),
                                 1000);//gtk_widget_get_height(shell->lingoverlay));
-    ling_operate_add(shell->controler,CL_STATUSBAR_CENTERBOX_OP_NAME,self->viewpager);
+    ling_operate_add(CL_STATUSBAR_CENTERBOX_OP_NAME,self->viewpager);
 
     //通知页
     self->page_notify = cl_notify_center_new();

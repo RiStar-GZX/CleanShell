@@ -382,3 +382,28 @@ fixed { min-width: 100%; min-height: 100%; }
 .no_focus_button:active{
     background:rgba(255,255,255,1);
 };
+
+.search_bar_box{
+    color:black;
+    background-color:black;
+    opacity:0;
+
+}
+
+.white_box{
+    background-color:white;
+}
+
+.side_box{
+    background-color:white;
+    border:3px;
+    border-color:black;
+}
+
+.side-button{
+    border-radius:50px;
+}
+
+.mp_listbox{
+   /* background-color:black;*/
+}

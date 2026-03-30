@@ -22,12 +22,12 @@ void clm_app_drawer_init(ClmAppDrawer * self){
     gtk_box_append(GTK_BOX(self),self->sw);
     gtk_widget_add_css_class(GTK_WIDGET(self),"app-drawer");
 
-    self->op = ling_operate_add(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME,self);
+    self->op = ling_operate_add(CLM_DESKTOP_DRAWER_OP_NAME,self);
     //ling_operate_set_force_run(self->op,TRUE);
 }
 
 static void drawer_app_open(ClmDesktopItem * item,gpointer userdata){
-    ling_operate_emit(ling_operate_get(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME),LING_ACTION_EMIT,NULL,TRUE,FINISH_DIR_START);
+    ling_operate_emit(ling_operate_get(CLM_DESKTOP_DRAWER_OP_NAME),LING_ACTION_EMIT,NULL,TRUE,FINISH_DIR_START);
 }
 
 gboolean clm_app_drawer_add_item(ClmAppDrawer *self,app_info * info,

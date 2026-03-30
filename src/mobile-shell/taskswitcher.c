@@ -308,7 +308,7 @@ static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer us
 
         clm_desktop_set_blur(CLM_DESKTOP(shell->desktop),CLM_DESKTOP_BLUR);
         ts->mode = TASK_SWITCHER_SWITCH;
-        ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_POS),LING_ACTION_ANIMATE,NULL,TRUE);
+        ling_operate_emit_end(ling_operate_get(ANI_NAME_TASK_POS),LING_ACTION_ANIMATE,NULL,TRUE);
         return;
     }
 
@@ -316,7 +316,9 @@ static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer us
     if(wincur==NULL)return;
 
     if(/*fabs(args.velocity_y)<50&&*/fabs(args.offset_y)<100){
-        ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_POS),LING_ACTION_ANIMATE,NULL,TRUE);
+        LingOperate * op = ling_operate_get(ANI_NAME_TASK_POS);
+
+        ling_operate_emit_end(op,LING_ACTION_ANIMATE,NULL,TRUE);
         return;
     }
 
@@ -330,7 +332,7 @@ static void task_bar_finish_e(GtkWidget * widget,LingActionArgs args,gpointer us
     }
 
     if(ts->mode==TASK_SWITCHER_SWITCH){
-        ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_RETURN),LING_ACTION_ANIMATE,NULL,TRUE);
+        ling_operate_emit_end(ling_operate_get(ANI_NAME_TASK_RETURN),LING_ACTION_ANIMATE,NULL,TRUE);
     }
 }
 /*----------------------------------------------------------------------------------------------------*/
@@ -488,7 +490,7 @@ static void task_remove_finish(GtkWidget * widget,LingActionArgs args,gpointer u
     ClmTaskSwitcher * ts = CLM_TASK_SWITCHER(user_data);
     if(ts->mode!=TASK_SWITCHER_SWITCH)return;
     if(args.progress_end!=0)ling_operate_emit_end(
-        ling_operate_get(shell->controler,ANI_NAME_TASK_MERGE),LING_ACTION_ANIMATE,NULL,TRUE);
+        ling_operate_get(ANI_NAME_TASK_MERGE),LING_ACTION_ANIMATE,NULL,TRUE);
 }
 
 /*----------------------------------------------------------------------------------------------------*/
@@ -552,7 +554,7 @@ static void task_merge_finish(GtkWidget * widget,LingActionArgs args,gpointer us
         cl_wm_set_current_window(ts->wm,CL_WM_WINDOW(lcrt->next->data));
     }
     else{
-        ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_SHOW_DESKTOP),LING_ACTION_ANIMATE,NULL,TRUE);
+        ling_operate_emit_end(ling_operate_get(ANI_NAME_SHOW_DESKTOP),LING_ACTION_ANIMATE,NULL,TRUE);
     }
     cl_wm_remove_window(ts->wm,CL_WM_WINDOW(lcrt->data));
 }
@@ -639,7 +641,7 @@ static PLEN task_fill_release_click(GtkWidget * widget,LingActionArgs args,gpoin
     if(ts->focus_window==NULL){
         //点击空白
         if(ts->mode==TASK_SWITCHER_SWITCH){
-            ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_RETURN),LING_ACTION_ANIMATE,NULL,TRUE);
+            ling_operate_emit_end(ling_operate_get(ANI_NAME_TASK_RETURN),LING_ACTION_ANIMATE,NULL,TRUE);
         }
         return ANI_END_BACK;
     }
@@ -674,7 +676,7 @@ static void task_fill_ani_click(GtkWidget * widget,LingActionArgs args,gpointer 
 /*----------------------------------------------------------------------------------------------------*/
 
 static void remove_all_button_clicked (GtkButton* self,ClmTaskSwitcher * ts){
-    ling_operate_emit_end(ling_operate_get(shell->controler,ANI_NAME_TASK_ALL_REMOVE),LING_ACTION_ANIMATE,NULL,TRUE);
+    ling_operate_emit_end(ling_operate_get(ANI_NAME_TASK_ALL_REMOVE),LING_ACTION_ANIMATE,NULL,TRUE);
 }
 
 static void task_remove_all_ani(GtkWidget * widget,LingActionArgs args,gpointer user_data){
@@ -706,19 +708,19 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
     gtk_widget_set_halign(GTK_WIDGET(self),GTK_ALIGN_CENTER);
 
     //显示所有任务缩略图动画
-    ling_operate_add_animate(shell->controler,ANI_NAME_SHOW_ALL_TASK,
+    ling_operate_add_animate(ANI_NAME_SHOW_ALL_TASK,
                              NULL,NULL,
                              show_all_task_ani,self,
                              NULL,show_all_task_finish,self);
 
     //所有任务缩略图归位动画
-    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_POS,
+    ling_operate_add_animate(ANI_NAME_TASK_POS,
                              task_pos_release,self,
                              task_pos_ani,self,
                              NULL,task_pos_finish,self);
 
     //所有任务缩略图左移退出
-    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_RETURN,
+    ling_operate_add_animate(ANI_NAME_TASK_RETURN,
                              task_return_release,self,
                              task_return_ani,self,
                              NULL,task_return_finish,self);
@@ -730,14 +732,14 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
     gtk_widget_set_size_request(self->bar,120,10);
     gtk_box_append(GTK_BOX(self),self->bar);
 
-    LingOperate * op = ling_operate_add(shell->controler,"task_switcher_bar",self->bar);
+    LingOperate * op = ling_operate_add("task_switcher_bar",self->bar);
     ling_operate_add_action(op,LING_ACTION_DRAG_ALL,task_bar_progress,self,
                             NULL,NULL,
                             task_bar_release,self,
                             NULL,task_bar_finish_e,self);
 
     //
-    LingOperate * wmop = ling_operate_add(shell->controler,"wm_op",shell->wm);
+    LingOperate * wmop = ling_operate_add("wm_op",shell->wm);
     ling_operate_add_action(wmop,LING_ACTION_DRAG_HORIZONTAL,wm_switch_progress,self,
                             wm_switch_ani,self,
                             wm_switch_release,self,
@@ -747,13 +749,13 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
     ling_operate_set_drag_propagation_phase(wmop,GTK_PHASE_BUBBLE);
 
     //移除一个任务其他任务右移合并
-    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_MERGE,
+    ling_operate_add_animate(ANI_NAME_TASK_MERGE,
                              NULL,self,
                              task_merge_ani,self,
                              NULL,task_merge_finish,self);
 
     //移除所有任务后显示桌面
-    ling_operate_add_animate(shell->controler,ANI_NAME_SHOW_DESKTOP,
+    ling_operate_add_animate(ANI_NAME_SHOW_DESKTOP,
                              NULL,NULL,
                              task_show_desktop_ani,self,
                              NULL,task_show_desktop_finish,self);
@@ -778,7 +780,7 @@ static void clm_task_switcher_init(ClmTaskSwitcher * self){
                             NULL,task_fill_finish_e,self);
 
     //所有任务缩略图向上移除
-    ling_operate_add_animate(shell->controler,ANI_NAME_TASK_ALL_REMOVE,
+    ling_operate_add_animate(ANI_NAME_TASK_ALL_REMOVE,
                              NULL,NULL,
                              task_remove_all_ani,self,
                              NULL,task_remove_all_finish,self);

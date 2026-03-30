@@ -37,12 +37,14 @@ static void ling_window_layout_allocate(GtkLayoutManager *manager,GtkWidget *wid
     GtkWidget * parent = gtk_widget_get_parent(widget);
     if(parent==NULL)return;
 
-    if(width<0){
-        width = gtk_widget_get_width(widget);
+    if(width<=0){
+        width = gtk_widget_get_width(gtk_widget_get_parent(widget));
     }
-    if(height<0){
-        height = gtk_widget_get_height(widget);
+    if(height<=0){
+        height = gtk_widget_get_height(gtk_widget_get_parent(widget));
     }
+
+    //g_print("w:%d h:%d\n",width,height);
 
     graphene_rect_t rect;
     if(!gtk_widget_compute_bounds(parent,widget,&rect))return;
@@ -103,6 +105,8 @@ static void ling_window_layout_allocate(GtkLayoutManager *manager,GtkWidget *wid
 
 
         gtk_widget_size_allocate(side->widget, &child_allocation, baseline);
+        if(side->show_progress==0)gtk_widget_set_visible(side->widget,FALSE);
+        else gtk_widget_set_visible(side->widget,TRUE);
     }
     child_allocation.x = 0;
     child_allocation.y = 0;
@@ -266,7 +270,7 @@ LingOperate * ling_window_side_enable_ani(LingWindow * window,GtkWidget * widget
     LingSide * side = ling_window_get_side(window,widget);
     if(side==NULL)return NULL;
 
-    side->show_ani = ling_operate_add_animate(shell->controler,"side_slide",
+    side->show_ani = ling_operate_add_animate("side_slide",
                                                 NULL,NULL,
                                                 side_slide_animate,side,
                                                 NULL,NULL,NULL);
@@ -278,9 +282,22 @@ LingOperate * ling_window_side_enable_ani(LingWindow * window,GtkWidget * widget
 
 void ling_window_side_set_show_progress(LingWindow * window,GtkWidget * widget,gdouble progress){
     LingSide * side = ling_window_get_side(window,widget);
-    if(side==NULL)return;
+    if(side==NULL||progress<0||progress>100)return;
     side->show_progress = progress;
+
+    //设置动画结束的位置
+    if(side->show_ani){
+        LingAction * act = &side->show_ani->actions[LING_ACTION_ANIMATE];
+        act->ani_progress = progress;
+        if(progress==0){
+            act->dir = FINISH_DIR_START;
+        }
+        if(progress==100){
+            act->dir = FINISH_DIR_END;
+        }
+    }
 }
+
 
 void ling_window_side_set_guide(LingWindow * window,GtkWidget * widget,GUIDE_LOAD load,gpointer load_data){
     LingSide * side = ling_window_get_side(window,widget);

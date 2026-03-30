@@ -282,8 +282,8 @@ static void clm_desktop_init(ClmDesktop * self){
     clm_desktop_set_wallpaper(self,"/home/gzx/Pictures/wallpaper3.png");
 
     //抽屉拖拽手势
-    LingOperate * bodybox_op = ling_operate_add(shell->controler,CLM_DESKTOP_BODYBOX_OP_NAME,self->bodybox);
-    LingOperate * drawer_op  = ling_operate_get(shell->controler,CLM_DESKTOP_DRAWER_OP_NAME);
+    LingOperate * bodybox_op = ling_operate_add(CLM_DESKTOP_BODYBOX_OP_NAME,self->bodybox);
+    LingOperate * drawer_op  = ling_operate_get(CLM_DESKTOP_DRAWER_OP_NAME);
 
     switcher * s = malloc(sizeof(switcher));
     LingLayer * main=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_BODYBOX);
@@ -334,7 +334,7 @@ static void clm_desktop_init(ClmDesktop * self){
 
     //刚进入桌面时候的动画
 
-    LingOperate * op = ling_operate_add(shell->controler,"desktop_load",self->bodybox);
+    LingOperate * op = ling_operate_add("desktop_load",self->bodybox);
     ling_operate_add_action(op,LING_ACTION_EMIT,
                             NULL,NULL,
                             desktop_load_ani,NULL,
@@ -392,7 +392,7 @@ void clm_desktop_set_wallpaper(ClmDesktop * self,const char * path){
 void clm_desktop_set_blur(ClmDesktop *self,gdouble blur){
     GString * str=g_string_new("");
 
-    //g_string_printf(str,"picture,box { filter: blur(%dpx); }",(uint)blur);
+    g_string_printf(str,"picture,box { filter: blur(%dpx); }",(uint)blur);
     GtkCssProvider *provider = gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider,
                                     str->str, -1);
@@ -406,7 +406,6 @@ void clm_desktop_set_blur(ClmDesktop *self,gdouble blur){
 
     gtk_widget_set_opacity(self->bodybox,1-blur/CLM_DESKTOP_BLUR);
     ling_widget_scale(self->bodybox,1-0.05*blur/CLM_DESKTOP_BLUR);
-
 
     self->blur = blur;
 }

@@ -137,8 +137,8 @@ GtkWidget * cl_lock_screen_new(){
     //添加切换
     LingLayer * cover=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_COVER);
     LingLayer * verify=ling_overlay_get_layer(LING_OVERLAY(self->overlay),LAYER_VERIFY);
-    LingOperate * cover_op = ling_operate_add(shell->controler,CL_LOCK_SCREEN_COVER_OP_NAME,cover->widget);
-    LingOperate * verify_op = ling_operate_add(shell->controler,"lockscreen_verify",verify->widget);
+    LingOperate * cover_op = ling_operate_add(CL_LOCK_SCREEN_COVER_OP_NAME,cover->widget);
+    LingOperate * verify_op = ling_operate_add("lockscreen_verify",verify->widget);
 
 
     switcher * s = malloc(sizeof(switcher));

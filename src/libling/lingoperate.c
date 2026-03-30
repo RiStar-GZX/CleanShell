@@ -1,5 +1,7 @@
 #include "lingoperate.h"
 
+LingOpControler OpControler;
+
 #define DEFAULT_ANI_TIME 0.3
 #define LONG_PRESS_OFFSET 10
 
@@ -17,20 +19,21 @@ void ling_operate_swipe_cb(GtkGestureSwipe* self,
 
 gboolean ling_operate_controler_timeout(gpointer user_data);
 
-LingOpControler * ling_operate_controler_new(uint frame){
-    LingOpControler * controler = g_malloc0(sizeof(LingOpControler));
-    controler->frames = frame;
-    controler->operates = NULL;
-    controler->timeout = g_timeout_add(1000/controler->frames, ling_operate_controler_timeout,controler);
-    return controler;
+void ling_operate_controler_new(uint frame,GdkFrameClock * clock){
+    //LingOpControler * controler = g_malloc0(sizeof(LingOpControler));
+    OpControler.frames = frame;
+    OpControler.operates = NULL;
+    OpControler.frameclock = clock;
+    OpControler.timeout = g_timeout_add(1000/OpControler.frames, ling_operate_controler_timeout,&OpControler);
+    // return controler;
 }
 
-char * ling_operate_new_name(LingOpControler * controler,const char * name){
+char * ling_operate_new_name(const char * name){
     char * new_name=malloc(sizeof(char)*100);
     strcpy(new_name,name);
     for(int i=1;;i++){
         gboolean have_same=0;
-        for(GList * l=controler->operates;l!=NULL;l=l->next){
+        for(GList * l=OpControler.operates;l!=NULL;l=l->next){
             LingOperate * op_now = (LingOperate*)l->data;
             if(strcmp(op_now->operate_name->str,new_name)==0){
                 sprintf(new_name,"%s_%d",name,i);
@@ -42,18 +45,18 @@ char * ling_operate_new_name(LingOpControler * controler,const char * name){
     return NULL;
 }
 
-LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,gpointer widget){
-    if(op_name==NULL||controler==NULL)return NULL;
+LingOperate * ling_operate_add(const char * op_name,gpointer widget){
+    if(op_name==NULL)return NULL;
 
     //创建op
     LingOperate * op = malloc(sizeof(LingOperate));
     memset(op,0,sizeof(LingOperate));
     op->able = TRUE;
-    op->controler = controler;
+    //OpControler = controler;
     op->state = LING_OPERATE_STATE_WAITTING;
 
     //创建新的名字防止重名
-    char * new_name = ling_operate_new_name(controler,op_name);
+    char * new_name = ling_operate_new_name(op_name);
     op->operate_name = g_string_new(new_name);
     free(new_name);
 
@@ -61,7 +64,7 @@ LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,
     op->breaker = NULL;     //没有人能打断
 
     //添加进表里，返回
-    controler->operates = g_list_append(controler->operates,op);
+    OpControler.operates = g_list_append(OpControler.operates,op);
 
     //添加控件的event controler
     op->widget = widget;
@@ -83,13 +86,13 @@ LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,
 }
 
 void ling_operate_remove(LingOperate * op){
-    LingOpControler * controler = op->controler;
-    controler->operates = g_list_remove(controler->operates,op);
+    //LingOpControler * controler = OpControler;
+    OpControler.operates = g_list_remove(OpControler.operates,op);
 }
 
-LingOperate * ling_operate_get(LingOpControler * controler,const char * op_name){
-    if(controler==NULL||op_name==NULL)return NULL;
-    for(GList * l=controler->operates;l!=NULL;l=l->next){
+LingOperate * ling_operate_get(const char * op_name){
+    if(op_name==NULL)return NULL;
+    for(GList * l=OpControler.operates;l!=NULL;l=l->next){
         LingOperate * op_now = (LingOperate*)l->data;
         if(strcmp(op_now->operate_name->str,op_name)==0)return op_now;
     }
@@ -249,22 +252,22 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         LingOperate * op = act->op;
 
         if(act->dir == FINISH_DIR_END){
-            op->time+=100.00f/op->controler->frames/act->ani_time;
+            op->time+=100.00f/OpControler.frames/act->ani_time;
         }
         else{
-            op->time-=100.00f/op->controler->frames/act->ani_time;
+            op->time-=100.00f/OpControler.frames/act->ani_time;
         }
-        gdouble y = op->time;
-        //gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
+        //gdouble y = op->time;
+        gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
         //g_print("Y:%f\n",op->time);
 
 
         //op->time = bezier_curve(0,50,75,100,op->time/1000.0000f)/act->ani_time;
         // if(act->ani_progress_lenth<=0){
-        //     op->time+=100.00f/op->controler->frames/act->ani_time;
+        //     op->time+=100.00f/OpControler->frames/act->ani_time;
         // }
         // else{
-        //     op->time+=act->ani_progress_lenth/op->controler->frames/act->ani_time;
+        //     op->time+=act->ani_progress_lenth/OpControler->frames/act->ani_time;
         // }
 
 
@@ -289,7 +292,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         if(op->time>=100||op->time<=0){
             act->ani_progress = act->ani_progress_end;
             act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
-            op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
+            OpControler.actions_list = g_list_remove(OpControler.actions_list,act);
             if(act->dir==FINISH_DIR_END){
                 ling_operate_run_finish(op,FINISH_DIR_END);
             }
@@ -302,6 +305,8 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
 
     }
+    gdk_frame_clock_begin_updating(OpControler.frameclock);
+    //g_signal_emit_by_name(OpControler.frameclock, "update",NULL);
     return G_SOURCE_CONTINUE;
 }
 
@@ -371,8 +376,8 @@ void ling_operate_run_animation(LingOperate * op){
     }
 
     act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
-    op->controler->actions_list = g_list_remove(op->controler->actions_list,act);
-    op->controler->actions_list = g_list_append(op->controler->actions_list,act);
+    OpControler.actions_list = g_list_remove(OpControler.actions_list,act);
+    OpControler.actions_list = g_list_append(OpControler.actions_list,act);
 }
 
 void ling_operate_run_isbreaked(LingOperate * op){
@@ -401,7 +406,7 @@ gboolean ling_operate_start_operating(LingOperate * op){
     }
     int op_is_on_num = 0;
 
-    for(GList * l=op->controler->operates;l!=NULL;l=l->next){
+    for(GList * l=OpControler.operates;l!=NULL;l=l->next){
         LingOperate * op_now = (LingOperate*)l->data;
         if(op==op_now){
             if(op_now->state!=LING_OPERATE_STATE_WAITTING)op_is_on_num++;
@@ -928,6 +933,10 @@ void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_dat
     ling_operate_emit(op,action,emit_data,ani,(EMIT_FINISH_DIR)EMIT_FINISH_DIR_END);
 }
 
+void ling_operate_emit_reverse(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani){
+    ling_operate_emit(op,action,emit_data,ani,(EMIT_FINISH_DIR)EMIT_FINISH_DIR_REVERSE);
+}
+
 void ling_operate_set_force_run(LingOperate * op,gboolean force_run){
     op->force_run = force_run;
 }
@@ -942,10 +951,10 @@ void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPER
 
 /*纯动画*/
 
-LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,
+LingOperate * ling_operate_add_animate(const char * ani_name,
         RELEASE release,gpointer release_data,ANIMATION ani,gpointer ani_data,
         FINISH finish_s,FINISH finish_e,gpointer finish_data){
-    LingOperate * op = ling_operate_add(controler,ani_name,NULL);
+    LingOperate * op = ling_operate_add(ani_name,NULL);
     op->force_run = TRUE;
     LingAction * act =&op->actions[LING_ACTION_ANIMATE];
     act->animation = ani;

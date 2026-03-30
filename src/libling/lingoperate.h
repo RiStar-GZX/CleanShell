@@ -9,6 +9,7 @@ typedef struct LingOpControler {
     uint timeout;
 
     GList * actions_list; //LingAction
+    GdkFrameClock * frameclock;
 }LingOpControler;
 
 typedef enum {
@@ -195,7 +196,7 @@ typedef struct LingAction{
 }LingAction;
 
 typedef struct LingOperate{
-    LingOpControler *controler;
+    //LingOpControler *controler;
 
     gboolean able;
     GtkDragSource * drag_source;
@@ -242,9 +243,11 @@ typedef struct LingOperate{
     gboolean longpress_status;
 }LingOperate;
 
-LingOpControler * ling_operate_controler_new(uint frame);
+extern LingOpControler OpControler;
 
-LingOperate * ling_operate_get(LingOpControler * controler,const char * op_name);
+void ling_operate_controler_new(uint frame,GdkFrameClock * clock);
+
+LingOperate * ling_operate_get(const char * op_name);
 
 void ling_operate_set_animation_cb(LingOperate * op,uint action_type,ANIMATION cb,gpointer data);
 
@@ -252,7 +255,7 @@ void ling_operate_set_isbreaked_cb(LingOperate * op,ISBREAKED cb,gpointer data);
 
 void ling_operate_set_finish_cb(LingOperate * op,uint action_type,FINISH cb,gpointer data);
 
-LingOperate * ling_operate_add(LingOpControler * controler,const char * op_name,gpointer widget);
+LingOperate * ling_operate_add(const char * op_name,gpointer widget);
 
 void ling_operate_set_able(LingOperate * op,gboolean able);
 
@@ -318,11 +321,13 @@ void ling_operate_emit_start(LingOperate * op,LING_ACTION action,gpointer emit_d
 
 void ling_operate_emit_end(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
 
+void ling_operate_emit_reverse(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani);
+
 void ling_operate_emit(LingOperate * op,LING_ACTION action,gpointer emit_data,gboolean ani,EMIT_FINISH_DIR dir);
 
 void ling_operate_emit_connect(LingOperate * source,LING_ACTION action,LING_OPERATE_EMIT emit,LingOperate * target,EMIT_FINISH_DIR dir,gpointer emit_data);
 
-LingOperate * ling_operate_add_animate(LingOpControler * controler,const char * ani_name,
+LingOperate * ling_operate_add_animate(const char * ani_name,
                                       RELEASE release,gpointer release_data,ANIMATION ani,gpointer ani_data,
                                       FINISH finish_s,FINISH finish_e,gpointer finish_data);
 

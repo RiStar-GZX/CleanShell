@@ -21,7 +21,8 @@ gboolean fps_timeout(gpointer user_data){
 }
 
 static void before_paint (GdkFrameClock* self,gpointer user_data){
-    ling_operate_controler_timeout(shell->controler);
+    ling_operate_controler_timeout(&OpControler);
+    g_print("update\n");
 }
 
 //#define SHELL_MODE
@@ -39,14 +40,15 @@ static void app_activate (GApplication *app) {
     g_object_set(settings, "gtk-dnd-drag-threshold", 1, NULL);
 
     GtkWidget * window=gtk_window_new();
+    ling_operate_controler_new(144,my_clock);
 #ifdef SHELL_MODE
     GtkWidget * appview = clm_shell_start();
     gtk_window_set_default_size(GTK_WINDOW(window),500,1000);
-    gtk_window_set_resizable(GTK_WINDOW(window),0);
+    //gtk_window_set_resizable(GTK_WINDOW(window),0);
 #else
-    clm_shell_start();
+    //clm_shell_start();
     GtkWidget * appview = ling_store_new();
-    gtk_window_set_default_size(GTK_WINDOW(window),500,1000);
+    gtk_window_set_default_size(GTK_WINDOW(window),700,500);
     //gtk_window_set_resizable(GTK_WINDOW(window),0);
 #endif
 
@@ -55,9 +57,10 @@ static void app_activate (GApplication *app) {
     gtk_window_set_application(GTK_WINDOW(window),GTK_APPLICATION(app));
     gtk_window_present(GTK_WINDOW(window));
 
-    // my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
-    // g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
-    // g_timeout_add(500,fps_timeout,appview);
+    my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
+
+    //g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
+    g_timeout_add(500,fps_timeout,appview);
 }
 
 static void app_open (GApplication *app, GFile ** files, gint n_files, gchar *hint) {
@@ -67,7 +70,7 @@ static void app_open (GApplication *app, GFile ** files, gint n_files, gchar *hi
 int main (int argc, char **argv) {
     GtkApplication *app;
     int stat;
-    //g_print("%d.%d.%d\n",GTK_MAJOR_VERSION,GTK_MINOR_VERSION,GTK_MICRO_VERSION);
+    g_print("%d.%d.%d\n",GTK_MAJOR_VERSION,GTK_MINOR_VERSION,GTK_MICRO_VERSION);
     app = gtk_application_new ("org.ling.lib", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect (app, "activate", G_CALLBACK (app_activate), NULL);
     g_signal_connect (app, "open", G_CALLBACK (app_open), NULL);

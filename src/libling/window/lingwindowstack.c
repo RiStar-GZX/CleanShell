@@ -141,10 +141,10 @@ static void ling_window_stack_init(LingWindowStack * self){
     self->ani_progress = 100;
 
     //默认方向0->100是添加新页面(push)0完全不显示,100完全显示
-    self->ani = ling_operate_add_animate(shell->controler,"switch",NULL,NULL,
+    self->ani = ling_operate_add_animate("switch",NULL,NULL,
                                          window_stack_switch_ani,self,
                                          NULL,NULL,self);
-    ling_operate_set_ani_time(self->ani,LING_ACTION_ANIMATE,2);
+    //ling_operate_set_ani_time(self->ani,LING_ACTION_ANIMATE,2);
 }
 
 GtkWidget * ling_window_stack_new(){

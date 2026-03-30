@@ -180,15 +180,15 @@ void cl_control_center_load(ClControlCenter * self){
     w_info->grid = self->grid;
     w_info->coordinates = GTK_WIDGET(self);
 
-    LingOperate * ctb_op = ling_operate_get(shell->controler,CL_STATUSBAR_CENTERBOX_OP_NAME);
-    LingOperate * vp_op = ling_operate_get(shell->controler,CL_STATUSBAR_VIEWPAGER_OP_NAME);
+    LingOperate * ctb_op = ling_operate_get(CL_STATUSBAR_CENTERBOX_OP_NAME);
+    LingOperate * vp_op = ling_operate_get(CL_STATUSBAR_VIEWPAGER_OP_NAME);
 
     //wifi按钮
     GtkWidget * button = cl_control_button_new("网络","network-wireless-100");
     GtkWidget * item_folder = cl_wlan_list_new();
     self->wlan_button = cl_control_item_new(button,item_folder);
     ling_grid_attach(LING_GRID(self->grid),self->wlan_button,1,1,2,1);
-    LingOperate * op = ling_operate_add(shell->controler,"wifi-button",self->wlan_button);
+    LingOperate * op = ling_operate_add("wifi-button",self->wlan_button);
     ling_folder_operate(op,LING_FOLDER(folder),LING_ACTION_CLICK,
                         folder_open,w_info,folder_ani,w_info,
                         folder_open_finish,w_info,folder_close,w_info);
@@ -199,7 +199,7 @@ void cl_control_center_load(ClControlCenter * self){
     button = cl_control_button_new("蓝牙","bluetooth-symbolic");
     self->ble_button = cl_control_item_new(button,gtk_button_new());
     ling_grid_attach(LING_GRID(self->grid),self->ble_button,3,1,2,1);
-    op = ling_operate_add(shell->controler,"ble-button",self->ble_button);
+    op = ling_operate_add("ble-button",self->ble_button);
     ling_folder_operate(op,LING_FOLDER(folder),LING_ACTION_CLICK,
                         folder_open,w_info,folder_ani,w_info,
                         folder_open_finish,w_info,folder_close,w_info);
@@ -208,7 +208,6 @@ void cl_control_center_load(ClControlCenter * self){
 
     self->media = cl_control_media_new();
     ling_grid_attach(LING_GRID(self->grid),self->media,1,2,2,2);
-
 
     //添加亮度条
     self->brightness.box = cl_control_scale_new(&self->brightness.scale);

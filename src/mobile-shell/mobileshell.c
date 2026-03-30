@@ -141,7 +141,7 @@ void clm_shell_lock_screen_passed(ClLockScreen * lockscreen,gpointer user_data){
     gtk_widget_set_opacity(shell->statusbar,1);
     self->mode = SHELL_MODE_DESKTOP;
     gtk_widget_set_visible(self->desktop,TRUE);
-    ling_operate_emit_end(ling_operate_get(shell->controler,"desktop_load"),LING_ACTION_EMIT,NULL,TRUE);
+    ling_operate_emit_end(ling_operate_get("desktop_load"),LING_ACTION_EMIT,NULL,TRUE);
 }
 
 void clm_shell_init(ClmShell * self){
@@ -262,9 +262,6 @@ void clm_shell_setting(ClmShell * self){
     clm_shell_load_apps(self,"/usr/share/applications/");
     clm_shell_load_apps(self,"~/.local/share/applications/");
 
-    //操作控制器
-    self->controler = ling_operate_controler_new(144);
-
     //更新器
     self->updater = ling_sys_info_updater_new();
     ling_sys_info_updater_add_type(self->updater,INFO_UPDATER_TIME,update_time_info_cb,NULL);
@@ -307,26 +304,26 @@ void clm_shell_setting(ClmShell * self){
     LingOverlay * ls_overlay =  cl_lock_screen_get_layer_cover(CL_LOCK_SCREEN(shell->lockscreen),&ls_lay);
     s->lockscreen = ls_lay;
 
-    ling_operate_add_action(ling_operate_get(shell->controler,CL_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,
+    ling_operate_add_action(ling_operate_get(CL_LOCK_SCREEN_COVER_OP_NAME),LING_ACTION_DRAG_DOWN,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
-    ling_operate_add_action(ling_operate_get(shell->controler,CLM_DESKTOP_BODYBOX_OP_NAME),LING_ACTION_DRAG_DOWN,
+    ling_operate_add_action(ling_operate_get(CLM_DESKTOP_BODYBOX_OP_NAME),LING_ACTION_DRAG_DOWN,
                             statusbar_center_progress,s,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
-    ling_operate_add_action(ling_operate_get(shell->controler,CL_STATUSBAR_CENTERBOX_OP_NAME),LING_ACTION_DRAG_UP,
+    ling_operate_add_action(ling_operate_get(CL_STATUSBAR_CENTERBOX_OP_NAME),LING_ACTION_DRAG_UP,
                             ling_layer_progress,NULL,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,
                             statusbar_center_s_finish,statusbar_center_e_finish,s);
 
 
-    ling_operate_add_action(ling_operate_get(shell->controler,CL_STATUSBAR_BAR_OP_NAME),LING_ACTION_DRAG_DOWN,
+    ling_operate_add_action(ling_operate_get(CL_STATUSBAR_BAR_OP_NAME),LING_ACTION_DRAG_DOWN,
                             statusbar_center_progress,s,
                             statusbar_center_ani,s,
                             ling_layer_release,NULL,

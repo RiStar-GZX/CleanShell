@@ -105,7 +105,7 @@ void ling_folder_init(LingFolder * self){
     gtk_widget_add_controller(self->folder_box,GTK_EVENT_CONTROLLER(gesture));
     g_signal_connect(gesture,"pressed",G_CALLBACK(folder_pressed_blank),self);
 
-    self->close_op = ling_operate_add(shell->controler,"desktop_folder_close",GTK_WIDGET(self));
+    self->close_op = ling_operate_add("desktop_folder_close",GTK_WIDGET(self));
     ling_operate_add_action(self->close_op,LING_ACTION_INSTANT,
                             NULL,NULL,
                             folder_close_animate,self,

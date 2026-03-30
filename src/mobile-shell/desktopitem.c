@@ -113,7 +113,7 @@ void clm_desktop_item_init(ClmDesktopItem * self){
     self->content = gtk_aspect_frame_new(0,0,1,FALSE);//gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     gtk_box_append(GTK_BOX(self),self->content);
 
-    self->op = ling_operate_add(shell->controler,"desktop_item",self);
+    self->op = ling_operate_add("desktop_item",self);
 
     ling_operate_add_dragsource(self->op,LING_DRAG_SOURCE_LONG_PRESS,
                                 ds_prepare,self,
@@ -510,7 +510,7 @@ static void folder_close(LingFolder * folder,GtkWidget * item,GtkWidget * conten
     //gtk_box_insert_child_after(GTK_BOX(self),content,NULL);
     GtkWidget * space = gtk_aspect_frame_get_child(GTK_ASPECT_FRAME(self->content));
     gtk_aspect_frame_set_child(GTK_ASPECT_FRAME(self->content),content);
-    g_object_unref(space);
+    //g_object_unref(space);
     //ling_grid_attach(LING_GRID(self->info.grid),item,self->info.column,self->info.row,self->info.grid_w,self->info.grid_h);
 }
 

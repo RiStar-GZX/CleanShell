@@ -34,7 +34,7 @@ struct _ClmShell{
 
     GtkWidget * lingoverlay;
 
-    LingOpControler * controler;
+    //LingOpControler * controler;
 
     GList * app_info;
 
