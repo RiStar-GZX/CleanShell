@@ -21,6 +21,8 @@
 
 #include <lingwindow.h>
 #include <lingwindowstack.h>
+#include <linglistbox.h>
+#include <lingdygrid.h>
 
 typedef struct{
     //网格信息
@@ -50,3 +52,5 @@ typedef struct{
 void ling_widget_scale(GtkWidget * self,gdouble scale);
 
 void ling_widget_border_radis(GtkWidget * widget,gdouble px);
+
+GtkWidget * ling_get_child_in_widget(GtkWidget * parent,GtkWidget * child);

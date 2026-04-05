@@ -29,3 +29,12 @@ void ling_widget_border_radis(GtkWidget * widget,gdouble px){
     g_free(str);
     g_object_unref(provider);
 }
+
+GtkWidget * ling_get_child_in_widget(GtkWidget * parent,GtkWidget * child){
+    if(parent==NULL||child==NULL)return NULL;
+    for(GtkWidget * w=gtk_widget_get_first_child(parent);
+         w!=NULL;w=gtk_widget_get_next_sibling(w)){
+        if(w==child)return w;
+    }
+    return NULL;
+}

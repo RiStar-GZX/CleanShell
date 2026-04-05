@@ -82,6 +82,29 @@ GtkWidget * store_main_page(LingOperate * op){
     return GTK_WIDGET(gtk_builder_get_object(builder,"main_box"));
 }
 
+GtkWidget * store_list_page(LingOperate * op){
+    LingListView * lv = LING_LIST_VIEW(ling_list_view_new());
+    gtk_box_set_spacing(GTK_BOX(lv),10);
+    LingListPart * part = ling_list_view_add_part(lv);
+    LingListView * plv = ling_list_part_set_as_list(part);
+    ling_list_view_add_item(plv,gtk_button_new());
+    ling_list_view_add_item(plv,gtk_button_new());
+    ling_list_view_add_item(plv,gtk_button_new());
+
+    ling_list_view_add_item(lv,gtk_button_new());
+    ling_list_view_add_item(lv,gtk_button_new());
+    ling_list_view_add_item(lv,gtk_button_new());
+    return GTK_WIDGET(lv);
+}
+
+GtkWidget * dy_grid_page(LingOperate *op){
+    LingDyGrid * grid = LING_DY_GRID(ling_dy_grid_new(50,50,10,10));
+    for( int i=0;i<7;i++){
+        ling_dy_grid_add_item(grid,gtk_button_new());
+    }
+    return GTK_WIDGET(grid);
+}
+
 GtkWidget * ling_store_new(){
     GtkWidget * button;
     GtkWidget * fixed = ling_fixed_new();
@@ -95,8 +118,8 @@ GtkWidget * ling_store_new(){
     ling_window_side_set_guide(LING_WINDOW(win),side,item_load,NULL);
 
     add_page(LING_WINDOW(win),omag_main_page_new(),op,"1","firefox");
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("2"),op,"2","firefox");
-    add_page(LING_WINDOW(win),gtk_button_new_with_label("3"),op,"3","vscode");
+    add_page(LING_WINDOW(win),store_list_page(op),op,"2","firefox");
+    add_page(LING_WINDOW(win),dy_grid_page(op),op,"3","vscode");
     add_page(LING_WINDOW(win),gtk_button_new_with_label("4"),op,"4","konsole");
 
     ling_window_side_guide_update(LING_WINDOW(win));

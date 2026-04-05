@@ -40,7 +40,7 @@ static void app_activate (GApplication *app) {
     g_object_set(settings, "gtk-dnd-drag-threshold", 1, NULL);
 
     GtkWidget * window=gtk_window_new();
-    ling_operate_controler_new(144,my_clock);
+    ling_operate_controler_new(100,my_clock);
 #ifdef SHELL_MODE
     GtkWidget * appview = clm_shell_start();
     gtk_window_set_default_size(GTK_WINDOW(window),500,1000);
@@ -60,7 +60,7 @@ static void app_activate (GApplication *app) {
     my_clock = gtk_widget_get_frame_clock(GTK_WIDGET(window));
 
     //g_signal_connect(my_clock, "update", G_CALLBACK(before_paint), window);
-    g_timeout_add(500,fps_timeout,appview);
+    // g_timeout_add(500,fps_timeout,appview);
 }
 
 static void app_open (GApplication *app, GFile ** files, gint n_files, gchar *hint) {

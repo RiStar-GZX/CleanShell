@@ -305,7 +305,7 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         act->animation(op->widget,operate_action_args(op,op->action_now),act->animate_data);
 
     }
-    gdk_frame_clock_begin_updating(OpControler.frameclock);
+    //gdk_frame_clock_begin_updating(OpControler.frameclock);
     //g_signal_emit_by_name(OpControler.frameclock, "update",NULL);
     return G_SOURCE_CONTINUE;
 }
