@@ -150,6 +150,7 @@ static LingActionArgs operate_action_args(LingOperate * op,uint action_type){
     args.progress_end = op->actions[action_type].ani_progress_end;
     args.action = action_type;
     args.emit_data = op->emit_data;
+    args.dir = op->actions[action_type].dir;
     return args;
 }
 
@@ -257,8 +258,8 @@ gboolean ling_operate_controler_timeout(gpointer user_data){
         else{
             op->time-=100.00f/OpControler.frames/act->ani_time;
         }
-        //gdouble y = op->time;
-        gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
+        gdouble y = op->time;
+        //gdouble y = bezier_curve(0,0.10,0.85,1,op->time/100.0000f)*100;
         //g_print("Y:%f\n",op->time);
 
 

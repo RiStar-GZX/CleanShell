@@ -25,7 +25,7 @@ static void before_paint (GdkFrameClock* self,gpointer user_data){
     g_print("update\n");
 }
 
-//#define SHELL_MODE
+#define SHELL_MODE
 
 static void app_activate (GApplication *app) {
     // 应用CSS样式
@@ -71,6 +71,8 @@ int main (int argc, char **argv) {
     GtkApplication *app;
     int stat;
     g_print("%d.%d.%d\n",GTK_MAJOR_VERSION,GTK_MINOR_VERSION,GTK_MICRO_VERSION);
+
+    g_setenv("G_ENABLE_DIAGNOSTIC", "0", TRUE);
     app = gtk_application_new ("org.ling.lib", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect (app, "activate", G_CALLBACK (app_activate), NULL);
     g_signal_connect (app, "open", G_CALLBACK (app_open), NULL);

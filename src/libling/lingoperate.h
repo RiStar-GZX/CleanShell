@@ -85,6 +85,11 @@ typedef struct {
     gdouble velocity_y;
 }LingEndArgs;
 
+typedef enum{
+    FINISH_DIR_START = 0,
+    FINISH_DIR_END = 1,
+}FINISH_DIR;
+
 typedef struct LingActionArgs{
     LingOperate * op;
     gdouble start_x;
@@ -97,12 +102,8 @@ typedef struct LingActionArgs{
     gdouble progress_end;
     gpointer emit_data;
     uint action;
+    FINISH_DIR dir;
 }LingActionArgs;
-
-typedef enum{
-    FINISH_DIR_START = 0,
-    FINISH_DIR_END = 1,
-}FINISH_DIR;
 
 typedef enum{
     EMIT_FINISH_DIR_START = FINISH_DIR_START,
